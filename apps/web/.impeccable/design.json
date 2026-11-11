@@ -1,0 +1,561 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T21:21:35.427Z",
+  "title": "Design System: DecideAqui",
+  "extensions": {
+    "colorMeta": {
+      "fondo": {
+        "role": "neutral",
+        "displayName": "Blanco página",
+        "canonical": "#ffffff",
+        "dark": "#1c1c2b",
+        "tonalRamp": [
+          "#404040",
+          "#737373",
+          "#a6a6a6",
+          "#d9d9d9",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "seccion": {
+        "role": "neutral",
+        "displayName": "Lino",
+        "canonical": "#f3ece7",
+        "dark": "#25253a",
+        "tonalRamp": [
+          "#3d3b3a",
+          "#6d6a68",
+          "#9e9996",
+          "#cfc9c4",
+          "#f5f0ec",
+          "#f8f5f2",
+          "#fbf9f8",
+          "#fefdfd"
+        ]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Blanco tarjeta",
+        "canonical": "#ffffff",
+        "dark": "#2a2a40",
+        "tonalRamp": [
+          "#404040",
+          "#737373",
+          "#a6a6a6",
+          "#d9d9d9",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "texto": {
+        "role": "neutral",
+        "displayName": "Grafito",
+        "canonical": "#36364f",
+        "dark": "#efe8e3",
+        "tonalRamp": [
+          "#0e0e14",
+          "#181824",
+          "#232333",
+          "#2e2e43",
+          "#5e5e72",
+          "#90909e",
+          "#c3c3ca",
+          "#ebebed"
+        ]
+      },
+      "suave": {
+        "role": "neutral",
+        "displayName": "Marrón tierra",
+        "canonical": "#7a5b4e",
+        "dark": "#cfb8aa",
+        "tonalRamp": [
+          "#1f1714",
+          "#372923",
+          "#4f3b33",
+          "#684d42",
+          "#957c71",
+          "#b6a59e",
+          "#d7ceca",
+          "#f2efed"
+        ]
+      },
+      "borde": {
+        "role": "neutral",
+        "displayName": "Borde cálido",
+        "canonical": "#e0d2c8",
+        "dark": "#4a4a66",
+        "tonalRamp": [
+          "#383532",
+          "#655e5a",
+          "#928982",
+          "#beb3aa",
+          "#e6dbd3",
+          "#eee6e1",
+          "#f6f2ef",
+          "#fcfbfa"
+        ]
+      },
+      "arena": {
+        "role": "neutral",
+        "displayName": "Arena",
+        "canonical": "#cfb8aa",
+        "dark": "#7a5b4e",
+        "tonalRamp": [
+          "#342e2b",
+          "#5d534c",
+          "#87786f",
+          "#b09c91",
+          "#d9c6bb",
+          "#e5d8d0",
+          "#f1eae6",
+          "#faf8f7"
+        ]
+      },
+      "cian": {
+        "role": "primary",
+        "displayName": "Cian DecideAqui",
+        "canonical": "#13a9cf",
+        "dark": "#13a9cf",
+        "tonalRamp": [
+          "#052a34",
+          "#094c5d",
+          "#0c6e87",
+          "#1090b0",
+          "#42bad9",
+          "#7dd0e5",
+          "#b8e5f1",
+          "#e7f6fa"
+        ]
+      },
+      "en-cian": {
+        "role": "primary",
+        "displayName": "Tinta profunda",
+        "canonical": "#1f1f33",
+        "dark": "#1f1f33",
+        "tonalRamp": [
+          "#08080d",
+          "#0e0e17",
+          "#141421",
+          "#1a1a2b",
+          "#4c4c5c",
+          "#84848f",
+          "#bcbcc2",
+          "#e9e9eb"
+        ]
+      },
+      "accion": {
+        "role": "secondary",
+        "displayName": "Azul acero",
+        "canonical": "#346a8f",
+        "dark": "#346a8f",
+        "tonalRamp": [
+          "#0d1b24",
+          "#173040",
+          "#22455d",
+          "#2c5a7a",
+          "#5d88a5",
+          "#8fadc1",
+          "#c2d2dd",
+          "#ebf0f4"
+        ]
+      },
+      "accion-fuerte": {
+        "role": "secondary",
+        "displayName": "Acero fuerte",
+        "canonical": "#2a5675",
+        "dark": "#3f7ba3",
+        "tonalRamp": [
+          "#0b161d",
+          "#132735",
+          "#1b384c",
+          "#244963",
+          "#557891",
+          "#8aa2b3",
+          "#bfccd6",
+          "#eaeef1"
+        ]
+      },
+      "en-accion": {
+        "role": "secondary",
+        "displayName": "Blanco sobre acero",
+        "canonical": "#ffffff",
+        "dark": "#ffffff",
+        "tonalRamp": [
+          "#404040",
+          "#737373",
+          "#a6a6a6",
+          "#d9d9d9",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "borde-accion": {
+        "role": "secondary",
+        "displayName": "Borde acero",
+        "canonical": "#346a8f",
+        "dark": "#7fb2d4",
+        "tonalRamp": [
+          "#0d1b24",
+          "#173040",
+          "#22455d",
+          "#2c5a7a",
+          "#5d88a5",
+          "#8fadc1",
+          "#c2d2dd",
+          "#ebf0f4"
+        ]
+      },
+      "enlace": {
+        "role": "secondary",
+        "displayName": "Enlace acero",
+        "canonical": "#346a8f",
+        "dark": "#8ccbe6",
+        "tonalRamp": [
+          "#0d1b24",
+          "#173040",
+          "#22455d",
+          "#2c5a7a",
+          "#5d88a5",
+          "#8fadc1",
+          "#c2d2dd",
+          "#ebf0f4"
+        ]
+      },
+      "arena-fondo": {
+        "role": "neutral",
+        "displayName": "Arena de fondo",
+        "canonical": "#cfb8aa",
+        "dark": "#4a3a33",
+        "tonalRamp": [
+          "#342e2b",
+          "#5d534c",
+          "#87786f",
+          "#b09c91",
+          "#d9c6bb",
+          "#e5d8d0",
+          "#f1eae6",
+          "#faf8f7"
+        ]
+      },
+      "pie": {
+        "role": "neutral",
+        "displayName": "Grafito de pie",
+        "canonical": "#36364f",
+        "dark": "#141421",
+        "tonalRamp": [
+          "#0e0e14",
+          "#181824",
+          "#232333",
+          "#2e2e43",
+          "#5e5e72",
+          "#90909e",
+          "#c3c3ca",
+          "#ebebed"
+        ]
+      },
+      "en-pie": {
+        "role": "neutral",
+        "displayName": "Crema de pie",
+        "canonical": "#f3ece7",
+        "dark": "#f3ece7",
+        "tonalRamp": [
+          "#3d3b3a",
+          "#6d6a68",
+          "#9e9996",
+          "#cfc9c4",
+          "#f5f0ec",
+          "#f8f5f2",
+          "#fbf9f8",
+          "#fefdfd"
+        ]
+      },
+      "foco": {
+        "role": "neutral",
+        "displayName": "Anillo de foco",
+        "canonical": "#1f1f33",
+        "dark": "#13a9cf",
+        "tonalRamp": [
+          "#08080d",
+          "#0e0e17",
+          "#141421",
+          "#1a1a2b",
+          "#4c4c5c",
+          "#84848f",
+          "#bcbcc2",
+          "#e9e9eb"
+        ]
+      },
+      "serie-1": {
+        "role": "neutral",
+        "displayName": "Serie 1 (trazo continuo)",
+        "canonical": "#346a8f",
+        "dark": "#13a9cf",
+        "tonalRamp": [
+          "#0d1b24",
+          "#173040",
+          "#22455d",
+          "#2c5a7a",
+          "#5d88a5",
+          "#8fadc1",
+          "#c2d2dd",
+          "#ebf0f4"
+        ]
+      },
+      "serie-2": {
+        "role": "neutral",
+        "displayName": "Serie 2 (rayas 8 5)",
+        "canonical": "#7a5b4e",
+        "dark": "#cfb8aa",
+        "tonalRamp": [
+          "#1f1714",
+          "#372923",
+          "#4f3b33",
+          "#684d42",
+          "#957c71",
+          "#b6a59e",
+          "#d7ceca",
+          "#f2efed"
+        ]
+      },
+      "serie-3": {
+        "role": "neutral",
+        "displayName": "Serie 3 (puntos 2 4)",
+        "canonical": "#36364f",
+        "dark": "#efe8e3",
+        "tonalRamp": [
+          "#0e0e14",
+          "#181824",
+          "#232333",
+          "#2e2e43",
+          "#5e5e72",
+          "#90909e",
+          "#c3c3ca",
+          "#ebebed"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Titular del inicio; 1.875rem en móvil, 3rem desde 640 px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "h1 de ficha (hasta 2.25rem), búsqueda, tiendas y 404."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "h2 de sección."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Párrafos a 60–65ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Barra de aviso, chips, stock, notas."
+      },
+      "precio-sello-grande": {
+        "displayName": "Precio sello grande",
+        "purpose": "Cifra del sello en la ficha."
+      },
+      "precio-sello": {
+        "displayName": "Precio sello",
+        "purpose": "Cifra del sello en la tarjeta."
+      },
+      "precio-oferta": {
+        "displayName": "Precio de oferta",
+        "purpose": "Cifra de cada fila de ofertas sin sello."
+      }
+    },
+    "shadows": [
+      {
+        "name": "elevacion-tarjeta",
+        "value": "0 8px 20px -10px rgb(31 31 51 / 0.45)",
+        "purpose": "Solo en hover de la tarjeta de producto; transición de 200 ms."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transicion-color",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "transition-colors de Tailwind en botones, chips y pestañas."
+      },
+      {
+        "name": "transicion-sombra-tarjeta",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Aparición de la sombra en hover de tarjeta."
+      },
+      {
+        "name": "latido",
+        "value": "1.4s ease-in-out infinite (opacity 1 -> 0.45)",
+        "purpose": "Pulso del esqueleto de carga."
+      },
+      {
+        "name": "movimiento-reducido",
+        "value": "transition: none; animation: none",
+        "purpose": "Con prefers-reduced-motion se anula todo movimiento."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ],
+    "focus": {
+      "value": "outline: 2px solid var(--foco); outline-offset: 2px",
+      "sobreOscuro": "outline-color: var(--cian)"
+    }
+  },
+  "components": [
+    {
+      "name": "Sello de precio",
+      "kind": "custom",
+      "refersTo": "sello-precio",
+      "description": "Firma del sistema: precio sobre cian y hora de lectura sobre arena como una sola pieza.",
+      "html": "<p class=\"ds-sello\"><span class=\"ds-sello-precio\"><span class=\"ds-sello-desde\">desde</span><strong>$156,51</strong></span><span class=\"ds-sello-hora\">leído hoy 01:17</span></p>",
+      "css": ".ds-sello{display:inline-flex;flex-direction:column;align-self:flex-start;overflow:hidden;border-radius:8px;margin:0;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-sello-precio{display:flex;align-items:baseline;gap:6px;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);padding:4px 10px}.ds-sello-desde{font-size:12px;font-weight:600}.ds-sello-precio strong{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}.ds-sello-hora{display:flex;align-items:center;background:var(--arena-fondo,#cfb8aa);color:var(--texto,#36364f);padding:4px 10px;font-size:12px}"
+    },
+    {
+      "name": "Barra de aviso",
+      "kind": "custom",
+      "refersTo": "barra-aviso",
+      "description": "Franja cian con la lectura global más reciente y el aviso de confirmar en la tienda.",
+      "html": "<p class=\"ds-aviso\"><strong>Precios leídos el 11 nov, 01:17</strong> · confirma siempre en la tienda</p>",
+      "css": ".ds-aviso{margin:0;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);padding:6px 16px;text-align:center;font-size:14px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-aviso strong{font-weight:600}"
+    },
+    {
+      "name": "Botón Ver oferta",
+      "kind": "button",
+      "refersTo": "boton-oferta",
+      "description": "Acción primaria: acero con texto blanco.",
+      "html": "<a class=\"ds-btn-oferta\" href=\"#\">Ver oferta</a>",
+      "css": ".ds-btn-oferta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--borde-accion,#346a8f);background:var(--accion,#346a8f);color:var(--en-accion,#fff);font-weight:600;text-decoration:none;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-btn-oferta:hover{background:var(--accion-fuerte,#2a5675)}.ds-btn-oferta:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "boton-secundario",
+      "description": "Ver en la tienda (sin stock) y salidas rápidas: borde arena.",
+      "html": "<a class=\"ds-btn-sec\" href=\"#\">Ver en la tienda</a>",
+      "css": ".ds-btn-sec{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--arena,#cfb8aa);background:transparent;color:var(--texto,#36364f);font-weight:600;text-decoration:none;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-btn-sec:hover{background:var(--seccion,#f3ece7)}.ds-btn-sec:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+    },
+    {
+      "name": "Buscador",
+      "kind": "input",
+      "refersTo": "buscador-campo",
+      "description": "Campo y botón Comparar unidos en una pieza.",
+      "html": "<form class=\"ds-buscador\" role=\"search\"><input class=\"ds-buscador-campo\" type=\"search\" placeholder=\"Busca un producto\"><button class=\"ds-buscador-boton\" type=\"submit\">Comparar</button></form>",
+      "css": ".ds-buscador{display:flex;max-width:520px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-buscador-campo{flex:1;min-width:0;height:44px;padding:0 16px;border:1px solid var(--arena,#cfb8aa);border-right:0;border-radius:8px 0 0 8px;background:var(--superficie,#fff);color:var(--texto,#36364f);font-size:16px;font-family:inherit}.ds-buscador-campo::placeholder{color:var(--suave,#7a5b4e)}.ds-buscador-boton{height:44px;padding:0 20px;border:1px solid var(--borde-accion,#346a8f);border-radius:0 8px 8px 0;background:var(--accion,#346a8f);color:var(--en-accion,#fff);font-weight:600;font-size:16px;font-family:inherit;cursor:pointer;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-buscador-boton:hover{background:var(--accion-fuerte,#2a5675)}.ds-buscador-campo:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}.ds-buscador-boton:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+    },
+    {
+      "name": "Chips de orden y filtro",
+      "kind": "chip",
+      "refersTo": "opcion-activa",
+      "description": "Activo en cian con marca de verificación; reposo con borde arena.",
+      "html": "<nav class=\"ds-chips\"><a class=\"ds-chip ds-chip-activa\" href=\"#\" aria-current=\"true\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 8.5l3.2 3L13 4.5\"/></svg>Menor precio</a><a class=\"ds-chip\" href=\"#\">Solo en stock</a></nav>",
+      "css": ".ds-chips{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-chip{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--arena,#cfb8aa);color:var(--texto,#36364f);font-size:14px;font-weight:600;text-decoration:none;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-chip:hover{background:var(--seccion,#f3ece7)}.ds-chip-activa,.ds-chip-activa:hover{background:var(--cian,#13a9cf);border-color:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33)}.ds-chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-chip:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+    },
+    {
+      "name": "Pestañas de búsquedas rápidas",
+      "kind": "nav",
+      "refersTo": "pestana-activa",
+      "description": "Fila deslizable; activa con subrayado cian de 3 px.",
+      "html": "<nav class=\"ds-pestanas\"><a class=\"ds-pestana ds-pestana-activa\" href=\"#\" aria-current=\"page\">Televisores</a><a class=\"ds-pestana\" href=\"#\">Refrigeradoras</a><a class=\"ds-pestana\" href=\"#\">Laptops</a></nav>",
+      "css": ".ds-pestanas{display:flex;gap:4px;border-top:1px solid var(--borde,#e0d2c8);font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-pestana{display:flex;align-items:center;height:44px;padding:0 12px;border-bottom:3px solid transparent;color:var(--suave,#7a5b4e);font-weight:600;text-decoration:none;transition:color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1)}.ds-pestana:hover{border-bottom-color:var(--arena,#cfb8aa);color:var(--texto,#36364f)}.ds-pestana-activa,.ds-pestana-activa:hover{border-bottom-color:var(--cian,#13a9cf);color:var(--texto,#36364f)}.ds-pestana:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+    },
+    {
+      "name": "Tarjeta de producto",
+      "kind": "card",
+      "refersTo": "tarjeta-producto",
+      "description": "Pozo blanco 4:3, título, sello y nota; toda la tarjeta es enlace.",
+      "html": "<article class=\"ds-tarjeta\"><div class=\"ds-tarjeta-img\"></div><div class=\"ds-tarjeta-cuerpo\"><h3><a href=\"#\">Televisor 32\" HD Google TV</a></h3><p class=\"ds-sello\"><span class=\"ds-sello-precio\"><span class=\"ds-sello-desde\">desde</span><strong>$156,51</strong></span><span class=\"ds-sello-hora\">leído hoy 01:17</span></p><p class=\"ds-tarjeta-nota\">3 tiendas · más barato en Comandato</p></div></article>",
+      "css": ".ds-tarjeta{position:relative;display:flex;flex-direction:column;width:220px;overflow:hidden;border-radius:12px;border:1px solid var(--borde,#e0d2c8);background:var(--superficie,#fff);color:var(--texto,#36364f);font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;transition:box-shadow 200ms cubic-bezier(.4,0,.2,1)}.ds-tarjeta:hover{box-shadow:0 8px 20px -10px rgb(31 31 51/.45)}.ds-tarjeta-img{aspect-ratio:4/3;background:#fff;border-bottom:1px solid var(--borde,#e0d2c8)}.ds-tarjeta-cuerpo{padding:12px;display:flex;flex-direction:column;gap:8px}.ds-tarjeta h3{margin:0;font-size:16px;font-weight:600;line-height:1.375}.ds-tarjeta h3 a{color:inherit;text-decoration:none}.ds-tarjeta h3 a::after{content:\"\";position:absolute;inset:0}.ds-tarjeta:hover h3 a{text-decoration:underline}.ds-tarjeta h3 a:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}.ds-tarjeta-nota{margin:0;font-size:14px;color:var(--suave,#7a5b4e)}.ds-sello{display:inline-flex;flex-direction:column;align-self:flex-start;overflow:hidden;border-radius:8px;margin:0;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-sello-precio{display:flex;align-items:baseline;gap:6px;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);padding:4px 10px}.ds-sello-desde{font-size:12px;font-weight:600}.ds-sello-precio strong{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}.ds-sello-hora{display:flex;align-items:center;background:var(--arena-fondo,#cfb8aa);color:var(--texto,#36364f);padding:4px 10px;font-size:12px}"
+    },
+    {
+      "name": "Stock",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Icono de trazo más texto: el significado no depende del color.",
+      "html": "<span class=\"ds-stock\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 8.5l3.2 3L13 4.5\"/></svg>En stock</span> <span class=\"ds-stock ds-stock-no\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M4 4l8 8M12 4l-8 8\"/></svg>Sin stock</span>",
+      "css": ".ds-stock{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--texto,#36364f);font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-stock-no{color:var(--suave,#7a5b4e)}.ds-stock svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El precio con fecha",
+    "overview": "DecideAqui es un catálogo de tienda online leído con honestidad: barra de aviso, cabecera con buscador ancho, pestañas de búsquedas rápidas, rejilla de productos, bloque de confianza y pie en columnas. La estructura es familiar a propósito; lo propio está en un único gesto que se repite en todas partes: el sello de precio, donde la cifra sobre cian y la hora de lectura sobre arena forman una sola pieza. Ningún precio aparece suelto.\n\nLa paleta separa funciones con disciplina. El cian es la marca y la señal de \"esto es un precio o una lectura\"; el azul acero es la única voz para actuar (comparar, ver oferta, enlaces); el grafito lee; la arena separa y respalda. La densidad es de catálogo: rejilla de 2 a 5 columnas, filas de ofertas apretadas, cifras tabulares en negrita extrema. El sistema funciona en claro y en oscuro con los mismos papeles; el cian y su tinta profunda no cambian entre temas.\n\nRechazo confirmado: el comparador genérico de cabecera azul, chip amarillo de \"mejor precio\" y ofertas desplegadas dentro del listado.",
+    "keyCharacteristics": [
+      "Un solo gesto de firma, el sello de precio, repetido en tarjeta, ficha, fila de ofertas, leyenda del historial y punto \"hoy\" del gráfico.",
+      "Cian siempre con tinta profunda; acero siempre con blanco.",
+      "Plano: profundidad por bordes arena y fondos tonales; una sola sombra, en el hover de la tarjeta.",
+      "Significado nunca solo por color: icono + texto en stock, trazo + color en series, marca de verificación en filtros activos.",
+      "Toda hora se muestra en America/Guayaquil.",
+      "Objetivos táctiles de 44 px en todo lo que se pulsa."
+    ],
+    "rules": [
+      {
+        "name": "The Tinta Profunda Rule",
+        "body": "Todo lo que va sobre cian lleva `--en-cian` (#1F1F33). Nunca blanco, nunca grafito, en ningún tema.",
+        "section": "colors"
+      },
+      {
+        "name": "The Acero con Blanco Rule",
+        "body": "El azul acero (#346A8F) es fondo de acción con texto blanco, o color de enlace subrayado sobre fondo claro. No se usa como superficie decorativa.",
+        "section": "colors"
+      },
+      {
+        "name": "The Arena sin Suave Rule",
+        "body": "Sobre `--arena-fondo` claro solo va `--texto`; `--suave` cae a 3.23:1 y no se usa ahí.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cifra Tabular Rule",
+        "body": "Todo importe, fecha de tabla y precio del historial usa `tabular-nums`; los precios en lista se alinean a la derecha.",
+        "section": "typography"
+      },
+      {
+        "name": "The Un Solo Rostro Rule",
+        "body": "No se añade una segunda familia tipográfica; el contraste viene del peso 800 frente al 400.",
+        "section": "typography"
+      },
+      {
+        "name": "The Plano en Reposo Rule",
+        "body": "Nada tiene sombra en reposo. Si un elemento necesita separarse, recibe borde o fondo tonal, no sombra.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do poner `--en-cian` (#1F1F33) sobre todo fondo cian, en claro y en oscuro.",
+      "Do poner texto blanco sobre el azul acero (#346A8F) y usar acero solo para actuar o enlazar.",
+      "Do acompañar cada precio con su hora de lectura en America/Guayaquil (\"leído hoy 01:17\"), y marcar \"puede haber cambiado\" cuando la lectura va más de un día por detrás.",
+      "Do expresar stock, filtro activo y serie del gráfico con icono, marca o trazo además del color.",
+      "Do usar `tabular-nums` y peso 800 en todas las cifras de precio.",
+      "Do dar 44 px de alto a todo lo que se pulsa y mantener el foco visible de 2 px.",
+      "Do mostrar las imágenes de producto en un pozo blanco con `object-contain`."
+    ],
+    "donts": [
+      "Don't usar cabecera azul, chip amarillo de \"mejor precio\" ni desplegar las ofertas dentro del listado de resultados.",
+      "Don't mostrar un precio sin su hora de lectura donde esa hora existe.",
+      "Don't poner `--suave` sobre `--arena-fondo` claro (3.23:1).",
+      "Don't añadir sombras en reposo; la única sombra es el hover de la tarjeta.",
+      "Don't dibujar el historial con menos de 7 días de datos.",
+      "Don't introducir una segunda familia tipográfica."
+    ]
+  }
+}

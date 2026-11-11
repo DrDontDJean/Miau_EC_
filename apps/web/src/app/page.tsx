@@ -1,59 +1,56 @@
 import Link from 'next/link';
 import { productosDestacados, tiendasActivas } from '@/lib/datos';
-import { precio } from '@/components/ofertas';
+import { RejillaProductos } from '@/components/ofertas';
 
-const SUGERENCIAS = ['televisor 55', 'refrigeradora', 'laptop', 'lavadora', 'samsung'];
+// Solo hechos que se pueden comprobar en el propio sitio: sin cifras ni testimonios.
+const HECHOS = [
+  { titulo: 'El mismo producto', texto: 'Solo juntamos ofertas que comparten código de barras (EAN) o código de modelo del fabricante.' },
+  { titulo: 'El precio de la tienda', texto: 'Mostramos el precio que cada tienda publica en su web, en dólares y con impuestos.' },
+  { titulo: 'Actualizado cada día', texto: 'Leemos los catálogos una vez al día. En cada producto ves a qué hora leímos el precio de cada tienda.' },
+  { titulo: 'Sin patrocinios', texto: 'Ninguna tienda paga por aparecer primero: el orden lo decide el precio.' },
+];
 
 export default async function Inicio() {
   const [destacados, tiendas] = await Promise.all([productosDestacados(), tiendasActivas()]);
   return (
-    <div className="flex flex-col gap-10">
-      <section className="py-6">
-        <h1 className="font-display text-3xl font-extrabold text-acento sm:text-4xl">Compara precios entre tiendas de Ecuador</h1>
+    <div className="flex flex-col gap-8 sm:gap-12">
+      <section>
+        <h1 className="max-w-[22ch] text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Compara precios entre tiendas de Ecuador</h1>
         <p className="mt-3 max-w-[62ch] text-lg text-suave">
-          Reunimos los catálogos de {tiendas.length} tiendas online, agrupamos el mismo producto y te mostramos dónde está más barato.
-          Al elegir una oferta, vas directo a la tienda.
+          Juntamos las ofertas del mismo producto en {tiendas.length} tiendas online y te mostramos dónde está más barato.
         </p>
-        <ul className="mt-5 flex flex-wrap gap-2">
-          {SUGERENCIAS.map(s => (
-            <li key={s}>
-              <Link href={`/buscar?q=${encodeURIComponent(s)}`} className="rounded-full bg-acento-suave px-4 py-1.5 text-acento hover:underline">{s}</Link>
-            </li>
-          ))}
-        </ul>
       </section>
 
       {destacados.length > 0 && (
         <section>
-          <h2 className="font-display text-xl font-semibold">Comparaciones destacadas</h2>
-          <p className="text-sm text-suave">Productos que encontramos en más de una tienda.</p>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {destacados.map(p => (
-              <li key={p.id}>
-                <Link href={`/p/${p.id}`} className="flex h-full items-center gap-3 rounded-xl border border-borde bg-superficie p-3 hover:border-acento">
-                  <span className="grid size-16 shrink-0 place-items-center">
-                    {p.imagen_url && <img src={p.imagen_url} alt="" loading="lazy" referrerPolicy="no-referrer" className="size-full object-contain" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="line-clamp-2 font-display leading-snug">{p.titulo}</span>
-                    <span className="mt-1 block text-sm text-suave">
-                      <strong className="text-acento tabular-nums">desde {precio(p.precio_desde)}</strong> · {p.num_tiendas} tiendas
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <h2 className="mb-4 text-xl font-bold">Productos en varias tiendas</h2>
+          <RejillaProductos
+            nivel="h3"
+            productos={destacados.map(p => ({ id: p.id, titulo: p.titulo, imagen: p.imagen_url, desde: p.precio_desde, numTiendas: p.num_tiendas }))}
+          />
         </section>
       )}
 
-      <section>
-        <h2 className="font-display text-xl font-semibold">Tiendas incluidas</h2>
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {tiendas.map(t => (
-            <li key={t.id} className="rounded-full border border-borde bg-superficie px-3 py-1 text-sm">{t.nombre}</li>
+      <section id="como-comparamos" className="scroll-mt-40 rounded-2xl bg-arena-fondo px-5 py-8 sm:px-8">
+        <h2 className="text-xl font-bold">Cómo comparamos</h2>
+        <dl className="mt-5 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+          {HECHOS.map(h => (
+            <div key={h.titulo}>
+              <dt className="font-bold">{h.titulo}</dt>
+              <dd className="mt-1 text-sm leading-relaxed">{h.texto}</dd>
+            </div>
           ))}
+        </dl>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-bold">Tiendas incluidas</h2>
+        <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-lg">
+          {tiendas.map(t => <li key={t.id}>{t.nombre}</li>)}
         </ul>
+        <p className="mt-3">
+          <Link href="/tiendas" className="inline-flex min-h-11 items-center font-semibold text-enlace underline">Ver cuándo leímos cada tienda</Link>
+        </p>
       </section>
     </div>
   );

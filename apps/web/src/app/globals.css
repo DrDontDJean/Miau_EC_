@@ -1,64 +1,109 @@
 @import "tailwindcss";
 
-/* Paleta: azul y amarillo de Ecuador, neutros con un leve tinte azul. */
+/* Paleta DecideAqui: cian de marca, azul acero para actuar, grafito para leer, arena para separar. */
 :root {
-  --fondo: #f4f6fa;
+  --fondo: #ffffff;
+  --seccion: #f3ece7;
   --superficie: #ffffff;
-  --texto: #1a2033;
-  --suave: #59627a;
-  --borde: #dde2ee;
-  --acento: #0b3d91;
-  --acento-suave: #e6edfa;
-  --cabecera: #0b3d91;
-  --en-cabecera: #ffffff;
-  --amarillo: #f5c400;
-  --en-amarillo: #0b2a66;
-  --verde: #0f7a43;
-  --rojo: #b3261e;
+  --texto: #36364f;
+  --suave: #7a5b4e;
+  --borde: #e0d2c8;
+  --arena: #cfb8aa;
+  --cian: #13a9cf;
+  --en-cian: #1f1f33;
+  --accion: #346a8f;
+  --accion-fuerte: #2a5675;
+  --en-accion: #ffffff;
+  --borde-accion: #346a8f;
+  --enlace: #346a8f;
+  --arena-fondo: #cfb8aa;
+  --pie: #36364f;
+  --en-pie: #f3ece7;
+  --foco: #1f1f33;
+  /* Series del historial: solo la paleta fijada; el trazo (continuo, rayas, puntos) distingue lo que el color no. */
+  --serie-1: #346a8f;
+  --serie-2: #7a5b4e;
+  --serie-3: #36364f;
+  --serie-4: #346a8f;
+  --serie-5: #7a5b4e;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fondo: #10141f;
-    --superficie: #171c2a;
-    --texto: #e4e8f3;
-    --suave: #9aa3ba;
-    --borde: #2a3145;
-    --acento: #8fb3ff;
-    --acento-suave: #1d2840;
-    --cabecera: #0d2a63;
-    --verde: #4cc685;
-    --rojo: #ff7b72;
+    --fondo: #1c1c2b;
+    --seccion: #25253a;
+    --superficie: #2a2a40;
+    --texto: #efe8e3;
+    --suave: #cfb8aa;
+    --borde: #4a4a66;
+    --arena: #7a5b4e;
+    --accion-fuerte: #3f7ba3;
+    --borde-accion: #7fb2d4;
+    --enlace: #8ccbe6;
+    --arena-fondo: #4a3a33;
+    --pie: #141421;
+    --foco: #13a9cf;
+    --serie-1: #13a9cf;
+    --serie-2: #cfb8aa;
+    --serie-3: #efe8e3;
+    --serie-4: #13a9cf;
+    --serie-5: #cfb8aa;
     color-scheme: dark;
   }
 }
 
 @theme inline {
   --color-fondo: var(--fondo);
+  --color-seccion: var(--seccion);
   --color-superficie: var(--superficie);
   --color-texto: var(--texto);
   --color-suave: var(--suave);
   --color-borde: var(--borde);
-  --color-acento: var(--acento);
-  --color-acento-suave: var(--acento-suave);
-  --color-cabecera: var(--cabecera);
-  --color-en-cabecera: var(--en-cabecera);
-  --color-amarillo: var(--amarillo);
-  --color-en-amarillo: var(--en-amarillo);
-  --color-verde: var(--verde);
-  --color-rojo: var(--rojo);
-  --font-sans: var(--fuente-texto), system-ui, sans-serif;
-  --font-display: var(--fuente-titulos), system-ui, sans-serif;
+  --color-arena: var(--arena);
+  --color-cian: var(--cian);
+  --color-en-cian: var(--en-cian);
+  --color-accion: var(--accion);
+  --color-accion-fuerte: var(--accion-fuerte);
+  --color-en-accion: var(--en-accion);
+  --color-borde-accion: var(--borde-accion);
+  --color-enlace: var(--enlace);
+  --color-arena-fondo: var(--arena-fondo);
+  --color-pie: var(--pie);
+  --color-en-pie: var(--en-pie);
+  --font-sans: var(--fuente), system-ui, sans-serif;
 }
 
 body {
   background: var(--fondo);
   color: var(--texto);
+  caret-color: var(--accion);
+  scrollbar-color: var(--arena) transparent;
 }
 
 h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
 
-:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+a { text-underline-offset: 0.2em; }
+
+::selection { background: var(--cian); color: var(--en-cian); }
+
+:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+.sobre-oscuro :focus-visible { outline-color: var(--cian); }
+
+/* Enlace que cubre toda la tarjeta sin anidar elementos interactivos. */
+.enlace-tarjeta::after { content: ""; position: absolute; inset: 0; }
+
+/* Fila de pestañas: se desliza en móvil sin barra visible. */
+.sin-barra { scrollbar-width: none; }
+.sin-barra::-webkit-scrollbar { display: none; }
+
+/* Texto del historial en unidades del SVG: grande en el teléfono (el SVG se encoge), normal en escritorio. */
+.eje { font-size: 16px; }
+@media (min-width: 640px) { .eje { font-size: 11px; } }
+
+@keyframes latido { 50% { opacity: 0.45; } }
+.esqueleto { background: var(--seccion); border-radius: 8px; animation: latido 1.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
