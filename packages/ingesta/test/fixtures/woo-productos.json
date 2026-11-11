@@ -1,0 +1,68 @@
+[
+ {
+  "id": 33788,
+  "name": "Televisor-tv 75&#8243; QLED 4K UHD 75TIKIQMINLED &#8211; Google TV 5.0 Indurama",
+  "sku": "10038194",
+  "permalink": "https://www.computron.com.ec/producto/televisor-tv-75-qled-4k-uhd-75tikiqminled-google-tv-5-0-indurama/",
+  "is_in_stock": true,
+  "prices": {
+   "price": "98867",
+   "regular_price": "99899",
+   "sale_price": "98867",
+   "price_range": null,
+   "currency_code": "USD",
+   "currency_symbol": "$",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "$",
+   "currency_suffix": ""
+  },
+  "images": [
+   {
+    "src": "https://www.computron.com.ec/wp-content/uploads/2026/11/10038194-5.webp"
+   }
+  ],
+  "brands": [
+   {
+    "id": 334,
+    "name": "INDURAMA",
+    "slug": "indurama",
+    "link": "https://www.computron.com.ec/marca/indurama/"
+   }
+  ]
+ },
+ {
+  "id": 33765,
+  "name": "Televisor-tv 43&#8243; LED Crystal 4K UHD Smart TIZEN-UN43U8000HPCZE Samsung",
+  "sku": "UN43U8000HPCZE",
+  "permalink": "https://www.computron.com.ec/producto/televisor-tv-43-led-crystal-4k-uhd-smart-tizen-un43u8000hpcze-samsung/",
+  "is_in_stock": true,
+  "prices": {
+   "price": "32586",
+   "regular_price": "32999",
+   "sale_price": "32586",
+   "price_range": null,
+   "currency_code": "USD",
+   "currency_symbol": "$",
+   "currency_minor_unit": 2,
+   "currency_decimal_separator": ",",
+   "currency_thousand_separator": ".",
+   "currency_prefix": "$",
+   "currency_suffix": ""
+  },
+  "images": [
+   {
+    "src": "https://www.computron.com.ec/wp-content/uploads/2026/10/UN43U8000HPCZE-3.webp"
+   }
+  ],
+  "brands": [
+   {
+    "id": 244,
+    "name": "SAMSUNG",
+    "slug": "samsung",
+    "link": "https://www.computron.com.ec/marca/samsung/"
+   }
+  ]
+ }
+]

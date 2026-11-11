@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Tipos (dominio, ingesta, web)
+        run: |
+          npx tsc -p packages/dominio
+          npx tsc -p packages/ingesta
+          cd apps/web && npx next typegen && npx tsc --noEmit
+      - name: Pruebas (prototipo, dominio, ingesta contra PGlite, rutas de la web)
+        run: npm test
+      - name: Migraciones y escenario de ingesta en Postgres (PGlite)
+        run: npm run validar:esquema
+      - name: Sintaxis de las pruebas k6
+        uses: grafana/setup-k6-action@v1
+      - run: for f in tests/carga/*.js; do k6 inspect "$f" > /dev/null && echo "ok $f"; done

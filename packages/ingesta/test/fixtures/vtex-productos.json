@@ -1,0 +1,62 @@
+[
+ {
+  "productId": "8050",
+  "productName": "TELEVISOR MINI HOME ENV 18.5\"",
+  "brand": "ENV",
+  "link": "https://www.novicompu.com/televisor-mini-home-env-18-5-pulg-/p",
+  "items": [
+   {
+    "itemId": "9890",
+    "name": "TELEVISOR MINI HOME ENV 18.5 PULG",
+    "nameComplete": "TELEVISOR MINI HOME ENV 18.5\" TELEVISOR MINI HOME ENV 18.5 PULG",
+    "ean": "",
+    "images": [
+     {
+      "imageUrl": "https://novicompu.vteximg.com.br/arquivos/ids/182057/1AENV8423.png?v=639250147760630000"
+     }
+    ],
+    "sellers": [
+     {
+      "sellerId": "1",
+      "commertialOffer": {
+       "Price": 113,
+       "ListPrice": 113,
+       "AvailableQuantity": 1144,
+       "IsAvailable": true
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "productId": "8020",
+  "productName": "TELEVISOR ENV 43\" ANDROID 14.0",
+  "brand": "ENV",
+  "link": "https://www.novicompu.com/televisor-env-43--android-14-0/p",
+  "items": [
+   {
+    "itemId": "9858",
+    "name": "TELEVISOR ENV 43\" ANDROID 14.0",
+    "nameComplete": "TELEVISOR ENV 43\" ANDROID 14.0",
+    "ean": "",
+    "images": [
+     {
+      "imageUrl": "https://novicompu.vteximg.com.br/arquivos/ids/182050/1AENV8447.png?v=639250149137470000"
+     }
+    ],
+    "sellers": [
+     {
+      "sellerId": "1",
+      "commertialOffer": {
+       "Price": 262,
+       "ListPrice": 262,
+       "AvailableQuantity": 300,
+       "IsAvailable": true
+      }
+     }
+    ]
+   }
+  ]
+ }
+]

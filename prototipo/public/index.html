@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es-EC">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparador EC · precios de tiendas de Ecuador</title>
+  <link rel="stylesheet" href="/estilos.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23ffd100'/><text x='16' y='22' font-size='16' text-anchor='middle' font-family='Arial' font-weight='700' fill='%23003893'>$</text></svg>">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="contenedor cabecera-fila">
+      <a class="logo" href="/"><span class="logo-marca">$</span> Comparador <b>EC</b></a>
+      <form id="form-busqueda" class="busqueda" role="search">
+        <input id="q" name="q" type="search" placeholder="Busca un producto: televisor 55, refrigeradora, laptop i5…" autocomplete="off" required minlength="2" aria-label="Producto a buscar">
+        <button type="submit">Comparar</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <section id="tiendas" class="tiendas" aria-label="Tiendas consultadas"></section>
+
+    <div id="barra" class="barra" hidden>
+      <p id="resumen" class="resumen"></p>
+      <label class="orden">Ordenar:
+        <select id="orden">
+          <option value="relevancia">Relevancia</option>
+          <option value="precio_asc">Precio: menor a mayor</option>
+          <option value="precio_desc">Precio: mayor a menor</option>
+          <option value="ahorro">Mayor descuento</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="estado" class="estado">
+      <h1>Compara precios entre tiendas de Ecuador</h1>
+      <p>Buscamos el producto en varias tiendas online a la vez, agrupamos las ofertas iguales y te llevamos a la tienda que elijas.</p>
+      <div class="sugerencias">
+        <button type="button" data-q="televisor 55">televisor 55</button>
+        <button type="button" data-q="refrigeradora">refrigeradora</button>
+        <button type="button" data-q="laptop">laptop</button>
+        <button type="button" data-q="lavadora">lavadora</button>
+        <button type="button" data-q="samsung galaxy">samsung galaxy</button>
+      </div>
+    </div>
+
+    <section id="resultados" class="resultados" aria-live="polite"></section>
+  </main>
+
+  <footer class="pie contenedor">
+    Precios en USD tomados en el momento de la búsqueda desde los catálogos públicos de cada tienda. Pueden cambiar: confirma siempre en la tienda.
+    Al hacer clic en "Ver oferta" pasas por nuestro redirector, que registra el clic y te lleva a la tienda.
+  </footer>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

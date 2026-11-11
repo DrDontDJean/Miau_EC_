@@ -1,0 +1,6 @@
+# Finales de línea LF en el repositorio; los scripts de bash y los YAML siempre LF.
+* text=auto eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.jpg binary
+*.png binary

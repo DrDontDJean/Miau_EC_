@@ -1,0 +1,11 @@
+{
+  "name": "@comparador/prototipo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Prototipo inicial: consulta las tiendas en vivo en cada búsqueda (reemplazado por ingesta + web).",
+  "scripts": {
+    "start": "node src/servidor.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

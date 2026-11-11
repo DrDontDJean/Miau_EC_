@@ -1,0 +1,12 @@
+{
+  "name": "@comparador/dominio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reglas puras del comparador: validación de ofertas y clave de producto.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  }
+}

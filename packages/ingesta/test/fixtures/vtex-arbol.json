@@ -1,0 +1,90 @@
+[
+ {
+  "id": 3,
+  "name": "Ofertas",
+  "hasChildren": false,
+  "children": []
+ },
+ {
+  "id": 4,
+  "name": "Salud",
+  "hasChildren": true,
+  "children": [
+   {
+    "id": 172,
+    "name": "Mascarillas",
+    "hasChildren": false,
+    "children": []
+   },
+   {
+    "id": 173,
+    "name": "Insumos Médicos",
+    "hasChildren": true,
+    "children": [
+     {
+      "id": 327,
+      "name": "Diagnostico y Monitoreo",
+      "hasChildren": true,
+      "children": []
+     },
+     {
+      "id": 328,
+      "name": "Mobiliario Clinico",
+      "hasChildren": true,
+      "children": []
+     },
+     {
+      "id": 329,
+      "name": "Movilidad y Rehabilitacion",
+      "hasChildren": true,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": 174,
+    "name": "Higiene",
+    "hasChildren": false,
+    "children": []
+   }
+  ]
+ },
+ {
+  "id": 5,
+  "name": "Celulares",
+  "hasChildren": true,
+  "children": [
+   {
+    "id": 192,
+    "name": "Accesorios",
+    "hasChildren": true,
+    "children": [
+     {
+      "id": 193,
+      "name": "Cargadores",
+      "hasChildren": false,
+      "children": []
+     },
+     {
+      "id": 194,
+      "name": "Aros de Luz",
+      "hasChildren": false,
+      "children": []
+     },
+     {
+      "id": 200,
+      "name": "Power Banks",
+      "hasChildren": false,
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": 242,
+    "name": "Celulares",
+    "hasChildren": false,
+    "children": []
+   }
+  ]
+ }
+]

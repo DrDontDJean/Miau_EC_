@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Paleta: azul y amarillo de Ecuador, neutros con un leve tinte azul. */
+:root {
+  --fondo: #f4f6fa;
+  --superficie: #ffffff;
+  --texto: #1a2033;
+  --suave: #59627a;
+  --borde: #dde2ee;
+  --acento: #0b3d91;
+  --acento-suave: #e6edfa;
+  --cabecera: #0b3d91;
+  --en-cabecera: #ffffff;
+  --amarillo: #f5c400;
+  --en-amarillo: #0b2a66;
+  --verde: #0f7a43;
+  --rojo: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #10141f;
+    --superficie: #171c2a;
+    --texto: #e4e8f3;
+    --suave: #9aa3ba;
+    --borde: #2a3145;
+    --acento: #8fb3ff;
+    --acento-suave: #1d2840;
+    --cabecera: #0d2a63;
+    --verde: #4cc685;
+    --rojo: #ff7b72;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-borde: var(--borde);
+  --color-acento: var(--acento);
+  --color-acento-suave: var(--acento-suave);
+  --color-cabecera: var(--cabecera);
+  --color-en-cabecera: var(--en-cabecera);
+  --color-amarillo: var(--amarillo);
+  --color-en-amarillo: var(--en-amarillo);
+  --color-verde: var(--verde);
+  --color-rojo: var(--rojo);
+  --font-sans: var(--fuente-texto), system-ui, sans-serif;
+  --font-display: var(--fuente-titulos), system-ui, sans-serif;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+h1, h2, h3 { text-wrap: balance; }
+
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

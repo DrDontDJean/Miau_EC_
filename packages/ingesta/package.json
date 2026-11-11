@@ -1,0 +1,20 @@
+{
+  "name": "@comparador/ingesta",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Worker de ingesta: lee el catálogo de cada tienda y lo carga en Supabase.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "ingesta": "node --env-file-if-exists=../../.env src/cli.ts"
+  },
+  "dependencies": {
+    "@comparador/dominio": "0.1.0",
+    "postgres": "^4.1.0",
+    "zod": "^4.6.7"
+  }
+}

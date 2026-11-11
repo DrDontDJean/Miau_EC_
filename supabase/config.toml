@@ -1,0 +1,5 @@
+# Configuración mínima para la CLI de Supabase (supabase link / db push / start).
+project_id = "comparador-ecuador"
+
+[db]
+major_version = 17

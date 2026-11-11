@@ -1,0 +1,244 @@
+<title>Arquitectura DecideAqui</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: misma identidad que el informe de investigación; columna de lectura de 70ch con tablas y diagramas a 1000px. */
+:root {
+  --bg: #f6f7fb; --surface: #ffffff; --fg: #1a2033; --muted: #59627a; --line: #dde2ee;
+  --accent: #0b3d91; --accent-soft: #e6edfa; --flag: #f5c400;
+  --ok: #0f7a43; --warn: #b25b00; --bad: #b3261e; --code-bg: #eef1f8;
+  --font-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141f; --surface: #171c2a; --fg: #e4e8f3; --muted: #9aa3ba; --line: #2a3145;
+    --accent: #8fb3ff; --accent-soft: #1d2840; --flag: #f5c400; --ok: #4cc685; --warn: #f0a34a; --bad: #ff7b72; --code-bg: #1d2333;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141f; --surface: #171c2a; --fg: #e4e8f3; --muted: #9aa3ba; --line: #2a3145;
+  --accent: #8fb3ff; --accent-soft: #1d2840; --flag: #f5c400; --ok: #4cc685; --warn: #f0a34a; --bad: #ff7b72; --code-bg: #1d2333;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.6; }
+.wrap { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+.prose { max-width: 70ch; }
+header.hero { border-top: 6px solid var(--flag); box-shadow: inset 0 6px 0 var(--accent); padding-block: 40px 16px; }
+.eyebrow { font-family: var(--font-mono); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 800; margin-top: 8px; }
+h2 { font-size: 26px; font-weight: 700; margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--line); }
+h3 { font-size: 19px; font-weight: 700; margin-top: 28px; }
+p { margin: 12px 0; }
+a { color: var(--accent); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+pre.code { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 13.5px; line-height: 1.5; }
+pre.code code { background: none; padding: 0; }
+.lede { font-size: 19px; color: var(--muted); max-width: 66ch; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 24px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.fact b { display: block; font-family: var(--font-display); font-size: 26px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.fact span { color: var(--muted); font-size: 14px; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; margin: 16px 0; }
+.diagram pre.mermaid { margin: 0; background: none; }
+.tbl { overflow-x: auto; margin: 12px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; background: var(--code-bg); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.pill { font-family: var(--font-mono); font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+.adr { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 16px 0; }
+.adr article { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; min-width: 0; }
+.adr .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.adr h3 { margin-top: 2px; font-size: 17px; }
+.adr p { font-size: 15px; margin: 6px 0 0; color: var(--muted); }
+.barriers { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 8px; counter-reset: b; }
+.barriers li { counter-increment: b; display: grid; grid-template-columns: 36px 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.barriers li::before { content: counter(b); font-family: var(--font-display); font-weight: 800; color: var(--surface); background: var(--accent); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; }
+.barriers li > div { min-width: 0; }
+.barriers strong { display: block; }
+.k6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.k6 div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.k6 h3 { margin: 0; font-size: 16px; }
+.k6 .big { font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.k6 p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.note { border-left: 4px solid var(--flag); background: var(--surface); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+ul { padding-left: 20px; } li { margin: 4px 0; }
+@media (max-width: 720px) { body { font-size: 16px; } }
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">Prácticas laborales · 6 de noviembre de 2026</div>
+  <h1>Arquitectura de DecideAqui</h1>
+  <p class="lede">De un prototipo que consulta tiendas en vivo a un sistema con ingesta programada, base operativa y analítica en Supabase, web en Vercel, CI en GitHub y pruebas de carga con k6.</p>
+  <div class="facts">
+    <div class="fact"><b>≈ 45.000</b><span>productos medidos en 5 tiendas</span></div>
+    <div class="fact"><b>cada 24 h</b><span>corrida de ingesta (~11 min)</span></div>
+    <div class="fact"><b>34 / 34</b><span>comprobaciones del esquema en Postgres</span></div>
+    <div class="fact"><b>0 %</b><span>errores en k6 sobre Vercel (48.378 peticiones)</span></div>
+  </div>
+</header>
+
+<h2>Vista general</h2>
+<div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph Tiendas
+    V[VTEX: Comandato, Novicompu, Kywi, Pycca]
+    W[WooCommerce: Computron]
+    F[Feeds acordados]
+  end
+  subgraph GitHub
+    GA[Actions: ingesta diaria]
+    CI[Actions: CI, migraciones, k6]
+  end
+  subgraph Supabase[Supabase Postgres 17 us-east-1]
+    ING[(ingesta y calidad)]
+    OLTP[(public: OLTP)]
+    OLAP[(analitica: ROLAP)]
+    CRON[pg_cron]
+  end
+  subgraph Vercel[Vercel iad1]
+    WEB[Next.js]
+  end
+  U((Comprador))
+  V & W & F --> GA
+  GA -->|cargar_lote| ING --> OLTP
+  OLTP --> OLAP
+  CRON -->|refrescar| OLAP
+  U --> WEB -->|buscar_productos| OLTP
+  WEB -->|registrar_salida 302| U
+  CI -->|db push| Supabase
+  CI -->|k6| WEB
+</pre></div>
+
+<h2>Ingesta de datos</h2>
+<p class="prose">La web deja de llamar a las tiendas. Un workflow de GitHub Actions lee el catálogo completo de cada tienda una vez al día (01:17 en Ecuador), a 1 petición por segundo y comprobando antes su robots.txt. Cada página pasa por normalización y validación, y se carga en lotes de hasta 1.000 ofertas con <code>ingesta.cargar_lote</code>. Esa función empareja la oferta con su producto (por EAN, código de modelo o a mano), detecta saltos de precio y escribe el historial solo cuando algo cambia.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Tienda</th><th>Plataforma</th><th class="num">Productos</th><th class="num">KB por producto</th><th class="num">Páginas por corrida</th></tr></thead>
+  <tbody>
+    <tr><td>Kywi</td><td>VTEX</td><td class="num">31.435</td><td class="num">10,6</td><td class="num">629</td></tr>
+    <tr><td>Pycca</td><td>VTEX</td><td class="num">9.164</td><td class="num">18,1</td><td class="num">184</td></tr>
+    <tr><td>Novicompu</td><td>VTEX</td><td class="num">3.023</td><td class="num">30,9</td><td class="num">61</td></tr>
+    <tr><td>Computron</td><td>WooCommerce</td><td class="num">1.305</td><td class="num">12,7</td><td class="num">14</td></tr>
+    <tr><td>Comandato</td><td>VTEX</td><td class="num">321</td><td class="num">29,7</td><td class="num">7</td></tr>
+  </tbody>
+</table></div>
+<p class="prose">El worker se diseñó con módulos profundos (skill <code>/codebase-design</code> del plugin): una sola función pública, <code>ejecutarCorrida(tienda, {fuente, almacen})</code>, y dos seams reales. <b>Fuente</b> tiene adaptadores VTEX, WooCommerce y feed. <b>Almacén</b> tiene adaptadores Postgres y memoria para las pruebas.</p>
+
+<h2>OLTP + ROLAP en un solo Postgres</h2>
+<div class="tbl"><table>
+  <thead><tr><th></th><th>Operación (OLTP)</th><th>Análisis (ROLAP)</th></tr></thead>
+  <tbody>
+    <tr><td>Esquema</td><td><code>public</code>, normalizado</td><td><code>analitica</code>, en estrella</td></tr>
+    <tr><td>Tablas</td><td>tienda, categoría, producto, oferta, precio_historial, salida</td><td>dim_fecha, dim_tienda, dim_categoria, dim_producto; hechos precio_historial (SCD2) y salida</td></tr>
+    <tr><td>Consultas</td><td>Búsqueda, ficha, salida, upsert por lotes</td><td>Precio semanal, salidas diarias, competitividad por tienda</td></tr>
+    <tr><td>Frescura</td><td>Inmediata</td><td>Vistas materializadas que pg_cron refresca 2 h después de la corrida diaria</td></tr>
+  </tbody>
+</table></div>
+<p class="prose">Un almacén aparte o un cubo MOLAP no se justifican con menos de 2 millones de filas de hechos al año. Umbral para reconsiderarlo: 50 millones de filas o 2 s de p95 en consultas analíticas.</p>
+
+<h2>Diseño de la base</h2>
+<div class="diagram"><pre class="mermaid">
+erDiagram
+  TIENDA ||--o{ OFERTA : publica
+  PRODUCTO ||--o{ OFERTA : agrupa
+  CATEGORIA ||--o{ PRODUCTO : clasifica
+  OFERTA ||--o{ PRECIO_HISTORIAL : periodos
+  OFERTA ||--o{ SALIDA : recibe
+  TIENDA ||--o{ CORRIDA : ingesta
+  CORRIDA ||--o{ CUARENTENA : rechaza
+  CORRIDA ||--o{ INCIDENCIA : registra
+  REGLA ||--o{ INCIDENCIA : define
+</pre></div>
+<ul class="prose">
+  <li><b>Historial SCD2:</b> una fila por periodo con el mismo precio y disponibilidad. Lo escribe un disparador solo cuando hay cambios.</li>
+  <li><b>Sin respuestas crudas:</b> una corrida cruda pesaría unos 900 MB y el plan gratuito tiene 500 MB. Cada oferta guarda una huella (hash) y el crudo se conserva solo en cuarentena, durante 30 días.</li>
+  <li><b>Búsqueda:</b> texto completo en español sin acentos y, si no hay resultados, trigramas palabra por palabra para errores de tipeo.</li>
+  <li><b>Seguridad:</b> RLS en todas las tablas. La clave pública solo lee y registra salidas mediante <code>registrar_salida</code>, que toma la URL de la base y bloquea redirecciones abiertas.</li>
+</ul>
+
+<h2>Calidad de datos</h2>
+<ol class="barriers">
+  <li><div><strong>Forma</strong>Zod valida la estructura de cada respuesta. Si una tienda cambia su API, la corrida falla entera en vez de cargar basura.</div></li>
+  <li><div><strong>Reglas por oferta</strong>13 reglas en <code>calidad.regla</code>. Las bloqueantes (precio inválido, URL fuera de la tienda, título vacío, SKU ausente, moneda) mandan a cuarentena. Las advertencias se anotan como incidencias.</div></li>
+  <li><div><strong>Restricciones en la base</strong>CHECK de precio, precio de lista, URL https y EAN numérico, como última barrera.</div></li>
+  <li><div><strong>Controles por corrida</strong>Un salto de precio se publica solo si la siguiente corrida lo confirma. Una oferta se desactiva tras faltar dos veces. Si el volumen cae a menos de la mitad, la corrida queda <code>parcial</code> y no desactiva nada. Una tienda sin corrida correcta en 24 h genera alerta.</div></li>
+</ol>
+
+<h2>Stack</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Capa</th><th>Elección</th><th>Descartado</th></tr></thead>
+  <tbody>
+    <tr><td>Web</td><td>Next.js (App Router) en Vercel iad1</td><td>Astro, SvelteKit, React Router 7</td></tr>
+    <tr><td>Lenguaje</td><td>TypeScript estricto, Node.js 24 LTS</td><td>JavaScript, Python</td></tr>
+    <tr><td>Base de datos</td><td>Supabase Postgres 17 (us-east-1), RLS, pg_cron</td><td>Neon, Firebase</td></tr>
+    <tr><td>Acceso a datos</td><td>supabase-js + tipos generados (web); postgres.js por el pooler (worker)</td><td>Prisma, Drizzle</td></tr>
+    <tr><td>Validación</td><td>Zod 4</td><td>Valibot</td></tr>
+    <tr><td>Búsqueda</td><td>Postgres FTS + pg_trgm</td><td>Algolia, Meilisearch, Elasticsearch</td></tr>
+    <tr><td>Programación</td><td>GitHub Actions (ingesta) + pg_cron</td><td>Vercel Cron, Edge Functions</td></tr>
+    <tr><td>Monorepo</td><td>npm workspaces: apps/web, packages/dominio, packages/ingesta</td><td>pnpm + Turborepo</td></tr>
+    <tr><td>Pruebas</td><td>Vitest, PGlite, Playwright, k6</td><td>Jest, Postgres en Docker</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Decisiones registradas (ADR)</h3>
+<div class="adr">
+  <article><div class="n">0001</div><h3>Ingesta por corridas programadas</h3><p>La consulta en vivo tardaba hasta 8 s con caché fría y no permite historial.</p></article>
+  <article><div class="n">0002</div><h3>Un Postgres para OLTP y ROLAP</h3><p>Menos de 2 millones de filas de hechos al año no justifican un almacén aparte.</p></article>
+  <article><div class="n">0003</div><h3>Historial SCD2 sin payload crudo</h3><p>900 MB por corrida contra 500 MB del plan gratuito.</p></article>
+  <article><div class="n">0004</div><h3>Ingesta en GitHub Actions</h3><p>Corridas de 11 min no caben en Vercel Cron ni en Edge Functions.</p></article>
+  <article><div class="n">0005</div><h3>Next.js en Vercel</h3><p>Renderizado en servidor e ISR para el SEO, más vistas previas por pull request.</p></article>
+  <article><div class="n">0006</div><h3>Búsqueda en Postgres</h3><p>Sin motor externo hasta que el p95 pase de 300 ms.</p></article>
+  <article><div class="n">0007</div><h3>Solo tiendas con permiso</h3><p>4 tiendas bloquean la búsqueda en robots.txt; entrarán por feed.</p></article>
+</div>
+
+<h2>Pruebas</h2>
+<h3>k6 contra Vercel y Supabase</h3>
+<p class="prose">Vista previa de la rama <code>prueba-k6</code> en Vercel (iad1), leyendo el Supabase de producción con las 46.937 ofertas de la ingesta completa. Se lanzó desde Quito el 6 de noviembre de 2026. Las salidas llevan <code>X-Prueba-Carga</code>, quedan como <code>es_prueba</code> y la analítica las excluye. Las 4 pruebas cumplieron sus 17 umbrales, sin ninguna petición fallida en 48.378.</p>
+<div class="k6">
+  <div><h3>Humo · 1 usuario</h3><div class="big">p95 233 ms</div><p>39 peticiones; salidas p95 244 ms. Umbral: 800 ms.</p></div>
+  <div><h3>Carga · 50 usuarios, 5 min</h3><div class="big">p95 229 ms</div><p>5.183 peticiones a 17 por segundo; p99 303 ms; salidas p95 218 ms. Umbral: 500 ms.</p></div>
+  <div><h3>Estrés · hasta 100 usuarios</h3><div class="big">p95 250 ms</div><p>28.784 peticiones a 53 por segundo; máximo 1,1 s. Umbral: 2 s.</p></div>
+  <div><h3>Pico · 10 → 100 búsquedas/s</h3><div class="big">p95 419 ms</div><p>14.372 peticiones; 20 iteraciones descartadas de 100 permitidas; máximo 3,1 s. Umbral: 1,5 s.</p></div>
+</div>
+<p class="note">Estrés y pico se corrieron con topes reducidos (100 usuarios y 100 búsquedas por segundo, en vez de 300 y 400), porque la vista previa comparte la base de producción y el plan gratuito de Supabase. Evidencia completa en <code>pruebas/k6-vercel.txt</code>.</p>
+
+<h3>k6 contra el prototipo local</h3>
+<div class="k6">
+  <div><h3>Humo · 1 usuario</h3><div class="big">p95 2,5 ms</div><p>40 peticiones, 0 errores, 100 % de checks.</p></div>
+  <div><h3>Carga · 50 usuarios</h3><div class="big">p95 2,0 ms</div><p>2.828 peticiones a 15 por segundo, 0 errores.</p></div>
+  <div><h3>Pico · 300 iteraciones/s</h3><div class="big">p95 1,7 ms</div><p>27.915 peticiones a 232 por segundo, 0 descartadas.</p></div>
+  <div><h3>Humo con caché fría</h3><div class="big">máx 8,0 s</div><p>Falló el umbral de 800 ms: prueba de que la consulta en vivo no escala (ADR 0001).</p></div>
+</div>
+<p class="note">Estas cifras miden solo el servidor local con caché caliente, sin red, Vercel ni Supabase. Sirven para comparar con las de arriba.</p>
+
+<h3>Base de datos en PGlite</h3>
+<p class="prose"><code>npm run validar:esquema</code> aplica las 5 migraciones en Postgres compilado a WebAssembly, sin Docker, y recorre un escenario completo. Resultado: 34 de 34 comprobaciones. Cubre el emparejamiento entre tiendas, el salto de precio retenido y confirmado, la desactivación tras dos ausencias, el corte por caída de volumen, la cuarentena, RLS y lo que la clave pública no puede hacer, la búsqueda con tildes y errores de tipeo, la salida segura y las vistas ROLAP.</p>
+
+<h2>CI/CD y configuración</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Workflow</th><th>Cuándo</th><th>Qué hace</th><th>Estado</th></tr></thead>
+  <tbody>
+    <tr><td><code>ci.yml</code></td><td>Pull request y main</td><td>Pruebas, esquema en PGlite, sintaxis k6</td><td><span class="pill ok">listo</span></td></tr>
+    <tr><td><code>migraciones.yml</code></td><td>Cambios en supabase/migrations</td><td><code>supabase db push</code></td><td><span class="pill ok">listo</span></td></tr>
+    <tr><td><code>carga-k6.yml</code></td><td>A mano, con la URL de una vista previa</td><td>k6 humo, carga, estrés o pico</td><td><span class="pill ok">listo</span></td></tr>
+    <tr><td><code>ingesta.yml</code></td><td>Diario, 06:17 UTC</td><td>Corrida de todas las tiendas activas</td><td><span class="pill ok">listo</span></td></tr>
+  </tbody>
+</table></div>
+<p class="prose"><code>scripts/wizard-configuracion.sh</code>, generado con la skill <code>/wizard</code> del plugin, te guía en 7 etapas: GitHub CLI, repositorio, proyecto de Supabase, claves, conexión del worker, importación en Vercel y bypass para k6. Escribe cada valor en <code>.env</code> y carga en GitHub solo los 2 secretos que usan los workflows. Las migraciones se aplican con <code>supabase db push --db-url</code>, sin token de Supabase.</p>
+
+<h2>Siguientes pasos</h2>
+<ul class="prose">
+  <li>Ejecutar el wizard para crear las cuentas y conectar GitHub, Supabase y Vercel.</li>
+  <li>Convertir esta arquitectura en tickets con <code>/to-spec</code> y <code>/to-tickets</code>, e implementarlos con <code>/implement</code> y <code>/tdd</code>: paquete dominio, worker de ingesta y web Next.js.</li>
+  <li>Definir con el tutor si el proyecto será comercial: eso decide los planes de Vercel y Supabase.</li>
+</ul>
+</div>

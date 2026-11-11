@@ -1,0 +1,27 @@
+name: Migraciones Supabase
+
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/migrations/**']
+  workflow_dispatch:
+
+concurrency: supabase-produccion
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    environment: produccion   # exige aprobación manual si la configuras en GitHub
+    env:
+      # URI del Session pooler (IPv4; los runners de GitHub no tienen IPv6).
+      # Con --db-url no hace falta "supabase link" ni un token de acceso de Supabase.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Migraciones pendientes
+        run: supabase migration list --db-url "$DATABASE_URL"
+      - name: Aplicar
+        run: supabase db push --db-url "$DATABASE_URL" --yes

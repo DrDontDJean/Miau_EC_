@@ -1,0 +1,54 @@
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_duration{tipo:buscar}
+    ✓ 'p(95)<500' p(95)=2.04ms
+    ✓ 'p(99)<1200' p(99)=2.54ms
+
+    http_req_duration{tipo:salida}
+    ✓ 'p(95)<250' p(95)=2.49ms
+
+    http_req_failed{tipo:buscar}
+    ✓ 'rate<0.01' rate=0.00%
+
+    http_req_failed{tipo:salida}
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 5656    30.619892/s
+    checks_succeeded...: 100.00% 5656 out of 5656
+    checks_failed......: 0.00%   0 out of 5656
+
+    ✓ buscar: 200
+    ✓ buscar: trae productos
+    ✓ salida: 302
+    ✓ salida: destino https fuera de nuestro dominio
+
+    HTTP
+    http_req_duration..............: avg=1.28ms min=0s       med=1.27ms max=17.58ms p(90)=1.92ms p(95)=2.15ms
+      { expected_response:true }...: avg=1.28ms min=0s       med=1.27ms max=17.58ms p(90)=1.92ms p(95)=2.15ms
+      { tipo:buscar }..............: avg=1.2ms  min=0s       med=1.19ms max=17.58ms p(90)=1.77ms p(95)=2.04ms
+      { tipo:salida }..............: avg=1.76ms min=505.29µs med=1.73ms max=4.42ms  p(90)=2.28ms p(95)=2.49ms
+    http_req_failed................: 0.00%  0 out of 2828
+      { tipo:buscar }..............: 0.00%  0 out of 2440
+      { tipo:salida }..............: 0.00%  0 out of 383
+    http_reqs......................: 2828   15.309946/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.26s  min=1s       med=3.06s  max=7.84s   p(90)=5.55s  p(95)=6.23s 
+    iterations.....................: 1868   10.112793/s
+    vus............................: 1      min=0         max=50
+    vus_max........................: 50     min=50        max=50
+
+    NETWORK
+    data_received..................: 93 MB  501 kB/s
+    data_sent......................: 393 kB 2.1 kB/s
+
+
+

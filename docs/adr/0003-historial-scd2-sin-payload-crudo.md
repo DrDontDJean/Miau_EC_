@@ -1,0 +1,3 @@
+# Historial de precios solo con cambios (SCD tipo 2) y sin guardar el payload crudo
+
+Cada producto VTEX pesa entre 10 y 30 KB en JSON. Guardar la respuesta cruda de una corrida completa ocuparía unos 900 MB, casi el doble de los 500 MB del plan gratuito de Supabase, y eso en cada corrida. No guardamos el crudo: cada oferta lleva una huella (hash) de su contenido normalizado y solo se escribe historial cuando cambia el precio, el precio de lista o la disponibilidad (filas con `valido_desde` y `valido_hasta`). El crudo se conserva únicamente para las ofertas en cuarentena, durante 30 días, para poder depurarlas.

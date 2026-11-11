@@ -1,0 +1,31 @@
+{
+  "name": "comparador-ecuador",
+  "description": "Comparador de precios de tiendas online de Ecuador (monorepo)",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "validar:esquema": "node scripts/validar-esquema.mjs",
+    "prototipo": "npm start --workspace prototipo",
+    "dev": "npm run dev --workspace apps/web",
+    "ingesta": "npm run ingesta --workspace packages/ingesta",
+    "k6:humo": "k6 run tests/carga/humo.js",
+    "k6:carga": "k6 run tests/carga/carga.js",
+    "k6:estres": "k6 run tests/carga/estres.js",
+    "k6:pico": "k6 run tests/carga/pico.js"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.7",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "workspaces": [
+    "prototipo",
+    "packages/*",
+    "apps/*"
+  ]
+}

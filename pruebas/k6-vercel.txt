@@ -1,0 +1,41 @@
+Pruebas k6 contra la vista previa de Vercel (6 nov 2026)
+URL: la de rama de la vista previa, <proyecto>-git-prueba-k6-<equipo>.vercel.app (región iad1)
+Base: Supabase de producción (us-east-1), con las 46.937 ofertas de la ingesta completa
+k6 v2.3.0 desde Quito; cabecera X-Prueba-Carga (salidas con es_prueba = true); redirecciones no seguidas
+Umbrales: ✓ = no se cruzó (pasó); los 4 escenarios terminaron con código de salida 0.
+
+== humo — 1 usuario, 30 s
+peticiones: 39 (1.2/s) · fallidas: 0.00 % · checks: 100.00 %
+búsqueda: mediana 194 ms · p95 233 ms · máx 247 ms
+salida:   mediana 176 ms · p95 244 ms · máx 263 ms
+✓ http_req_failed{tipo:buscar} rate<0.01
+✓ http_req_failed{tipo:salida} rate<0.01
+✓ checks rate>0.99
+✓ http_req_duration{tipo:salida} p(95)<300
+✓ http_req_duration{tipo:buscar} p(95)<800
+
+== carga — rampa a 50 usuarios, 3 min de meseta (5 min)
+peticiones: 5183 (17.1/s) · fallidas: 0.00 % · checks: 100.00 %
+búsqueda: mediana 169 ms · p95 229 ms · máx 708 ms
+salida:   mediana 155 ms · p95 218 ms · máx 754 ms
+✓ checks rate>0.99
+✓ http_req_failed{tipo:salida} rate<0.01
+✓ http_req_failed{tipo:buscar} rate<0.01
+✓ http_req_duration{tipo:salida} p(95)<250
+✓ http_req_duration{tipo:buscar} p(95)<500
+✓ http_req_duration{tipo:buscar} p(99)<1200
+
+== estres — escalones de 25, 50, 75 y 100 usuarios, 1 min cada uno (VUS=100 ESCALON=1m)
+peticiones: 28784 (53.0/s) · fallidas: 0.00 % · checks: 100.00 %
+búsqueda: mediana 163 ms · p95 250 ms · máx 1114 ms
+✓ http_req_failed rate<0.10
+✓ http_req_duration{tipo:buscar} p(95)<2000
+
+== pico — 10 → 100 búsquedas/s en 30 s, 1 min de meseta (RPS=100 MESETA=1m)
+peticiones: 14372 (94.9/s) · fallidas: 0.00 % · checks: 100.00 %
+búsqueda: mediana 236 ms · p95 419 ms · máx 3118 ms
+iteraciones descartadas: 20
+✓ dropped_iterations count<100
+✓ http_req_duration{tipo:buscar} p(95)<1500
+✓ http_req_failed{tipo:buscar} rate<0.02
+

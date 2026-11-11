@@ -1,0 +1,11 @@
+✔ valida EAN-13 con dígito de control (0.58ms)
+✔ extrae códigos de modelo e ignora specs genéricas (0.7082ms)
+✔ normaliza VTEX: elige el vendedor más barato con stock (0.36ms)
+✔ normaliza WooCommerce: precios en centavos y entidades HTML (0.2339ms)
+✔ agrupa la misma referencia de distintas tiendas y ordena por precio (0.3341ms)
+✔ redirector: ida y vuelta, con UTM y sin redirección abierta (0.36ms)
+✔ API de extremo a extremo con tiendas simuladas: busca, agrupa y redirige registrando el clic (26.6282ms)
+✔ el servidor no sirve archivos fuera de /public (6.6213ms)
+ℹ tests 8
+ℹ pass 8
+ℹ fail 0

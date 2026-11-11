@@ -1,0 +1,8 @@
+tiendas: Comandato=ok(6), Novicompu=ok(14), Kywi=ok(4), Pycca=ok(8), Computron=ok(0)
+- Televisor 55" UHD Google TV 55MNUHD Motorola | 2 tiendas | Comandato $373.03 / Pycca $521.73 | clave modelo:55MNUHD
+- Televisor 55" 4K UHD Tizen UN55U8000FPCZE Samsung | 3 tiendas | Comandato $451.33 / Novicompu $591.82 / Pycca $652.17 | clave modelo:UN55U8000FPCZE
+- Televisor 55" 4K QLED Google TV GLT55TPQ10 Riviera | 2 tiendas | Comandato $428.71 / Pycca $695.64 | clave modelo:GLT55TPQ10
+enlace interno: /ir?o=comandato~L3RlbGV2aXNvci01NS0tNGstdWhkLXRpemVuLXVuNTV1ODAwMGZwY3plLXNhbXN1bmcvcA&pos=1&p=451.33
+redirector: 302 -> https://www.comandato.com/televisor-55--4k-uhd-tizen-un55u8000fpcze-samsung/p?utm_source=comparador-ec&utm_medium=cpc&utm_content=pos-1
+tienda responde: 200 | título de la página: Televisor 55&quot; 4K UHD Tizen UN55U8000FPCZE Samsung
+clics: {"total":1,"porTienda":{"comandato":1}}

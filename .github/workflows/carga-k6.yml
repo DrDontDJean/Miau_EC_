@@ -1,0 +1,37 @@
+name: Pruebas de carga (k6)
+
+# Solo manual: las pruebas de carga se ejecutan al final, cuando la web, la ingesta
+# y la base estén listas. Para correrlas en cada vista previa de Vercel, añade
+# el disparador "deployment_status:" y la condición comentada más abajo.
+on:
+  workflow_dispatch:
+    inputs:
+      escenario:
+        type: choice
+        options: [humo, carga, estres, pico]
+        default: humo
+      base_url:
+        description: 'URL de rama de la vista previa: https://<proyecto>-git-<rama>-<equipo>.vercel.app'
+        required: true
+      tope:
+        description: 'Tope de estrés (usuarios) o de pico (búsquedas/s). La vista previa usa la base de producción'
+        default: '100'
+
+jobs:
+  k6:
+    # if: github.event.deployment_status.state == 'success' && startsWith(github.event.deployment.environment, 'Preview')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: grafana/setup-k6-action@v1
+      - uses: grafana/run-k6-action@v1
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          VERCEL_BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Vacío en los demás escenarios: carga.js mantiene sus 50 usuarios por defecto.
+          VUS: ${{ inputs.escenario == 'estres' && inputs.tope || '' }}
+          ESCALON: ${{ inputs.escenario == 'estres' && '1m' || '' }}
+          RPS: ${{ inputs.escenario == 'pico' && inputs.tope || '' }}
+        with:
+          path: tests/carga/${{ inputs.escenario }}.js
