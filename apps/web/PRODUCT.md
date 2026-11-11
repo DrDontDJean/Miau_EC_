@@ -17,7 +17,7 @@ Solo agrupa ofertas que son realmente el mismo producto (por EAN o código de mo
 
 ## Operating Context
 - Un worker lee el catálogo de cada tienda una vez al día (06:17 UTC); los precios no son en vivo.
-- Precios en dólares, con impuestos incluidos.
+- Precio publicado por la tienda.
 - Superficies actuales: inicio, `/buscar`, `/p/[id]` con historial de precios, `/tiendas`, `/api/buscar` e `/ir/[id]`.
 - Vocabulario del dominio en `GLOSSARY.md` (tienda, oferta, producto, precio desde, salto de precio, corrida, cuarentena).
 

@@ -18,7 +18,7 @@ function Opcion({ href, activa, children }: { href: string; activa: boolean; chi
     <Link
       href={href} aria-current={activa ? 'true' : undefined}
       className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-sm font-semibold transition-colors ${
-        activa ? 'border-cian bg-cian text-en-cian' : 'border-arena text-texto hover:bg-seccion'}`}
+        activa ? 'border-cian bg-cian text-en-cian' : 'border-borde-control text-texto hover:bg-seccion'}`}
     >
       {activa && (
         <svg viewBox="0 0 16 16" aria-hidden="true" className="size-4 fill-none stroke-current stroke-2">

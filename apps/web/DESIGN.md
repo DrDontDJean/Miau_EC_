@@ -9,6 +9,7 @@ colors:
   suave: "#7a5b4e"
   borde: "#e0d2c8"
   arena: "#cfb8aa"
+  borde-control: "#957868"
   cian: "#13a9cf"
   en-cian: "#1f1f33"
   accion: "#346a8f"
@@ -69,6 +70,16 @@ typography:
     fontWeight: 800
     lineHeight: 1.33
     fontFeature: "tnum"
+  eje-grafico:
+    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1
+  eje-grafico-movil:
+    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1
 rounded:
   sm: "4px"
   md: "6px"
@@ -202,7 +213,8 @@ Paleta de catálogo cálido: cian de marca, azul acero para actuar, grafito para
 ### Neutral
 - **Grafito** (`--texto`): todo el texto principal, 11.68:1 sobre fondo blanco. En claro también es el color del pie (`--pie`).
 - **Marrón tierra** (`--suave`): texto secundario, notas, metadatos de oferta, pestañas inactivas, ejes del gráfico. 6.12:1 sobre blanco, 5.23:1 sobre `--seccion`.
-- **Arena** (`--arena`): bordes de controles secundarios (campo de búsqueda, chips, botón "Ver en la tienda"), subrayado hover de pestaña, barra de desplazamiento.
+- **Arena** (`--arena`): subrayado hover de pestaña y barra de desplazamiento.
+- **Borde de control** (`--borde-control`): borde del campo de búsqueda, de las pastillas de orden, filtro y salida, y del botón "Ver en la tienda". Claro #957868: 4.07:1 sobre blanco y 3.48:1 sobre `--seccion`; oscuro #9c8578: 4.83:1 sobre `--fondo`, 4.02:1 sobre `--superficie` y 4.30:1 sobre `--seccion`. Nunca se sustituye por `--arena`, que no llega a 3:1.
 - **Arena de fondo** (`--arena-fondo`): mitad horaria del sello, banda "Cómo comparamos", cabecera de la tabla de tiendas. Sobre ella solo va `--texto` (6.17:1).
 - **Lino** (`--seccion`): hover de controles secundarios y color del esqueleto de carga.
 - **Borde cálido** (`--borde`): divisores de lista, borde de tarjetas, cabecera, figura del historial y tabla.
@@ -221,6 +233,7 @@ Paleta de catálogo cálido: cian de marca, azul acero para actuar, grafito para
 | `--suave` | #cfb8aa | sobre fondo 8.87:1 |
 | `--borde` | #4a4a66 | |
 | `--arena` | #7a5b4e | |
+| `--borde-control` | #9c8578 | 4.02:1 a 4.83:1 contra fondos |
 | `--accion-fuerte` | #3f7ba3 | blanco 4.59:1 |
 | `--borde-accion` | #7fb2d4 | sobre fondo 7.37:1 |
 | `--enlace` | #8ccbe6 | sobre fondo 9.44:1 |
@@ -271,7 +284,7 @@ Contenedor central de 1152 px (`max-w-6xl`) con 16 px de margen lateral en todos
 - **Cabecera:** fija (`sticky`) desde 640 px; en móvil se desplaza. Las pestañas se deslizan horizontalmente sin barra visible.
 - **Controles de búsqueda:** en móvil plegados en un `details` ("Ordenar y filtrar") para que los precios entren en la primera pantalla; en escritorio, a la vista entre dos filetes.
 - **Pie:** tres columnas (2fr 1fr 1fr) desde 640 px.
-- **Historial:** SVG de 480 × 230 que se encoge; el texto del eje sube a 16 px en móvil y baja a 11 px desde 640 px para mantener la lectura.
+- **Historial:** SVG de 480 × 230 que se encoge; el texto del eje sube a 16 px en móvil y baja a 11 px desde 640 px para mantener la lectura (pasos `eje-grafico-movil` y `eje-grafico`, en unidades del SVG: unos 11 px reales en móvil y 13 px en escritorio).
 
 Todo control pulsable mide al menos 44 px de alto.
 
@@ -306,11 +319,11 @@ Franja cian a todo el ancho sobre la cabecera, texto de 0.875rem en tinta profun
 ### Botones
 - **Forma:** 8 px, 44 px de alto, texto en 600.
 - **Primario ("Ver oferta", "Comparar"):** fondo `--accion`, borde `--borde-accion`, texto blanco; hover `--accion-fuerte` con `transition-colors`.
-- **Secundario ("Ver en la tienda", salidas rápidas):** transparente, borde `--arena`, texto `--texto`; hover fondo `--seccion`. Se usa cuando la oferta no tiene stock.
+- **Secundario ("Ver en la tienda", salidas rápidas):** transparente, borde `--borde-control`, texto `--texto`; hover fondo `--seccion`. Se usa cuando la oferta no tiene stock.
 - **Enlace de texto:** `--enlace`, subrayado, 600, en un área de 44 px.
 
 ### Chips de orden y filtro
-- **Reposo:** borde `--arena`, texto `--texto` 0.875rem 600, 44 px de alto; hover `--seccion`.
+- **Reposo:** borde `--borde-control`, texto `--texto` 0.875rem 600, 44 px de alto; hover `--seccion`.
 - **Activo:** fondo y borde `--cian`, tinta profunda y una marca de verificación SVG delante. El estado activo se lee por la marca, no solo por el color. Son enlaces normales que funcionan sin JavaScript.
 
 ### Tarjeta de producto
@@ -320,7 +333,7 @@ Franja cian a todo el ancho sobre la cabecera, texto de 0.875rem en tinta profun
 - **Interacción:** toda la tarjeta es enlace (pseudo-elemento que cubre el `article`); hover subraya el título y aplica la elevación de tarjeta.
 
 ### Campo de búsqueda
-Campo de 44 px, borde `--arena` sin lado derecho, fondo `--superficie`, marcador en `--suave`, unido al botón acero "Comparar". Formulario GET que funciona sin JavaScript.
+Campo de 44 px, borde `--borde-control` sin lado derecho, fondo `--superficie`, marcador en `--suave`, unido al botón acero "Comparar". Formulario GET que funciona sin JavaScript.
 
 ### Navegación
 - **Pestañas de búsquedas rápidas:** fila bajo el buscador, 44 px, texto 600 en `--suave`; hover subrayado inferior de 3 px en `--arena` y texto `--texto`; activa con subrayado `--cian` y `aria-current`.

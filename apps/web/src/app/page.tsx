@@ -5,7 +5,7 @@ import { RejillaProductos } from '@/components/ofertas';
 // Solo hechos que se pueden comprobar en el propio sitio: sin cifras ni testimonios.
 const HECHOS = [
   { titulo: 'El mismo producto', texto: 'Solo juntamos ofertas que comparten código de barras (EAN) o código de modelo del fabricante.' },
-  { titulo: 'El precio de la tienda', texto: 'Mostramos el precio que cada tienda publica en su web, en dólares y con impuestos.' },
+  { titulo: 'El precio de la tienda', texto: 'Mostramos el precio que cada tienda publica en su web.' },
   { titulo: 'Actualizado cada día', texto: 'Leemos los catálogos una vez al día. En cada producto ves a qué hora leímos el precio de cada tienda.' },
   { titulo: 'Sin patrocinios', texto: 'Ninguna tienda paga por aparecer primero: el orden lo decide el precio.' },
 ];

@@ -9,7 +9,7 @@ export function SalidasRapidas({ titulo = 'Prueba con una de estas búsquedas' }
       <ul className="mt-2 flex flex-wrap gap-2">
         {RAPIDAS.map(r => (
           <li key={r.q}>
-            <Link href={rutaBusqueda(r.q)} className="flex min-h-11 items-center rounded-lg border border-arena px-4 font-semibold transition-colors hover:bg-seccion">
+            <Link href={rutaBusqueda(r.q)} className="flex min-h-11 items-center rounded-lg border border-borde-control px-4 font-semibold transition-colors hover:bg-seccion">
               {r.etiqueta}
             </Link>
           </li>

@@ -160,7 +160,7 @@ export function ListaOfertas({ ofertas, comparar, ahora }: { ofertas: Oferta[]; 
                 className={`order-4 col-span-2 flex min-h-11 items-center justify-center rounded-lg border px-4 font-semibold transition-colors sm:order-none sm:col-span-1 ${
                   o.disponible
                     ? 'border-borde-accion bg-accion text-en-accion hover:bg-accion-fuerte'
-                    : 'border-arena text-texto hover:bg-seccion'
+                    : 'border-borde-control text-texto hover:bg-seccion'
                 }`}
               >
                 {o.disponible ? 'Ver oferta' : 'Ver en la tienda'}

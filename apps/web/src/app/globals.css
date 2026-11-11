@@ -9,6 +9,8 @@
   --suave: #7a5b4e;
   --borde: #e0d2c8;
   --arena: #cfb8aa;
+  /* Borde de controles (campo, pastillas, botón secundario): 3:1 o más contra fondo, superficie y sección. */
+  --borde-control: #957868;
   --cian: #13a9cf;
   --en-cian: #1f1f33;
   --accion: #346a8f;
@@ -38,6 +40,7 @@
     --suave: #cfb8aa;
     --borde: #4a4a66;
     --arena: #7a5b4e;
+    --borde-control: #9c8578;
     --accion-fuerte: #3f7ba3;
     --borde-accion: #7fb2d4;
     --enlace: #8ccbe6;
@@ -61,6 +64,7 @@
   --color-suave: var(--suave);
   --color-borde: var(--borde);
   --color-arena: var(--arena);
+  --color-borde-control: var(--borde-control);
   --color-cian: var(--cian);
   --color-en-cian: var(--en-cian);
   --color-accion: var(--accion);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-11T21:21:35.427Z",
+  "generatedAt": "2026-11-11T22:11:07.255Z",
   "title": "Design System: DecideAqui",
   "extensions": {
     "colorMeta": {
@@ -114,6 +114,22 @@
           "#e5d8d0",
           "#f1eae6",
           "#faf8f7"
+        ]
+      },
+      "borde-control": {
+        "role": "neutral",
+        "displayName": "Borde de control",
+        "canonical": "#957868",
+        "dark": "#9c8578",
+        "tonalRamp": [
+          "#2e241f",
+          "#4f3f37",
+          "#715a4f",
+          "#957868",
+          "#b39b8f",
+          "#cbb9b0",
+          "#e2d7d1",
+          "#f5f0ed"
         ]
       },
       "cian": {
@@ -373,6 +389,14 @@
       "precio-oferta": {
         "displayName": "Precio de oferta",
         "purpose": "Cifra de cada fila de ofertas sin sello."
+      },
+      "eje-grafico": {
+        "displayName": "Eje del gráfico",
+        "purpose": "Ejes del historial en escritorio, en unidades del SVG."
+      },
+      "eje-grafico-movil": {
+        "displayName": "Eje del gráfico (móvil)",
+        "purpose": "Ejes del historial bajo 640 px, en unidades del SVG."
       }
     },
     "shadows": [
@@ -452,9 +476,9 @@
       "name": "Botón secundario",
       "kind": "button",
       "refersTo": "boton-secundario",
-      "description": "Ver en la tienda (sin stock) y salidas rápidas: borde arena.",
+      "description": "Ver en la tienda (sin stock) y salidas rápidas: borde de control.",
       "html": "<a class=\"ds-btn-sec\" href=\"#\">Ver en la tienda</a>",
-      "css": ".ds-btn-sec{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--arena,#cfb8aa);background:transparent;color:var(--texto,#36364f);font-weight:600;text-decoration:none;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-btn-sec:hover{background:var(--seccion,#f3ece7)}.ds-btn-sec:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+      "css": ".ds-btn-sec{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--borde-control,#957868);background:transparent;color:var(--texto,#36364f);font-weight:600;text-decoration:none;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-btn-sec:hover{background:var(--seccion,#f3ece7)}.ds-btn-sec:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
     },
     {
       "name": "Buscador",
@@ -462,15 +486,15 @@
       "refersTo": "buscador-campo",
       "description": "Campo y botón Comparar unidos en una pieza.",
       "html": "<form class=\"ds-buscador\" role=\"search\"><input class=\"ds-buscador-campo\" type=\"search\" placeholder=\"Busca un producto\"><button class=\"ds-buscador-boton\" type=\"submit\">Comparar</button></form>",
-      "css": ".ds-buscador{display:flex;max-width:520px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-buscador-campo{flex:1;min-width:0;height:44px;padding:0 16px;border:1px solid var(--arena,#cfb8aa);border-right:0;border-radius:8px 0 0 8px;background:var(--superficie,#fff);color:var(--texto,#36364f);font-size:16px;font-family:inherit}.ds-buscador-campo::placeholder{color:var(--suave,#7a5b4e)}.ds-buscador-boton{height:44px;padding:0 20px;border:1px solid var(--borde-accion,#346a8f);border-radius:0 8px 8px 0;background:var(--accion,#346a8f);color:var(--en-accion,#fff);font-weight:600;font-size:16px;font-family:inherit;cursor:pointer;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-buscador-boton:hover{background:var(--accion-fuerte,#2a5675)}.ds-buscador-campo:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}.ds-buscador-boton:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+      "css": ".ds-buscador{display:flex;max-width:520px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-buscador-campo{flex:1;min-width:0;height:44px;padding:0 16px;border:1px solid var(--borde-control,#957868);border-right:0;border-radius:8px 0 0 8px;background:var(--superficie,#fff);color:var(--texto,#36364f);font-size:16px;font-family:inherit}.ds-buscador-campo::placeholder{color:var(--suave,#7a5b4e)}.ds-buscador-boton{height:44px;padding:0 20px;border:1px solid var(--borde-accion,#346a8f);border-radius:0 8px 8px 0;background:var(--accion,#346a8f);color:var(--en-accion,#fff);font-weight:600;font-size:16px;font-family:inherit;cursor:pointer;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-buscador-boton:hover{background:var(--accion-fuerte,#2a5675)}.ds-buscador-campo:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}.ds-buscador-boton:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
     },
     {
       "name": "Chips de orden y filtro",
       "kind": "chip",
       "refersTo": "opcion-activa",
-      "description": "Activo en cian con marca de verificación; reposo con borde arena.",
+      "description": "Activo en cian con marca de verificación; reposo con borde de control.",
       "html": "<nav class=\"ds-chips\"><a class=\"ds-chip ds-chip-activa\" href=\"#\" aria-current=\"true\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 8.5l3.2 3L13 4.5\"/></svg>Menor precio</a><a class=\"ds-chip\" href=\"#\">Solo en stock</a></nav>",
-      "css": ".ds-chips{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-chip{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--arena,#cfb8aa);color:var(--texto,#36364f);font-size:14px;font-weight:600;text-decoration:none;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-chip:hover{background:var(--seccion,#f3ece7)}.ds-chip-activa,.ds-chip-activa:hover{background:var(--cian,#13a9cf);border-color:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33)}.ds-chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-chip:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
+      "css": ".ds-chips{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;}.ds-chip{display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:8px;border:1px solid var(--borde-control,#957868);color:var(--texto,#36364f);font-size:14px;font-weight:600;text-decoration:none;transition:background-color 150ms cubic-bezier(.4,0,.2,1)}.ds-chip:hover{background:var(--seccion,#f3ece7)}.ds-chip-activa,.ds-chip-activa:hover{background:var(--cian,#13a9cf);border-color:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33)}.ds-chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-chip:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
     },
     {
       "name": "Pestañas de búsquedas rápidas",

@@ -11,7 +11,7 @@ export function FormularioBusqueda({ q = '' }: { q?: string }) {
       <input
         id="q" name="q" type="search" defaultValue={q} key={q} required minLength={2} maxLength={80}
         placeholder="Busca un producto"
-        className="h-11 min-w-0 flex-1 rounded-l-lg border border-r-0 border-arena bg-superficie px-4 text-base text-texto placeholder:text-suave"
+        className="h-11 min-w-0 flex-1 rounded-l-lg border border-r-0 border-borde-control bg-superficie px-4 text-base text-texto placeholder:text-suave"
       />
       <button type="submit" className="h-11 rounded-r-lg border border-borde-accion bg-accion px-5 font-semibold text-en-accion transition-colors hover:bg-accion-fuerte">
         Comparar
