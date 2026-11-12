@@ -39,12 +39,9 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
     return (
       <section>
         {titulo}
-        <p className="mt-2 max-w-[65ch]">
-          Precio registrado desde el {diaCorto(inicio)}.
-        </p>
         {cambios.length === 0
-          ? <p className="mt-1 text-suave">Sin cambios de precio desde entonces.</p>
-          : <ListaCambios cambios={cambios} />}
+          ? <p className="mt-2 max-w-[65ch]">Sin cambios de precio desde el {diaCorto(inicio)}.</p>
+          : <><p className="mt-2 max-w-[65ch]">Precio registrado desde el {diaCorto(inicio)}.</p><ListaCambios cambios={cambios} /></>}
       </section>
     );
   }
@@ -101,7 +98,7 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
                 <span className="font-semibold">{s.o.tienda}</span>
                 <span className="inline-flex overflow-hidden rounded text-sm">
                   <strong className="bg-cian px-1.5 text-en-cian tabular-nums">{precio(s.o.precio)}</strong>
-                  <span className="bg-seccion px-1.5">leído {leido(s.o.vistoUltimaVez, ahora)}</span>
+                  <span className="bg-seccion px-1.5">actualizado {leido(s.o.vistoUltimaVez, ahora)}</span>
                 </span>
               </li>
             ))}

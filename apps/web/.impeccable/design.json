@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-12T04:31:35.270Z",
-  "title": "Design System: DecideAqui",
+  "title": "Design System: DecideAquí",
   "extensions": {
     "colorMeta": {
       "fondo": {
@@ -134,7 +134,7 @@
       },
       "cian": {
         "role": "secondary",
-        "displayName": "Cian DecideAqui",
+        "displayName": "Cian DecideAquí",
         "canonical": "#13a9cf",
         "dark": "#13a9cf",
         "tonalRamp": [
@@ -440,7 +440,7 @@
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Etiquetas, chips, stock y botones, en mayúscula inicial normal."
+        "purpose": "Etiquetas, chips, disponibilidad y botones, en mayúscula inicial normal."
       },
       "nav": {
         "displayName": "Nav",
@@ -521,7 +521,7 @@
       "kind": "nav",
       "refersTo": "cabecera",
       "description": "Franja de hechos en acero fuerte, logotipo y buscador en píldora sobre acero, pestañas de categorías en mayúsculas.",
-      "html": "<header class=\"ds-cab\"><p class=\"ds-cab-franja\">Precios leídos el 11 nov, 11:14 · Sin patrocinios</p><div class=\"ds-cab-fila\"><span class=\"ds-logo\">Decide<span>Aqui</span></span><form class=\"ds-busca\"><input placeholder=\"Buscar un producto\"><button type=\"button\">Buscar</button></form></div><nav class=\"ds-pest\"><a aria-current=\"page\">Televisores</a><a>Laptops</a></nav></header>",
+      "html": "<header class=\"ds-cab\"><p class=\"ds-cab-franja\">Precios actualizados el 11 nov, 11:14 · Sin patrocinios</p><div class=\"ds-cab-fila\"><span class=\"ds-logo\">Decide<span>Aquí</span></span><form class=\"ds-busca\"><input placeholder=\"¿Qué está buscando?\"><button type=\"button\">Buscar</button></form></div><nav class=\"ds-pest\"><a aria-current=\"page\">Televisores</a><a>Laptops</a></nav></header>",
       "css": ".ds-cab{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;background:var(--cabecera,#346a8f);color:#fff}.ds-cab-franja{margin:0;background:var(--cabecera-fuerte,#2a5675);color:var(--en-cabecera-suave,#dde7ee);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:8px 16px;text-align:center}.ds-cab-fila{display:flex;gap:24px;align-items:center;padding:12px 16px}.ds-logo{font-size:24px;font-weight:800;letter-spacing:-.025em}.ds-logo span{margin-left:2px;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);border-radius:6px;padding:0 6px}.ds-busca{display:flex;flex:1}.ds-busca input{flex:1;height:44px;border:0;border-radius:9999px 0 0 9999px;padding:0 16px;font:inherit;color:#36364f}.ds-busca button{height:44px;border:0;border-radius:0 9999px 9999px 0;padding:0 20px;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);font:inherit;font-weight:600;cursor:pointer}.ds-busca :focus-visible{outline:2px solid #fff;outline-offset:2px}.ds-pest{display:flex;justify-content:center}.ds-pest a{display:flex;align-items:center;height:44px;padding:0 12px;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--en-cabecera-suave,#dde7ee);border-bottom:3px solid transparent;cursor:pointer}.ds-pest a:hover{border-color:rgb(255 255 255/.4);color:#fff}.ds-pest a[aria-current]{color:#fff;border-color:#fff}"
     },
     {
@@ -536,7 +536,7 @@
       "name": "Botón de contorno",
       "kind": "button",
       "refersTo": "boton-contorno",
-      "description": "Ofertas con stock que no son la más barata.",
+      "description": "Ofertas disponibles que no son la más barata.",
       "html": "<button class=\"ds-btn-contorno\">Ver oferta</button>",
       "css": ".ds-btn-contorno{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;min-height:44px;padding:0 16px;border:1px solid var(--borde-accion,#346a8f);border-radius:8px;background:var(--superficie,#fff);color:var(--enlace,#346a8f);font-weight:600;font-size:16px;cursor:pointer;transition:background-color 150ms}.ds-btn-contorno:hover{background:var(--seccion,#e3e6eb)}.ds-btn-contorno:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
     },
@@ -544,7 +544,7 @@
       "name": "Botón secundario",
       "kind": "button",
       "refersTo": "boton-secundario",
-      "description": "Ofertas sin stock (\"Ver en la tienda\") y salidas rápidas.",
+      "description": "Ofertas agotadas y salidas rápidas.",
       "html": "<button class=\"ds-btn-sec\">Ver en la tienda</button>",
       "css": ".ds-btn-sec{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;min-height:44px;padding:0 16px;border:1px solid var(--borde-control,#737a88);border-radius:8px;background:transparent;color:var(--texto,#36364f);font-weight:600;font-size:16px;cursor:pointer;transition:background-color 150ms}.ds-btn-sec:hover{background:var(--seccion,#e3e6eb)}.ds-btn-sec:focus-visible{outline:2px solid var(--foco,#1f1f33);outline-offset:2px}"
     },
@@ -560,8 +560,8 @@
       "name": "Fila de oferta más barata",
       "kind": "custom",
       "refersTo": "fila-oferta-barata",
-      "description": "Borde cian, fondo resalte, marca \"Más barato\" junto al precio y botón sólido.",
-      "html": "<div class=\"ds-fila\"><div><p class=\"ds-fila-tienda\">Comandato</p><p class=\"ds-fila-stock\">✓ En stock</p></div><div class=\"ds-fila-precio\"><p><span class=\"ds-marca\">Más barato</span><strong>$156,51</strong></p><p class=\"ds-fila-leido\">leído hoy 11:11</p></div></div>",
+      "description": "Borde cian, fondo resalte, marca \"Mejor precio\" junto al precio y botón sólido.",
+      "html": "<div class=\"ds-fila\"><div><p class=\"ds-fila-tienda\">Comandato</p><p class=\"ds-fila-stock\">✓ Disponible</p></div><div class=\"ds-fila-precio\"><p><span class=\"ds-marca\">Mejor precio</span><strong>$156,51</strong></p></div></div>",
       "css": ".ds-fila{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;display:flex;justify-content:space-between;align-items:center;gap:16px;width:420px;padding:16px;border:2px solid var(--cian,#13a9cf);border-radius:8px;background:var(--resalte,#e7f6fa);color:var(--texto,#36364f)}.ds-fila p{margin:0}.ds-fila-tienda{font-size:18px;font-weight:700}.ds-fila-stock{font-size:14px;font-weight:600}.ds-fila-precio{text-align:right}.ds-fila-precio p:first-child{display:flex;align-items:baseline;gap:8px;justify-content:flex-end}.ds-fila-precio strong{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}.ds-marca{white-space:nowrap;border-radius:9999px;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);padding:2px 8px;font-size:12px;font-weight:600}.ds-fila-leido{font-size:12px;color:var(--suave,#5f6070)}"
     },
     {
@@ -569,7 +569,7 @@
       "kind": "custom",
       "refersTo": "panel",
       "description": "Panel fijo de la ficha: etiqueta cian, precio grande, datos de la tienda y el único botón sólido.",
-      "html": "<aside class=\"ds-recuadro\"><p class=\"ds-etiqueta\">Precio más bajo</p><p class=\"ds-recuadro-precio\">$156,51</p><dl><dt>Tienda</dt><dd>Comandato</dd><dt>Leído</dt><dd>hoy 11:11</dd></dl><a class=\"ds-recuadro-btn\">Ver oferta en Comandato</a></aside>",
+      "html": "<aside class=\"ds-recuadro\"><p class=\"ds-etiqueta\">Precio más bajo</p><p class=\"ds-recuadro-precio\">$156,51</p><dl><dt>Vendido por</dt><dd>Comandato</dd><dt>Actualizado</dt><dd>hoy, 11:11</dd></dl><a class=\"ds-recuadro-btn\">Ir a Comandato</a></aside>",
       "css": ".ds-recuadro{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;width:300px;padding:24px;border-radius:16px;background:var(--superficie,#fff);color:var(--texto,#36364f)}.ds-recuadro p{margin:0}.ds-etiqueta{width:fit-content;border-radius:9999px;background:var(--cian,#13a9cf);color:var(--en-cian,#1f1f33);padding:2px 10px;font-size:14px;font-weight:600}.ds-recuadro-precio{margin-top:4px!important;font-size:48px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}.ds-recuadro dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:16px 0 0;font-size:14px}.ds-recuadro dt{color:var(--suave,#5f6070)}.ds-recuadro dd{margin:0;font-weight:600}.ds-recuadro-btn{display:flex;align-items:center;justify-content:center;min-height:48px;margin-top:20px;border-radius:8px;background:var(--accion,#346a8f);color:#fff;font-weight:700;cursor:pointer;transition:background-color 150ms}.ds-recuadro-btn:hover{background:var(--accion-fuerte,#2a5675)}"
     },
     {
@@ -577,7 +577,7 @@
       "kind": "chip",
       "refersTo": "chip",
       "description": "Píldoras grises con datos del producto, en mayúscula inicial normal.",
-      "html": "<ul class=\"ds-chips\"><li>En 3 tiendas</li><li>Con stock</li></ul>",
+      "html": "<ul class=\"ds-chips\"><li>En 3 tiendas</li><li>Disponible</li></ul>",
       "css": ".ds-chips{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;display:flex;gap:8px;list-style:none;margin:0;padding:0}.ds-chips li{border-radius:9999px;background:var(--seccion,#e3e6eb);color:var(--texto,#36364f);padding:4px 12px;font-size:14px;font-weight:600}"
     },
     {
@@ -585,13 +585,13 @@
       "kind": "custom",
       "refersTo": "",
       "description": "Orden activo con barra cian interior; casillas acero con conteo.",
-      "html": "<div class=\"ds-filtros\"><p class=\"ds-filtros-h\">Ordenar por</p><a class=\"ds-orden\" aria-current=\"true\">Relevancia</a><a class=\"ds-orden\">Menor precio</a><p class=\"ds-filtros-h\">Mostrar</p><a class=\"ds-casilla\"><span class=\"ds-caja on\">✓</span>Con stock<em>18</em></a><a class=\"ds-casilla\"><span class=\"ds-caja\"></span>En varias tiendas<em>7</em></a></div>",
+      "html": "<div class=\"ds-filtros\"><p class=\"ds-filtros-h\">Ordenar por</p><a class=\"ds-orden\" aria-current=\"true\">Más relevantes</a><a class=\"ds-orden\">Precio: menor a mayor</a><p class=\"ds-filtros-h\">Mostrar</p><a class=\"ds-casilla\"><span class=\"ds-caja on\">✓</span>Disponibles<em>18</em></a><a class=\"ds-casilla\"><span class=\"ds-caja\"></span>Disponible en varias tiendas<em>7</em></a></div>",
       "css": ".ds-filtros{font-family:var(--fuente,\"Hanken Grotesk\"),system-ui,sans-serif;display:flex;flex-direction:column;gap:4px;width:240px;color:var(--texto,#36364f)}.ds-filtros-h{margin:12px 0 4px;font-weight:700}.ds-orden,.ds-casilla{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:8px;cursor:pointer}.ds-orden{font-weight:600;color:var(--suave,#5f6070)}.ds-orden:hover,.ds-casilla:hover{background:var(--superficie,#fff)}.ds-orden[aria-current]{background:var(--superficie,#fff);color:var(--texto,#36364f);box-shadow:inset 3px 0 0 var(--cian,#13a9cf)}.ds-caja{display:grid;place-items:center;width:20px;height:20px;border:2px solid var(--borde-control,#737a88);border-radius:4px;background:#fff;font-size:12px}.ds-caja.on{border-color:var(--accion,#346a8f);background:var(--accion,#346a8f);color:#fff}.ds-casilla em{margin-left:auto;font-style:normal;font-size:14px;color:var(--suave,#5f6070)}"
     }
   ],
   "narrative": {
     "northStar": "El precio con fecha",
-    "overview": "DecideAqui se lee como un catálogo de tienda online, pero honesto: franja de hechos y cabecera en azul acero con buscador en píldora, paneles blancos sobre fondo gris claro y pie del mismo acero que la cabecera. La estructura es familiar a propósito.\n\nLo propio es la disciplina de funciones: el acero es la casa y la voz de actuar; el cian solo señala el precio (botón Buscar, \"Precio más bajo\", \"Más barato\", borde de la oferta más barata, punto \"hoy\"); el grafito lee y el gris separa. La portada persuade; búsqueda y ficha operan, densas y escaneables.\n\nEl registro es formal (usted), breve y sin explicaciones obvias.",
+    "overview": "DecideAquí se lee como un catálogo de tienda online, pero honesto: franja de hechos y cabecera en azul acero con buscador en píldora, paneles blancos sobre fondo gris claro y pie del mismo acero que la cabecera. La estructura es familiar a propósito.\n\nLo propio es la disciplina de funciones: el acero es la casa y la voz de actuar; el cian solo señala el precio (botón Buscar, \"Precio más bajo\", \"Mejor precio\", borde de la oferta más barata, punto \"hoy\"); el grafito lee y el gris separa. La portada persuade; búsqueda y ficha operan, densas y escaneables.\n\nEl registro es formal (usted), breve y sin explicaciones obvias.",
     "keyCharacteristics": [
       "Paneles blancos de 16 px sobre fondo gris; nada de sombras en reposo.",
       "Cabecera y pie en el mismo acero; franja superior en acero fuerte.",
@@ -614,7 +614,7 @@
       },
       {
         "name": "The Un Botón Sólido Rule",
-        "body": "Un solo botón acero sólido por decisión; el resto en contorno acero, o gris si no hay stock.",
+        "body": "Un solo botón acero sólido por decisión; el resto en contorno acero, o gris si está agotada.",
         "section": "colors"
       },
       {
@@ -643,7 +643,7 @@
       "Do poner blanco sobre el acero y usar acero para la casa y para actuar.",
       "Do dejar un único botón sólido por decisión.",
       "Do escribir en registro formal (usted), breve y sin explicar lo obvio.",
-      "Do mostrar \"leído …\" en hora de Guayaquil una vez por oferta en la ficha.",
+      "Do decir \"actualizado\" y \"Disponible / Agotado\"; la fecha va una vez, en el recuadro de precio.",
       "Do expresar estado con icono, marca o trazo además del color.",
       "Do dar 44 px a todo lo que se pulsa y mantener visible el foco."
     ],

@@ -1,5 +1,5 @@
 ---
-name: DecideAqui
+name: DecideAquí
 description: Comparador honesto de precios entre tiendas online de Ecuador; paneles blancos sobre gris, cabecera y pie en azul acero, cian solo para señalar el precio.
 colors:
   fondo: "#eef0f3"
@@ -204,15 +204,15 @@ components:
     padding: "40px 16px"
 ---
 
-# Design System: DecideAqui
+# Design System: DecideAquí
 
 ## Overview
 
 **Creative North Star: "El precio con fecha"**
 
-DecideAqui se lee como un catálogo de tienda online, pero honesto. Una franja de hechos y una cabecera en azul acero con buscador en píldora abren todas las páginas; debajo, paneles blancos sobre un fondo gris claro. El pie repite el acero de la cabecera y cierra la página. La estructura es familiar a propósito: el comprador ya sabe usarla.
+DecideAquí se lee como un catálogo de tienda online, pero honesto. Una franja de hechos y una cabecera en azul acero con buscador en píldora abren todas las páginas; debajo, paneles blancos sobre un fondo gris claro. El pie repite el acero de la cabecera y cierra la página. La estructura es familiar a propósito: el comprador ya sabe usarla.
 
-Lo propio del sistema es la disciplina de funciones. El acero es la casa: cabecera, pie, bandas de título y la voz de actuar ("Ver oferta"). El cian solo señala el precio: el botón Buscar, la etiqueta "Precio más bajo", la marca "Más barato", el borde de la oferta más barata y el punto "hoy" del historial. El grafito lee y el gris separa. La portada está en modo Persuade (banda de bienvenida con producto); la búsqueda y la ficha están en modo Operate (densas y escaneables).
+Lo propio del sistema es la disciplina de funciones. El acero es la casa: cabecera, pie, bandas de título y la voz de actuar ("Ver oferta"). El cian solo señala el precio: el botón Buscar, la etiqueta "Precio más bajo", la marca "Mejor precio", el borde de la oferta más barata y el punto "hoy" del historial. El grafito lee y el gris separa. La portada está en modo Persuade (banda de bienvenida con producto); la búsqueda y la ficha están en modo Operate (densas y escaneables).
 
 El registro es formal (usted), breve y sin explicaciones obvias.
 
@@ -235,7 +235,7 @@ Fondo gris neutro, paneles blancos, azul acero para la casa y la acción, cian c
 - **Texto suave de cabecera** (`--en-cabecera-suave`): franja de hechos (6.23:1 sobre acero fuerte), pestañas inactivas y entradillas sobre acero (4.64:1).
 
 ### Secondary
-- **Cian DecideAqui** (`--cian`): botón Buscar, detalle "Aqui" del logotipo, etiqueta "Precio más bajo", marca "Más barato", borde de la fila más barata, barra de orden activo en búsqueda, `::selection` y punto "hoy". Igual en claro y en oscuro.
+- **Cian DecideAquí** (`--cian`): botón Buscar, detalle "Aquí" del logotipo, etiqueta "Precio más bajo", marca "Mejor precio", borde de la fila más barata, barra de orden activo en búsqueda, `::selection` y punto "hoy". Igual en claro y en oscuro.
 - **Tinta profunda** (`--en-cian`): lo único que va sobre cian (5.84:1).
 - **Resalte** (`--resalte`): fondo de la fila de la oferta más barata (cian al 10 % sobre blanco, opaco).
 
@@ -244,9 +244,9 @@ Fondo gris neutro, paneles blancos, azul acero para la casa y la acción, cian c
 - **Gris sección** (`--seccion` #e3e6eb): chips de la ficha, hover de controles secundarios, esqueleto, cabecera de la tabla de tiendas.
 - **Blanco** (`--superficie`): paneles, tarjetas, filas de ofertas.
 - **Grafito** (`--texto`): texto principal, 11.68:1 sobre blanco y 10.23:1 sobre `--fondo`.
-- **Gris suave** (`--suave` #5f6070): texto secundario, notas, "leído …", conteos. 6.19:1 sobre blanco, 5.42:1 sobre `--fondo`, 4.95:1 sobre `--seccion`.
+- **Gris suave** (`--suave` #5f6070): texto secundario, notas, "Actualizado …", conteos. 6.19:1 sobre blanco, 5.42:1 sobre `--fondo`, 4.95:1 sobre `--seccion`.
 - **Borde** (`--borde`): borde de tarjetas, filas de oferta y figura del historial.
-- **Borde de control** (`--borde-control` #737a88): botón "Ver en la tienda", casillas de filtro, salidas rápidas. 4.31:1 sobre blanco, 3.78:1 sobre `--fondo`, 3.45:1 sobre `--seccion`; también hover de borde de la tarjeta.
+- **Borde de control** (`--borde-control` #737a88): botón "Ver oferta" de las ofertas agotadas, casillas de filtro, salidas rápidas. 4.31:1 sobre blanco, 3.78:1 sobre `--fondo`, 3.45:1 sobre `--seccion`; también hover de borde de la tarjeta.
 - **Arena** (`--arena`): solo la barra de desplazamiento. Sigue en la paleta, pero ya no se usa como superficie.
 - **Foco** (`--foco`): anillo de 2 px en tinta; dentro de `.en-cabecera` el anillo pasa a blanco y en `.sobre-oscuro` a cian.
 
@@ -278,7 +278,7 @@ La cabecera, el pie, `--cian`, `--en-cian`, `--accion` y `--en-accion` no cambia
 
 **The Cian Señala Rule.** El cian marca el precio y la búsqueda; no es indicador sobre el acero de la cabecera (2.11:1). Ahí los estados activos van en blanco.
 
-**The Un Botón Sólido Rule.** En cada decisión hay un solo botón acero sólido: el de la mejor oferta (recuadro de precio y fila más barata). Las demás ofertas con stock usan contorno acero; las que no tienen stock, contorno gris.
+**The Un Botón Sólido Rule.** En cada decisión hay un solo botón acero sólido: el de la mejor oferta (recuadro de precio y fila más barata). Las demás ofertas disponibles usan contorno acero; las agotadas, contorno gris. Todas dicen "Ver oferta".
 
 ## Typography
 
@@ -290,9 +290,9 @@ La cabecera, el pie, `--cian`, `--en-cian`, `--accion` y `--en-accion` no cambia
 ### Hierarchy
 - **Display** (800, 2.25rem en móvil a 3rem desde 640 px, -0.025em): titular de la portada.
 - **Headline** (800, 1.5rem a 2.25rem, -0.025em): h1 de búsqueda, ficha, tiendas y 404.
-- **Title** (700, 1.25rem a 1.5rem, sin tracking): h2 de sección ("Productos en varias tiendas", "Ofertas en 3 tiendas", "Historial de precios") y encabezados de filtros ("Ordenar por", "Mostrar") a 1rem.
+- **Title** (700, 1.25rem a 1.5rem, sin tracking): h2 de sección ("Más comparados", "Compare precios en 3 tiendas", "Historial de precios") y encabezados de filtros ("Ordenar por", "Filtrar", "Tienda") a 1rem.
 - **Body** (400, 1rem, 1.5): párrafos con medida de 60–65ch.
-- **Label** (600, 0.875rem): etiquetas, chips, stock y botones. Siempre en mayúscula inicial normal.
+- **Label** (600, 0.875rem): etiquetas, chips, disponibilidad y botones. Siempre en mayúscula inicial normal.
 - **Nav** (600, 0.875rem, 0.08em, mayúsculas): solo pestañas de categorías. La franja de hechos usa 0.75rem en mayúsculas con tracking ancho.
 - **Precio** (800, tabular): 3rem en el recuadro de la ficha, 1.875rem en la fila más barata, 1.5rem en las demás filas y 1.25rem en la tarjeta.
 
@@ -307,8 +307,8 @@ La cabecera, el pie, `--cian`, `--en-cian`, `--accion` y `--en-accion` no cambia
 
 Contenedor central de 1152 px (`max-w-6xl`) con 16 px de margen lateral; franja, cabecera, contenido y pie comparten ese eje. Ritmo en múltiplos de 4 px: 24 px entre paneles y 20–24 px de relleno dentro de cada uno.
 
-- **Portada:** banda acero (texto y categorías a la izquierda, tres productos en círculos blancos a la derecha), rejilla "Productos en varias tiendas" y línea de tiendas incluidas.
-- **Búsqueda:** banda acero con el título y las categorías; debajo, columna de filtros de 15rem y rejilla de 4 columnas desde 1024 px. En móvil los filtros se pliegan en un `details` ("Ordenar y filtrar") que resume los activos.
+- **Portada:** banda acero (texto y categorías a la izquierda, tres productos en círculos blancos a la derecha), rejilla "Más comparados" y la línea "Comparamos Comandato, …, Ver tiendas".
+- **Búsqueda:** banda acero con "Resultados para «…»", el número de productos en texto pequeño y las categorías; debajo, columna de filtros de 15rem y rejilla de 4 columnas desde 1024 px. En móvil los filtros se pliegan en un `details` ("Ordenar y filtrar") que resume los activos.
 - **Ficha:** dos columnas desde 1024 px: a la izquierda los paneles de producto, ofertas e historial; a la derecha un recuadro de precio de 21rem fijo (`sticky`) al desplazarse. En móvil todo se apila.
 - **Rejilla de productos:** 2 columnas en móvil, 3 desde 640 px, 4 desde 1024 px y 5 desde 1280 px fuera de la búsqueda.
 - **Fila de oferta:** en escritorio cuatro columnas (tienda 10rem, título flexible, precio, botón 10rem). En móvil, tienda y precio arriba; título y botón a todo el ancho debajo.
@@ -329,17 +329,17 @@ Sistema plano. La profundidad la hacen el contraste entre el gris de página y e
 Tres radios con un papel cada uno:
 - **16 px** (`rounded-2xl`): paneles, bandas acero de portada y búsqueda, recuadro de precio y tabla de tiendas.
 - **8 px** (`rounded-lg`): tarjetas, filas de oferta, botones, imagen de la ficha, figura del historial, opciones de filtro y esqueleto.
-- **Píldora** (`rounded-full`): buscador, categorías, etiqueta "Precio más bajo", marca "Más barato", chips de la ficha y círculos de producto de la portada.
+- **Píldora** (`rounded-full`): buscador, categorías, etiqueta "Precio más bajo", marca "Mejor precio", chips de la ficha y círculos de producto de la portada.
 
-Quedan dos excepciones pequeñas: el detalle "Aqui" del logotipo (6 px) y la casilla de filtro (4 px). El buscador es una sola pieza: campo blanco redondeado a la izquierda y botón cian redondeado a la derecha.
+Quedan dos excepciones pequeñas: el detalle "Aquí" del logotipo (6 px) y la casilla de filtro (4 px). El buscador es una sola pieza: campo blanco redondeado a la izquierda y botón cian redondeado a la derecha.
 
 ## Components
 
 ### Franja de hechos
-Primera línea de la cabecera, fondo acero fuerte, texto `--en-cabecera-suave` de 0.75rem en mayúsculas con icono por hecho: "Precios leídos el {día}, {hora}", "Mismo producto por EAN o modelo", "Precio que publica la tienda", "Sin patrocinios". Centrada desde 640 px; en móvil se desliza en horizontal sin barra visible.
+Primera línea de la cabecera, fondo acero fuerte, texto `--en-cabecera-suave` de 0.75rem en mayúsculas con icono por hecho: "Precios actualizados el {día}, {hora}", "Precios oficiales de cada tienda", "Sin resultados pagados". Centrada desde 640 px; en móvil se desliza en horizontal sin barra visible.
 
 ### Cabecera y buscador
-Fondo acero, logotipo "Decide" en blanco con "Aqui" sobre cian, buscador en píldora (campo blanco con lupa y marcador "Buscar un producto", botón cian "Buscar") y enlace "Tiendas" con icono desde 768 px. Formulario GET que funciona sin JavaScript.
+Fondo acero, logotipo "Decide" en blanco con "Aquí" sobre cian, buscador en píldora (campo blanco con lupa y marcador "¿Qué está buscando?", botón cian "Buscar") y enlace "Tiendas" con icono desde 768 px. Formulario GET que funciona sin JavaScript.
 
 ### Pestañas de categorías
 Fila centrada bajo el buscador, 44 px, mayúsculas con 0.08em. Inactiva en `--en-cabecera-suave` con subrayado blanco translúcido al pasar el cursor; activa en blanco con subrayado inferior de 3 px y `aria-current`.
@@ -354,31 +354,31 @@ Panel acero de 16 px en portada ("Encuentre el precio más bajo") y búsqueda ("
 - Toda la tarjeta es enlace (pseudo-elemento que cubre el `article`). Al pasar el cursor el borde pasa a `--borde-control` y el título se subraya. No lleva botón ni etiqueta sobre la imagen.
 
 ### Recuadro de precio (ficha)
-Panel blanco fijo con etiqueta cian "Precio más bajo" en píldora, precio de 3rem en 800, precio de lista tachado si la tienda lo publica, lista Tienda / Leído / Stock y botón acero sólido "Ver oferta en {tienda}" de 48 px. Debajo no lleva aviso: el aviso único va bajo la lista de ofertas.
+Panel blanco fijo con etiqueta cian "Precio más bajo" en píldora, precio de 3rem en 800, precio de lista tachado si la tienda lo publica, "Antes" con el precio de lista tachado si la tienda lo publica, "Ahorra $X frente a {tienda}" (frente a la siguiente tienda disponible), "Vendido por {tienda}", "Actualizado hoy, 11:11", disponibilidad y botón acero sólido "Ir a {tienda}" de 48 px. Debajo no lleva aviso: el aviso único va bajo la lista de ofertas.
 
 ### Lista de ofertas
-- **Fila más barata:** borde cian de 2 px, fondo `--resalte`, marca "Más barato" en píldora cian junto al precio (encima en móvil), precio 1.875rem y botón acero sólido.
-- **Otras filas con stock:** borde `--borde`, fondo blanco, precio 1.5rem y botón de contorno acero.
-- **Sin stock:** botón de contorno gris "Ver en la tienda".
-- Bajo cada precio, "leído hoy 11:11" en hora de Guayaquil. Si la lectura va más de un día por detrás de la más reciente, añade "· puede haber cambiado" en grafito 600.
-- Aviso único debajo: "Precios según la última lectura de cada tienda. Confírmelos en la tienda antes de comprar."
+- **Fila más barata:** borde cian de 2 px, fondo `--resalte`, marca "Mejor precio" en píldora cian junto al precio (encima en móvil), precio 1.875rem y botón acero sólido.
+- **Otras filas disponibles:** borde `--borde`, fondo blanco, precio 1.5rem y botón de contorno acero.
+- **Agotadas:** botón de contorno gris "Ver oferta".
+- La fecha no se repite en cada fila (ya está en el recuadro). Solo si una oferta se actualizó más de un día antes que la más reciente, su fila dice "Actualizado 9 nov 01:17 · puede haber cambiado" en grafito 600. El precio de lista va como "Antes $X" tachado.
+- Aviso único debajo: "Los precios pueden cambiar; verifique el precio final en la tienda."
 
 ### Filtros de búsqueda
-Columna con "Ordenar por" (opciones de 44 px; activa en blanco con barra interior cian a la izquierda) y "Mostrar" (casillas de 20 px: activa acero con check blanco, inactiva con borde `--borde-control`; conteo a la derecha en `--suave`). Son enlaces normales que funcionan sin JavaScript.
+Columna con "Ordenar por" (opciones de 44 px; activa en blanco con barra interior cian a la izquierda) ; "Filtrar" ("Disponibles", "Disponible en varias tiendas") y "Tienda" (casillas de 20 px: activa acero con check blanco, inactiva con borde `--borde-control`; conteo a la derecha en `--suave`). Son enlaces normales que funcionan sin JavaScript.
 
 ### Chips de la ficha
-Píldoras `--seccion` en 0.875rem 600: "En 3 tiendas", "Con stock".
+Píldoras `--seccion` en 0.875rem 600: "3 tiendas", "Disponible" / "Agotado".
 
 ### Stock
-Icono SVG de trazo (check o aspa) más texto "En stock" / "Sin stock", 0.875rem 600; con stock en `--texto` y sin stock en `--suave`.
+Icono SVG de trazo (check o aspa) más texto "Disponible" / "Agotado", 0.875rem 600; disponible en `--texto` y agotado en `--suave`.
 
 ### Historial de precios
 - Tramos escalonados por tienda con trazo de 2.5 px, color `--serie-n` y patrón de rayas propio; rejilla en `--borde` y ejes en `--suave`.
-- Leyenda fuera del SVG: muestra de trazo, nombre de tienda, precio sobre cian y "leído …" sobre `--seccion`.
+- Leyenda fuera del SVG: muestra de trazo, nombre de tienda, precio sobre cian y "actualizado …" sobre `--seccion`.
 - Con menos de 7 días no se dibuja: se dice desde cuándo se registra y se listan los cambios. Sin historial: una frase en `--suave`.
 
 ### Pie
-Fondo acero (igual que la cabecera), texto blanco, logotipo repetido, dos frases de método en registro formal y listas "Buscar" y "Los datos"; foco en blanco.
+Fondo acero (igual que la cabecera), texto blanco, logotipo repetido, dos frases breves en registro formal y listas "Categorías" e "Información" (Tiendas, Privacidad); foco en blanco.
 
 ### Estados de carga y vacío
 - **Esqueleto:** bloques `--seccion` de 8 px con pulso de opacidad de 1.4 s que reproducen la rejilla o la ficha.
@@ -391,8 +391,8 @@ Fondo acero (igual que la cabecera), texto blanco, logotipo repetido, dos frases
 - **Do** poner texto blanco sobre el acero (#346A8F) y usar acero para la casa (cabecera, pie, bandas) y para actuar.
 - **Do** dejar un único botón sólido por decisión: el de la mejor oferta.
 - **Do** escribir en registro formal (usted), con frases cortas y sin explicar lo obvio.
-- **Do** mostrar "leído …" en hora de Guayaquil una vez por oferta en la ficha, y "puede haber cambiado" cuando la lectura está atrasada.
-- **Do** expresar stock, filtro activo y serie del gráfico con icono, marca o trazo además del color.
+- **Do** decir "actualizado" (nunca "leído" ni "lectura") y "Disponible / Agotado" (nunca "stock"); la fecha va una vez, en el recuadro de precio, y en una fila solo si está atrasada.
+- **Do** expresar disponibilidad, filtro activo y serie del gráfico con icono, marca o trazo además del color.
 - **Do** dar 44 px de alto a todo lo que se pulsa y mantener visible el foco de 2 px.
 
 ### Don't:

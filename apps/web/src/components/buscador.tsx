@@ -11,7 +11,7 @@ export function FormularioBusqueda({ q = '' }: { q?: string }) {
       <label htmlFor="q" className="sr-only">Producto a buscar</label>
       <input
         id="q" name="q" type="search" defaultValue={q} key={q} required minLength={2} maxLength={80}
-        placeholder="Buscar un producto"
+        placeholder="¿Qué está buscando?"
         className="buscador-campo h-11 min-w-0 flex-1 rounded-l-full border-0 bg-white pr-4 pl-11 text-base text-[#36364f] placeholder:text-[#5f6070]"
       />
       <button type="submit" className="h-11 rounded-r-full bg-cian px-5 font-semibold text-en-cian transition-[filter] hover:brightness-95">

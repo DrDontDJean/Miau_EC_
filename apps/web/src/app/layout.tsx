@@ -11,19 +11,18 @@ import './globals.css';
 const fuente = Hanken_Grotesk({ variable: '--fuente', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: { default: 'DecideAqui · Comparador de precios de tiendas de Ecuador', template: '%s · DecideAqui' },
+  title: { default: 'DecideAquí · Comparador de precios de tiendas de Ecuador', template: '%s · DecideAquí' },
   description: 'Compare precios entre tiendas online de Ecuador y vaya directo a la tienda más conveniente.',
 };
 
-/** Franja de hechos verificables (sin envíos ni reseñas: solo lo que DecideAqui puede comprobar). */
+/** Franja de hechos verificables (sin envíos ni reseñas: solo lo que DecideAquí puede comprobar). */
 async function FranjaHechos({ claseFondo }: { claseFondo: string }) {
   const tiendas = await tiendasActivas();
   const ultima = tiendas.map(t => t.ultima_corrida_ok).filter((f): f is string => f !== null).sort().at(-1);
   const hechos = [
-    { texto: ultima ? `Precios leídos el ${diaCorto(ultima)}, ${horaCorta(ultima)}` : 'Precios leídos una vez al día', d: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0' },
-    { texto: 'Mismo producto por EAN o modelo', d: 'M4 6v12M8 6v12M11 6v12M15 6v12M18 6v12M20 6v12' },
-    { texto: 'Precio que publica la tienda', d: 'M3 9l2-5h14l2 5M4 9v11h16V9M3 9h18' },
-    { texto: 'Sin patrocinios', d: 'M12 3l7 3v6c0 4-3 7-7 9c-4-2-7-5-7-9V6z' },
+    { texto: ultima ? `Precios actualizados el ${diaCorto(ultima)}, ${horaCorta(ultima)}` : 'Precios actualizados cada día', d: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0' },
+    { texto: 'Precios oficiales de cada tienda', d: 'M3 9l2-5h14l2 5M4 9v11h16V9M3 9h18' },
+    { texto: 'Sin resultados pagados', d: 'M12 3l7 3v6c0 4-3 7-7 9c-4-2-7-5-7-9V6z' },
   ];
   return (
     <div className={claseFondo}>
@@ -47,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <FranjaHechos claseFondo="bg-cabecera-fuerte text-en-cabecera-suave" />
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3">
             <Link href="/" className="flex h-11 items-center text-2xl font-extrabold tracking-tight whitespace-nowrap">
-              Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aqui</span>
+              Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
             </Link>
             <div className="flex min-w-0 flex-1 basis-64 justify-center">
               <div className="flex w-full max-w-2xl">
@@ -68,28 +67,27 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-[2fr_1fr_1fr]">
             <div>
               <p className="text-xl font-extrabold tracking-tight">
-                Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aqui</span>
+                Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
               </p>
               <p className="mt-3 max-w-[52ch] text-sm leading-relaxed">
-                Los precios se toman una vez al día de los catálogos públicos de cada tienda y pueden cambiar;
-                confírmelos en la tienda antes de comprar. Al pulsar «Ver oferta» se registra la visita de forma anónima.
+                Compare precios de tiendas online de Ecuador. Los precios pueden cambiar; verifíquelos en la tienda.
               </p>
-              <p className="mt-2 max-w-[52ch] text-sm leading-relaxed">
-                Solo se agrupan ofertas del mismo producto (por código de barras o modelo) y ninguna tienda paga por aparecer primero.
-              </p>
+              <p className="mt-2 max-w-[52ch] text-sm leading-relaxed">Ninguna tienda paga por aparecer primero.</p>
             </div>
-            <nav aria-label="Buscar por tipo de producto">
-              <h2 className="font-semibold">Buscar</h2>
+            <nav aria-label="Categorías">
+              <h2 className="font-semibold">Categorías</h2>
               <ul className="mt-2 text-sm">
                 {RAPIDAS.map(r => (
                   <li key={r.q}><Link href={rutaBusqueda(r.q)} className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">{r.etiqueta}</Link></li>
                 ))}
               </ul>
             </nav>
-            <nav aria-label="Sobre los datos">
-              <h2 className="font-semibold">Los datos</h2>
+            <nav aria-label="Información">
+              <h2 className="font-semibold">Información</h2>
               <ul className="mt-2 text-sm">
-                <li><Link href="/tiendas" className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">Tiendas y última lectura</Link></li>              </ul>
+                <li><Link href="/tiendas" className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">Tiendas</Link></li>
+                <li><Link href="/privacidad" className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">Privacidad</Link></li>
+              </ul>
             </nav>
           </div>
         </footer>

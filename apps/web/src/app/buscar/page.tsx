@@ -9,7 +9,7 @@ import { SalidasRapidas } from '@/components/salidas';
 
 export const metadata: Metadata = { title: 'Buscar', robots: { index: false } };
 
-const ETIQUETAS = { relevancia: 'Relevancia', precio_asc: 'Menor precio', precio_desc: 'Mayor precio' } as const;
+const ETIQUETAS = { relevancia: 'Más relevantes', precio_asc: 'Precio: menor a mayor', precio_desc: 'Precio: mayor a menor' } as const;
 
 const texto = (v: string | string[] | undefined) => (typeof v === 'string' ? v : '');
 
@@ -82,9 +82,10 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
   };
   const hayFiltros = filtros.stock || filtros.varias || filtros.tienda !== '';
   const limitado = todos.length >= 24; // buscar_productos devuelve como mucho 24
-  const titulo = hayFiltros && productos.length < todos.length
-    ? `${productos.length} de los ${limitado ? 'primeros ' : ''}${todos.length} productos`
-    : limitado ? `Primeros ${todos.length} productos` : `${todos.length} ${todos.length === 1 ? 'producto' : 'productos'}`;
+  const cantidad = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
+  const resumen = hayFiltros && productos.length < todos.length
+    ? `${productos.length} de ${cantidad(todos.length)}`
+    : cantidad(todos.length);
   // Cuántos de los resultados cumple cada filtro, para mostrarlo junto a él.
   const conteo = {
     stock: todos.filter(p => p.ofertas.some(o => o.disponible)).length,
@@ -102,27 +103,35 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
         ))}
       </nav>
       <nav aria-label="Filtrar resultados" className="flex flex-wrap items-center gap-2">
-        <span className="w-16 shrink-0 text-sm text-suave">Mostrar</span>
-        <Opcion href={ruta({ stock: !filtros.stock })} activa={filtros.stock}>Solo en stock</Opcion>
-        <Opcion href={ruta({ varias: !filtros.varias })} activa={filtros.varias}>En varias tiendas</Opcion>
-        {tiendas.length > 1 && tiendas.map(([id, nombre]) => (
-          <Opcion key={id} href={ruta({ tienda: filtros.tienda === id ? '' : id })} activa={filtros.tienda === id}>{nombre}</Opcion>
-        ))}
+        <span className="w-16 shrink-0 text-sm text-suave">Filtrar</span>
+        <Opcion href={ruta({ stock: !filtros.stock })} activa={filtros.stock}>Disponibles</Opcion>
+        <Opcion href={ruta({ varias: !filtros.varias })} activa={filtros.varias}>Disponible en varias tiendas</Opcion>
       </nav>
+      {tiendas.length > 1 && (
+        <nav aria-label="Filtrar por tienda" className="flex flex-wrap items-center gap-2">
+          <span className="w-16 shrink-0 text-sm text-suave">Tienda</span>
+          {tiendas.map(([id, nombre]) => (
+            <Opcion key={id} href={ruta({ tienda: filtros.tienda === id ? '' : id })} activa={filtros.tienda === id}>{nombre}</Opcion>
+          ))}
+        </nav>
+      )}
     </div>
   );
 
   // Filtros de la columna lateral: cada uno con cuántos resultados lo cumplen.
-  const filtrosLista = [
-    { etiqueta: 'Solo en stock', n: conteo.stock, activa: filtros.stock, href: ruta({ stock: !filtros.stock }) },
-    { etiqueta: 'En varias tiendas', n: conteo.varias, activa: filtros.varias, href: ruta({ varias: !filtros.varias }) },
-    ...tiendas.map(([id, nombre]) => ({ etiqueta: nombre, n: conteo.tienda(id), activa: filtros.tienda === id, href: ruta({ tienda: filtros.tienda === id ? '' : id }) })),
-  ];
+  const gruposFiltro = [
+    { titulo: 'Filtrar', items: [
+      { etiqueta: 'Disponibles', n: conteo.stock, activa: filtros.stock, href: ruta({ stock: !filtros.stock }) },
+      { etiqueta: 'Disponible en varias tiendas', n: conteo.varias, activa: filtros.varias, href: ruta({ varias: !filtros.varias }) },
+    ] },
+    { titulo: 'Tienda', items: tiendas.map(([id, nombre]) => ({ etiqueta: nombre, n: conteo.tienda(id), activa: filtros.tienda === id, href: ruta({ tienda: filtros.tienda === id ? '' : id }) })) },
+  ].filter(g => g.items.length > 0);
 
   return (
     <div className="flex flex-col gap-6">
       <section className="en-cabecera rounded-2xl bg-cabecera px-6 py-8 text-en-cabecera sm:px-10">
-        <h1 className="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">{titulo} para <q>{q}</q></h1>
+        <h1 className="text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">Resultados para <q>{q}</q></h1>
+        <p className="mt-1 text-sm text-en-cabecera-suave">{resumen}</p>
         <ul className="sin-barra -mx-6 mt-5 flex gap-2 overflow-x-auto px-6 sm:mx-0 sm:flex-wrap sm:px-0">
           {RAPIDAS.map(r => (
             <li key={r.q} className="shrink-0">
@@ -145,7 +154,7 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
               <span className="min-w-0">
                 <span className="block whitespace-nowrap">Ordenar y filtrar</span>
                 <span className="block text-sm font-normal text-suave">
-                  {[ETIQUETAS[orden], filtros.stock && 'en stock', filtros.varias && 'en varias tiendas', filtros.tienda && tiendas.find(([id]) => id === filtros.tienda)?.[1]].filter(Boolean).join(' · ')}
+                  {[ETIQUETAS[orden], filtros.stock && 'disponibles', filtros.varias && 'en varias tiendas', filtros.tienda && tiendas.find(([id]) => id === filtros.tienda)?.[1]].filter(Boolean).join(' · ')}
                 </span>
               </span>
               <svg viewBox="0 0 16 16" aria-hidden="true" className="size-4 shrink-0 fill-none stroke-current stroke-2 transition-transform group-open:rotate-180"><path d="M3.5 6l4.5 4.5L12.5 6" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -168,23 +177,25 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
                 ))}
               </ul>
             </div>
-            <div>
-              <h2 className="mb-2 font-bold">Mostrar</h2>
-              <ul className="flex flex-col gap-1">
-                {filtrosLista.map(it => (
-                  <li key={it.etiqueta}>
-                    <Link href={it.href} aria-current={it.activa ? 'true' : undefined} className="flex min-h-11 items-center gap-3 rounded-lg px-3 hover:bg-superficie">
-                      <span className={`grid size-5 shrink-0 place-items-center rounded border-2 ${it.activa ? 'border-accion bg-accion text-white' : 'border-borde-control bg-superficie'}`}>
-                        {it.activa && <svg viewBox="0 0 16 16" aria-hidden="true" className="size-3.5 fill-none stroke-current stroke-[2.5]"><path d="M3 8.5l3.2 3L13 4.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                      </span>
-                      <span className="flex-1">{it.etiqueta}</span>
-                      <span className="text-sm text-suave tabular-nums">{it.n}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              {hayFiltros && <Link href={ruta({ stock: false, varias: false, tienda: '' })} className="mt-2 inline-flex min-h-11 items-center px-3 text-sm font-semibold text-enlace underline">Quitar filtros</Link>}
-            </div>
+            {gruposFiltro.map(g => (
+              <div key={g.titulo}>
+                <h2 className="mb-2 font-bold">{g.titulo}</h2>
+                <ul className="flex flex-col gap-1">
+                  {g.items.map(it => (
+                    <li key={it.etiqueta}>
+                      <Link href={it.href} aria-current={it.activa ? 'true' : undefined} className="flex min-h-11 items-center gap-3 rounded-lg px-3 hover:bg-superficie">
+                        <span className={`grid size-5 shrink-0 place-items-center rounded border-2 ${it.activa ? 'border-accion bg-accion text-white' : 'border-borde-control bg-superficie'}`}>
+                          {it.activa && <svg viewBox="0 0 16 16" aria-hidden="true" className="size-3.5 fill-none stroke-current stroke-[2.5]"><path d="M3 8.5l3.2 3L13 4.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                        </span>
+                        <span className="flex-1">{it.etiqueta}</span>
+                        <span className="text-sm text-suave tabular-nums">{it.n}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            {hayFiltros && <Link href={ruta({ stock: false, varias: false, tienda: '' })} className="mt-2 inline-flex min-h-11 items-center px-3 text-sm font-semibold text-enlace underline">Quitar filtros</Link>}
           </aside>
         </div>
 

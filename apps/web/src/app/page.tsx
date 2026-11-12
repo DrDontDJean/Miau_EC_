@@ -3,6 +3,9 @@ import { productosDestacados, tiendasActivas } from '@/lib/datos';
 import { RejillaProductos } from '@/components/ofertas';
 import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
 
+/** "A, B y C". */
+const lista = (nombres: string[]) => new Intl.ListFormat('es', { type: 'conjunction' }).format(nombres);
+
 export default async function Inicio() {
   const [destacados, tiendas] = await Promise.all([productosDestacados(), tiendasActivas()]);
   const escaparate = destacados.slice(0, 3);
@@ -12,7 +15,7 @@ export default async function Inicio() {
       <section className="en-cabecera grid items-center gap-8 overflow-hidden rounded-2xl bg-cabecera px-6 py-10 text-en-cabecera sm:px-10 md:grid-cols-[1.2fr_1fr]">
         <div>
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">Encuentre el precio más bajo</h1>
-          <p className="mt-2 text-lg text-en-cabecera-suave">El mismo producto, comparado en {tiendas.length} tiendas online de Ecuador.</p>
+          <p className="mt-2 text-lg text-en-cabecera-suave">Compare precios de las principales tiendas de Ecuador en un solo lugar.</p>
           <ul className="mt-6 flex flex-wrap gap-2">
             <li><span aria-current="page" className="inline-flex min-h-11 items-center rounded-full bg-white px-4 font-semibold text-[#1f1f33]">Todo</span></li>
             {RAPIDAS.map(r => (
@@ -37,7 +40,7 @@ export default async function Inicio() {
 
       {resto.length > 0 && (
         <section>
-          <h2 className="mb-5 text-2xl font-bold">Productos en varias tiendas</h2>
+          <h2 className="mb-5 text-2xl font-bold">Más comparados</h2>
           <RejillaProductos
             nivel="h3"
             productos={resto.map(p => ({ id: p.id, titulo: p.titulo, imagen: p.imagen_url, desde: p.precio_desde, numTiendas: p.num_tiendas }))}
@@ -46,8 +49,8 @@ export default async function Inicio() {
       )}
 
       <p className="text-sm text-suave">
-        Tiendas incluidas: {tiendas.map(t => t.nombre).join(' · ')}.{' '}
-        <Link href="/tiendas" className="font-semibold text-enlace underline">Última lectura de cada tienda</Link>
+        Comparamos {lista(tiendas.map(t => t.nombre))}.{' '}
+        <Link href="/tiendas" className="font-semibold text-enlace underline">Ver tiendas</Link>
       </p>
     </div>
   );

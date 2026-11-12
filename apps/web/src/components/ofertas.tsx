@@ -11,7 +11,7 @@ export function ofertaMasBarata(ofertas: Oferta[]): Oferta | null {
   return ofertas.filter(o => o.disponible).sort(porPrecio)[0] ?? [...ofertas].sort(porPrecio)[0] ?? null;
 }
 
-/** Stock con icono y texto: el significado no depende del color. */
+/** Disponibilidad con icono y texto: el significado no depende del color. */
 export function Stock({ disponible }: { disponible: boolean }) {
   return (
     <span className={`inline-flex items-center gap-1 text-sm font-semibold ${disponible ? 'text-texto' : 'text-suave'}`}>
@@ -20,7 +20,7 @@ export function Stock({ disponible }: { disponible: boolean }) {
           ? <path d="M3 8.5l3.2 3L13 4.5" strokeLinecap="round" strokeLinejoin="round" />
           : <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />}
       </svg>
-      {disponible ? 'En stock' : 'Sin stock'}
+      {disponible ? 'Disponible' : 'Agotado'}
     </span>
   );
 }
@@ -37,8 +37,8 @@ export function tarjetaDeProducto(p: Producto): DatosTarjeta {
   return {
     id: p.id, titulo: p.titulo, imagen: p.imagen, desde: p.desde, numTiendas: p.numTiendas,
     nota: !barata ? undefined
-      : !hayStock ? "sin stock en ninguna tienda"
-      : p.numTiendas > 1 ? `más barato en ${barata.tienda}` : `solo en ${barata.tienda}`,
+      : !hayStock ? 'agotado'
+      : p.numTiendas > 1 ? `más barato en ${barata.tienda}` : `en ${barata.tienda}`,
   };
 }
 
@@ -59,7 +59,7 @@ export function TarjetaProducto({ datos: p, nivel = 'h2' }: { datos: DatosTarjet
           <strong className="text-xl font-extrabold tabular-nums">{precio(p.desde)}</strong>
         </p>
         <p className="-mt-1 text-xs text-suave">
-          {p.numTiendas > 1 ? `En ${p.numTiendas} tiendas${p.nota ? ` · ${p.nota}` : ''}` : p.nota ? p.nota.charAt(0).toUpperCase() + p.nota.slice(1) : 'En 1 tienda'}
+          {p.numTiendas > 1 ? `${p.numTiendas} tiendas${p.nota ? ` · ${p.nota}` : ''}` : p.nota ? p.nota.charAt(0).toUpperCase() + p.nota.slice(1) : '1 tienda'}
         </p>
       </div>
     </article>
@@ -98,13 +98,13 @@ export function EsqueletoRejilla({ cuantas = 10 }: { cuantas?: number }) {
 }
 
 /**
- * Ofertas de un producto, una fila por tienda. La más barata con stock va destacada;
- * cada precio lleva una vez su hora de lectura.
+ * Ofertas de un producto, una fila por tienda. La más barata disponible va destacada.
+ * La fecha de actualización solo aparece en la fila cuando va atrasada respecto de las demás.
  */
 export function ListaOfertas({ ofertas, comparar, ahora }: { ofertas: Oferta[]; comparar: boolean; ahora: number }) {
   const desde = ofertaMasBarata(ofertas);
   const masReciente = Math.max(...ofertas.map(o => new Date(o.vistoUltimaVez).getTime()));
-  // Una oferta leída más de un día antes que la más reciente se avisa: su precio puede haber cambiado.
+  // Una oferta actualizada más de un día antes que la más reciente se avisa: su precio puede haber cambiado.
   const atrasada = (o: Oferta) => masReciente - new Date(o.vistoUltimaVez).getTime() > 86_400_000;
   return (
     <>
@@ -124,14 +124,14 @@ export function ListaOfertas({ ofertas, comparar, ahora }: { ofertas: Oferta[]; 
               <p className="order-3 col-span-2 text-sm text-suave sm:order-none sm:col-span-1">{o.titulo}</p>
               <div className="text-right">
                 <p className="flex flex-col items-end gap-1 sm:flex-row sm:items-baseline sm:justify-end sm:gap-2">
-                  {esDesde && <span className="whitespace-nowrap rounded-full bg-cian px-2 py-0.5 text-xs font-semibold text-en-cian">Más barato</span>}
+                  {esDesde && <span className="whitespace-nowrap rounded-full bg-cian px-2 py-0.5 text-xs font-semibold text-en-cian">Mejor precio</span>}
                   <span className={`font-extrabold tabular-nums ${esDesde ? 'text-3xl' : 'text-2xl'}`}>{precio(o.precio)}</span>
                 </p>
-                <p className={`text-xs ${atrasada(o) ? 'font-semibold text-texto' : 'text-suave'}`}>
-                  leído {leido(o.vistoUltimaVez, ahora)}{atrasada(o) && ' · puede haber cambiado'}
-                </p>
+                {atrasada(o) && (
+                  <p className="text-xs font-semibold text-texto">Actualizado {leido(o.vistoUltimaVez, ahora)} · puede haber cambiado</p>
+                )}
                 {o.precioLista !== null && o.precioLista > o.precio && (
-                  <p className="mt-1 text-xs text-suave">La tienda lo lista en <s className="tabular-nums">{precio(o.precioLista)}</s></p>
+                  <p className="mt-1 text-xs text-suave">Antes <s className="tabular-nums">{precio(o.precioLista)}</s></p>
                 )}
               </div>
               <a
@@ -144,7 +144,7 @@ export function ListaOfertas({ ofertas, comparar, ahora }: { ofertas: Oferta[]; 
                       : 'border-borde-accion bg-superficie text-enlace hover:bg-seccion'
                 }`}
               >
-                {o.disponible ? 'Ver oferta' : 'Ver en la tienda'}
+                Ver oferta
                 <span className="sr-only"> en {o.tienda} (se abre en otra pestaña)</span>
               </a>
             </li>
@@ -152,7 +152,7 @@ export function ListaOfertas({ ofertas, comparar, ahora }: { ofertas: Oferta[]; 
         })}
       </ul>
       <p className="mt-3 text-sm text-suave">
-        Precios según la última lectura de cada tienda. Confírmelos en la tienda antes de comprar.
+        Los precios pueden cambiar; verifique el precio final en la tienda.
       </p>
     </>
   );
