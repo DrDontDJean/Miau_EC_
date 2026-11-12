@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { fichaProducto, productosDestacados } from '@/lib/datos';
+import Link from 'next/link';
+import { ListaOfertas, Stock, ofertaMasBarata, precio } from '@/components/ofertas';
 import { leido } from '@/lib/fechas';
-import { ListaOfertas, Sello, ofertaMasBarata, precio } from '@/components/ofertas';
 import { GraficoHistorial } from '@/components/grafico-historial';
 
 // Con Cache Components hay que prerenderizar al menos un producto; el resto se genera
@@ -30,34 +31,51 @@ async function Ficha({ params }: { params: PageProps<'/p/[id]'>['params'] }) {
   const varias = p.numTiendas > 1;
   const barata = ofertaMasBarata(p.ofertas);
   const hayStock = p.ofertas.some(o => o.disponible);
+  const rebaja = barata && barata.precioLista !== null && barata.precioLista > barata.precio ? barata.precioLista : null;
   return (
-    <article className="flex flex-col gap-10">
-      <header className="grid gap-5 sm:grid-cols-[240px_1fr] sm:gap-8">
-        <div className="aspect-[4/3] rounded-xl border border-borde bg-white p-4 sm:aspect-square">
+    <article className="grid items-start gap-6 lg:grid-cols-[1fr_21rem]">
+      <section className="grid gap-6 rounded-2xl bg-superficie p-5 sm:grid-cols-[13rem_1fr] sm:p-6 lg:col-start-1">
+        <div className="aspect-square rounded-lg bg-white p-2">
           {p.imagen && <img src={p.imagen} alt={p.titulo} referrerPolicy="no-referrer" className="size-full object-contain" />}
         </div>
-        <div>
-          <h1 className="text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl">{p.titulo}</h1>
-          <div className="mt-4">
-            <Sello valor={p.desde} desde={varias} leidoEn={barata ? leido(barata.vistoUltimaVez, generadaEn) : null} grande />
-          </div>
-          <p className="mt-3 max-w-[60ch]">
-            {!hayStock
-              ? 'Ahora mismo ninguna tienda lo tiene en stock.'
-              : varias
-                ? <>En {p.numTiendas} tiendas. El más barato está en <strong>{barata!.tienda}</strong>.</>
-                : <>Solo lo encontramos en <strong>{barata!.tienda}</strong>.</>}
-            {' '}<span className="text-suave">El precio puede haber cambiado desde que lo leímos.</span>
-          </p>
+        <div className="flex flex-col gap-2">
+          {p.marca && <Link href={`/buscar?q=${encodeURIComponent(p.marca)}`} className="w-fit text-sm font-semibold text-enlace hover:underline">{p.marca}</Link>}
+          <h1 className="text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">{p.titulo}</h1>
+          <ul className="mt-2 flex flex-wrap gap-2 text-sm font-semibold">
+            <li className="rounded-full bg-seccion px-3 py-1">{varias ? `En ${p.numTiendas} tiendas` : 'En 1 tienda'}</li>
+            <li className="rounded-full bg-seccion px-3 py-1">{hayStock ? 'Con stock' : 'Sin stock'}</li>
+          </ul>
         </div>
-      </header>
+      </section>
 
-      <section>
-        <h2 className="mb-3 text-xl font-bold">{varias ? 'Ofertas por tienda' : 'Oferta'}</h2>
+      <div className="lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:self-stretch">
+        <aside aria-label="Mejor precio" className="rounded-2xl bg-superficie p-5 sm:p-6 lg:sticky lg:top-40">
+          <p className="w-fit rounded-full bg-cian px-2.5 py-0.5 text-sm font-semibold text-en-cian">{varias ? 'Precio más bajo' : 'Precio'}</p>
+          <p className="mt-1 text-5xl font-extrabold tabular-nums">{precio(p.desde)}</p>
+          {rebaja !== null && <p className="mt-1 text-sm text-suave">La tienda lo lista en <s className="tabular-nums">{precio(rebaja)}</s></p>}
+          {barata && (
+            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+              <dt className="text-suave">Tienda</dt><dd className="font-semibold">{barata.tienda}</dd>
+              <dt className="text-suave">Leído</dt><dd>{leido(barata.vistoUltimaVez, generadaEn)}</dd>
+              <dt className="text-suave">Stock</dt><dd><Stock disponible={barata.disponible} /></dd>
+            </dl>
+          )}
+          {barata && (
+            <a href={barata.ir} target="_blank" rel="noopener nofollow" className="mt-5 flex min-h-12 items-center justify-center rounded-lg bg-accion px-4 font-bold text-en-accion transition-colors hover:bg-accion-fuerte">
+              Ver oferta en {barata.tienda}<span className="sr-only"> (se abre en otra pestaña)</span>
+            </a>
+          )}
+        </aside>
+      </div>
+
+      <section id="ofertas" className="rounded-2xl bg-superficie p-5 sm:p-6 lg:col-start-1">
+        <h2 className="mb-4 text-xl font-bold">{varias ? `Ofertas en ${p.numTiendas} tiendas` : 'Oferta'}</h2>
         <ListaOfertas ofertas={p.ofertas} comparar={varias} ahora={generadaEn} />
       </section>
 
-      <GraficoHistorial historial={historial} ofertas={p.ofertas} ahora={generadaEn} desde={p.desde} />
+      <section className="rounded-2xl bg-superficie p-5 sm:p-6 lg:col-start-1">
+        <GraficoHistorial historial={historial} ofertas={p.ofertas} ahora={generadaEn} desde={p.desde} />
+      </section>
     </article>
   );
 }

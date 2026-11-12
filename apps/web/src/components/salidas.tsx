@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
 
 /** Salidas para estados vacíos y de error: las mismas búsquedas rápidas de la cabecera. */
-export function SalidasRapidas({ titulo = 'Prueba con una de estas búsquedas' }: { titulo?: string }) {
+export function SalidasRapidas({ titulo = 'Categorías' }: { titulo?: string }) {
   return (
     <div className="mt-6">
       <p className="font-semibold">{titulo}</p>

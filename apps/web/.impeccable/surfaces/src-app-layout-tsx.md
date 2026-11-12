@@ -2,16 +2,16 @@
 version: 1
 slug: "src-app-layout-tsx"
 primary_target: "src/app/layout.tsx"
-related_targets: ["src/app/page.tsx","src/app/buscar/page.tsx","src/app/p/[id]/page.tsx","src/app/tiendas/page.tsx","src/app/not-found.tsx"]
+related_targets: ["src/app/buscar/page.tsx","src/app/p/[id]/page.tsx","src/app/tiendas/page.tsx","src/app/not-found.tsx"]
 ---
 
 # Surface brief: apps/web (rediseño completo)
 
-Scope: inicio, /buscar, /p/[id], /tiendas, 404, cabecera y pie. Mode: Operate.
+Scope: /buscar, /p/[id], /tiendas, 404, cabecera y pie. Mode: Operate. La portada tiene su propio brief (src-app-page-tsx, Persuade).
 
 Audience and job: comprador en Ecuador, móvil primero, busca un producto concreto, quiere saber dónde está más barato y si conviene esperar. Acción: buscar, abrir ficha, salir por "Ver oferta".
 
-Constraints: no cambiar rutas, consultas a Supabase (buscar_productos), /ir ni pruebas. Filtros solo sobre los datos que llegan. Sin dependencias pesadas. Next 16 Cache Components, Tailwind 4. Tuteo, vocabulario de GLOSSARY.md. Tema claro y oscuro. Objetivos táctiles de 44 px. Fuera: comparación lado a lado, alertas, búsquedas recientes.
+Constraints: no cambiar rutas, consultas a Supabase (buscar_productos), /ir ni pruebas. Filtros solo sobre los datos que llegan. Sin dependencias pesadas. Next 16 Cache Components, Tailwind 4. Registro formal (usted), vocabulario de GLOSSARY.md. Tema claro y oscuro. Objetivos táctiles de 44 px. Fuera: comparación lado a lado, alertas, búsquedas recientes.
 
 Confirmed adjustments: hora del sello en America/Guayaquil calculada de visto_ultima_vez; bloque de confianza solo con hechos verificables (EAN o modelo, precio que publica la tienda, actualizado cada día, sin patrocinios); tienda sin corrida completa: "Última lectura incompleta · reintentamos cada día"; Hanken Grotesk con next/font; logo solo texto con detalle cian; frescura global en el inicio.
 

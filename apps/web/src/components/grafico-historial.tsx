@@ -18,7 +18,7 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
     return (
       <section>
         {titulo}
-        <p className="mt-2 max-w-[65ch] text-suave">Todavía no guardamos historial de este producto. Aparecerá aquí cuando lo leamos varios días seguidos.</p>
+        <p className="mt-2 max-w-[65ch] text-suave">Aún no hay historial de este producto.</p>
       </section>
     );
   }
@@ -40,10 +40,10 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
       <section>
         {titulo}
         <p className="mt-2 max-w-[65ch]">
-          Guardamos el precio de este producto desde el {diaCorto(inicio)}. Con una semana de datos verás aquí cómo cambia en cada tienda.
+          Precio registrado desde el {diaCorto(inicio)}.
         </p>
         {cambios.length === 0
-          ? <p className="mt-1 text-suave">Desde entonces no ha cambiado en ninguna tienda.</p>
+          ? <p className="mt-1 text-suave">Sin cambios de precio desde entonces.</p>
           : <ListaCambios cambios={cambios} />}
       </section>
     );
@@ -73,7 +73,7 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
     <section>
       {titulo}
       <p className="mt-2 max-w-[65ch] font-semibold">{resumen}</p>
-      <figure className="mt-4 rounded-xl border border-borde bg-superficie p-3 sm:p-4">
+      <figure className="mt-4 rounded-lg border border-borde bg-superficie p-3 sm:p-4">
         <svg viewBox={`0 0 ${an} ${al}`} className="w-full max-w-xl" role="img" aria-label={`Historial de precios por tienda. ${resumen}`}>
           {[min, (min + max) / 2, max].map(p => (
             <g key={p}>
@@ -101,12 +101,12 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
                 <span className="font-semibold">{s.o.tienda}</span>
                 <span className="inline-flex overflow-hidden rounded text-sm">
                   <strong className="bg-cian px-1.5 text-en-cian tabular-nums">{precio(s.o.precio)}</strong>
-                  <span className="bg-arena-fondo px-1.5">leído {leido(s.o.vistoUltimaVez, ahora)}</span>
+                  <span className="bg-seccion px-1.5">leído {leido(s.o.vistoUltimaVez, ahora)}</span>
                 </span>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-sm text-suave">El punto cian marca el precio de hoy. Solo guardamos un tramo nuevo cuando el precio o el stock cambian.</p>
+          <p className="mt-3 text-sm text-suave">El punto cian indica el precio actual.</p>
         </figcaption>
       </figure>
       {cambios.length > 0 && <ListaCambios cambios={cambios.slice(0, 6)} />}

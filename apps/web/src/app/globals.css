@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
-/* Paleta DecideAqui: cian de marca, azul acero para actuar, grafito para leer, arena para separar. */
+/* Paleta DecideAqui: azul acero para cabecera, pie y acciones; cian solo como acento; grafito para leer; fondo gris neutro con paneles blancos encima. */
 :root {
-  --fondo: #ffffff;
-  --seccion: #f3ece7;
+  --fondo: #eef0f3;
+  --seccion: #e3e6eb;
   --superficie: #ffffff;
   --texto: #36364f;
-  --suave: #7a5b4e;
-  --borde: #e0d2c8;
+  --suave: #5f6070;
+  --borde: #dde1e6;
   --arena: #cfb8aa;
   /* Borde de controles (campo, pastillas, botón secundario): 3:1 o más contra fondo, superficie y sección. */
-  --borde-control: #957868;
+  --borde-control: #737a88;
   --cian: #13a9cf;
   --en-cian: #1f1f33;
   --accion: #346a8f;
@@ -18,10 +18,16 @@
   --en-accion: #ffffff;
   --borde-accion: #346a8f;
   --enlace: #346a8f;
-  --arena-fondo: #cfb8aa;
-  --pie: #36364f;
-  --en-pie: #f3ece7;
+  --pie: #346a8f;
+  --en-pie: #ffffff;
   --foco: #1f1f33;
+  /* Cabecera: una sola familia de azul (acero). El cian no va sobre ella como indicador: 2,11:1. */
+  --cabecera: #346a8f;
+  --cabecera-fuerte: #2a5675;
+  --en-cabecera: #ffffff;
+  --en-cabecera-suave: #dde7ee;
+  /* Fondo de la oferta más barata: cian al 10 % sobre blanco, opaco para no mezclarse con el fondo. */
+  --resalte: #e7f6fa;
   /* Series del historial: solo la paleta fijada; el trazo (continuo, rayas, puntos) distingue lo que el color no. */
   --serie-1: #346a8f;
   --serie-2: #7a5b4e;
@@ -37,16 +43,16 @@
     --seccion: #25253a;
     --superficie: #2a2a40;
     --texto: #efe8e3;
-    --suave: #cfb8aa;
+    --suave: #b9bac6;
     --borde: #4a4a66;
     --arena: #7a5b4e;
-    --borde-control: #9c8578;
+    --borde-control: #8a90a0;
     --accion-fuerte: #3f7ba3;
     --borde-accion: #7fb2d4;
     --enlace: #8ccbe6;
-    --arena-fondo: #4a3a33;
-    --pie: #141421;
+    --pie: #346a8f;
     --foco: #13a9cf;
+    --resalte: #1f3a4a;
     --serie-1: #13a9cf;
     --serie-2: #cfb8aa;
     --serie-3: #efe8e3;
@@ -72,7 +78,11 @@
   --color-en-accion: var(--en-accion);
   --color-borde-accion: var(--borde-accion);
   --color-enlace: var(--enlace);
-  --color-arena-fondo: var(--arena-fondo);
+  --color-cabecera: var(--cabecera);
+  --color-cabecera-fuerte: var(--cabecera-fuerte);
+  --color-en-cabecera: var(--en-cabecera);
+  --color-en-cabecera-suave: var(--en-cabecera-suave);
+  --color-resalte: var(--resalte);
   --color-pie: var(--pie);
   --color-en-pie: var(--en-pie);
   --font-sans: var(--fuente), system-ui, sans-serif;
@@ -94,6 +104,8 @@ a { text-underline-offset: 0.2em; }
 
 :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 .sobre-oscuro :focus-visible { outline-color: var(--cian); }
+/* Sobre el acero de la cabecera el foco va en blanco (5,83:1); el cian no llega a 3:1. */
+.en-cabecera :focus-visible { outline-color: var(--en-cabecera); }
 
 /* Enlace que cubre toda la tarjeta sin anidar elementos interactivos. */
 .enlace-tarjeta::after { content: ""; position: absolute; inset: 0; }
@@ -111,4 +123,17 @@ a { text-underline-offset: 0.2em; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
+}
+
+/* Catálogo: con la columna de filtros al lado, la rejilla se queda en 4 columnas en escritorio. */
+@media (min-width: 1024px) {
+  .catalogo-rejilla > ul { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Lupa dentro del buscador en píldora de la cabecera. */
+.buscador-campo {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6070' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 1rem center;
+  background-size: 1.15rem;
 }
