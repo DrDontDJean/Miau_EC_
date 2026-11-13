@@ -161,15 +161,17 @@ function desdeJsonLd(html: string): Partial<ProductoPagina> | null {
     const porPrecio = (a: { precio: number }, b: { precio: number }) => a.precio - b.precio;
     const elegida = ofertas.filter(o => o.disp === true).sort(porPrecio)[0] ?? [...ofertas].sort(porPrecio)[0];
     const marca = producto['brand'];
+    // Las tiendas VTEX dejan entidades HTML dentro del JSON-LD ("15.6&quot;"): el título es texto, no HTML.
+    const aTexto = (v: string | null) => (v === null ? null : decodificar(v));
     return {
-      nombre: texto(producto['name']),
+      nombre: aTexto(texto(producto['name'])),
       precio: elegida?.precio,
       moneda: elegida?.moneda ?? null,
       disponible: ofertas.some(o => o.disp === true) ? true : ofertas.some(o => o.disp === false) ? false : null,
       sku: texto(producto['sku']) ?? texto(producto['productID']) ?? texto(producto['mpn']),
       ean: texto(producto['gtin13']) ?? texto(producto['gtin']) ?? texto(producto['gtin12']) ?? texto(producto['gtin14']) ?? texto(producto['gtin8']),
       imagen: imagenDe(producto['image']),
-      marca: esObjeto(marca) ? texto(marca['name']) : texto(marca),
+      marca: aTexto(esObjeto(marca) ? texto(marca['name']) : texto(marca)),
     };
   }
   return null;

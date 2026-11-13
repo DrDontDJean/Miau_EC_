@@ -197,6 +197,23 @@ ok(pidiendoloSoporte[0].titulo.startsWith('Soporte') && pidiendoloSoporte.length
   `"soporte televisor 55": el soporte va primero y no se penaliza (${pidiendoloSoporte.map(r => r.titulo.slice(0, 14)).join(' | ')})`);
 await db.exec(`reset role`);
 
+// Títulos con entidades HTML (de antes de que la fuente sitemap las decodificara): la migración 1900 los limpia en oferta
+// y en producto, decodifica "&amp;" al final y deja intactos los que ya están limpios. Se vuelve a ejecutar sobre datos sucios.
+const csuc = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [csuc, JSON.stringify([
+  oferta('E1', 'Monitor Curvo 27&quot; Tom &amp; Jerry &apos;Pro&apos; Edicion', 300, { dominio: 'randall-tech.com' }),
+  oferta('E2', 'Monitor Plano 24" ya limpio Edicion', 200, { dominio: 'randall-tech.com' }),
+  oferta('E3', 'Literal &amp;quot; sin doble decodificacion Edicion', 100, { dominio: 'randall-tech.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [csuc]);
+await db.exec(readFileSync(join(dir, readdirSync(dir).find(f => f.includes('titulos_sin_entidades_html'))), 'utf8'));
+const limpios = (await q(`select titulo from public.producto where titulo like '%Edicion' order by titulo`)).map(r => r.titulo);
+const enOfertas = (await q(`select titulo from public.oferta where sku_tienda in ('E1','E2','E3') order by sku_tienda`)).map(r => r.titulo);
+ok(JSON.stringify(limpios) === JSON.stringify([`Literal &quot; sin doble decodificacion Edicion`, `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion`, `Monitor Plano 24" ya limpio Edicion`]),
+  `títulos de producto sin entidades HTML, sin decodificar dos veces (${JSON.stringify(limpios)})`);
+ok(enOfertas[0] === `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion` && enOfertas[1] === 'Monitor Plano 24" ya limpio Edicion' && enOfertas[2] === 'Literal &quot; sin doble decodificacion Edicion',
+  'los títulos de oferta también quedan limpios');
+
 // Paginación: 30 parlantes de una tienda. Las páginas no repiten ni pierden productos (incluso con empates de rango),
 // el total no depende del límite, y los filtros se aplican en la base antes de paginar.
 const cpag = (await uno(`select ingesta.abrir_corrida('newstore') id`)).id;

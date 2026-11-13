@@ -35,6 +35,14 @@ describe('extraerProducto', () => {
     });
   });
 
+  it('decodifica las entidades HTML del nombre y de la marca, que las tiendas VTEX dejan en el JSON-LD', () => {
+    const html = jsonLd(producto({ name: 'Laptop HP 15-DY2172 | 15.6&quot; 8GB &amp; SSD &apos;512&apos;', brand: { '@type': 'Brand', name: 'Tom &amp; Jerry' } }));
+    expect(extraerProducto(html)).toMatchObject({ nombre: `Laptop HP 15-DY2172 | 15.6" 8GB & SSD '512'`, marca: 'Tom & Jerry' });
+    // Un texto que ya viene limpio no cambia, y un "&amp;quot;" se decodifica una sola vez.
+    expect(extraerProducto(jsonLd(producto({ name: 'Cable 3" Tom & Jerry' })))!.nombre).toBe('Cable 3" Tom & Jerry');
+    expect(extraerProducto(jsonLd(producto({ name: 'Literal &amp;quot;' })))!.nombre).toBe('Literal &quot;');
+  });
+
   it('encuentra el producto dentro de @graph y con @type como lista', () => {
     const html = jsonLd({ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', name: 'Tienda' }, producto({ '@type': ['Product', 'Thing'] })] });
     expect(extraerProducto(html)).toMatchObject({ nombre: 'Encimera a gas Teka GBC 95030', precio: 490.55 });
