@@ -1,13 +1,21 @@
 // Lecturas con caché (Cache Components). Los precios cambian como mucho una vez al día (una corrida),
 // así que unos minutos de caché no esconden nada y ahorran consultas a Supabase.
 import { cacheLife } from 'next/cache';
-import { crearCatalogo, type Orden, type Producto } from './catalogo';
+import { crearCatalogo, type Facetas, type Orden, type OpcionesBusqueda, type Producto, type ResultadoBusqueda } from './catalogo';
 import { clienteSupabase } from './supabase';
 
-export async function buscarCacheado(q: string, orden: Orden): Promise<Producto[]> {
+// Los argumentos son parte de la clave de la caché: cada página y cada combinación de filtros tiene la suya.
+export async function buscarCacheado(q: string, orden: Orden, opciones: OpcionesBusqueda = {}): Promise<ResultadoBusqueda> {
   'use cache';
   cacheLife('minutes');
-  return crearCatalogo(clienteSupabase()).buscar(q, orden);
+  return crearCatalogo(clienteSupabase()).buscar(q, orden, opciones);
+}
+
+/** Los conteos del lateral de filtros dependen solo del texto buscado: se calculan una vez para todas las páginas. */
+export async function facetasCacheadas(q: string): Promise<Facetas> {
+  'use cache';
+  cacheLife('minutes');
+  return crearCatalogo(clienteSupabase()).facetas(q);
 }
 
 export type Tienda = { id: string; nombre: string; origen: string; plataforma: string; ultima_corrida_ok: string | null };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crearCatalogo, type ClienteSupabase } from '../src/lib/catalogo';
+import { MAX_PAGINA, crearCatalogo, type ClienteSupabase } from '../src/lib/catalogo';
 import { crearBuscarGET, crearIrGET } from '../src/lib/rutas';
 
 // Una fila tal como la devuelve public.buscar_productos (migración 0400).
@@ -11,6 +11,7 @@ const filaTv = {
   precio_desde: 451.33,
   num_tiendas: 2,
   rango: 0.6,
+  total: 1,
   ofertas: [
     { id: 11, tienda_id: 'comandato', tienda: 'Comandato', titulo: 'Televisor 55" UN55U8000FPCZE', precio: 451.33,
       precio_lista: 988.25, disponible: true, visto_ultima_vez: '2026-11-06T13:40:00Z' },
@@ -77,14 +78,62 @@ describe('GET /api/buscar', () => {
     const r = await GET(new Request('http://localhost/api/buscar?q=televisor%20samsung&orden=precio_asc'));
 
     expect(r.status).toBe(200);
-    expect(llamadas).toEqual([{ fn: 'buscar_productos', args: { p_q: 'televisor samsung', p_orden: 'precio_asc', p_limite: 24, p_desde: 0 } }]);
+    expect(llamadas).toEqual([{ fn: 'buscar_productos', args: {
+      p_q: 'televisor samsung', p_orden: 'precio_asc', p_limite: 24, p_desde: 0,
+      p_solo_disponibles: false, p_solo_varias: false, p_tienda: null,
+    } }]);
     const cuerpo = await r.json();
-    expect(cuerpo.consulta).toBe('televisor samsung');
+    expect(cuerpo).toMatchObject({ consulta: 'televisor samsung', pagina: 1, porPagina: 24, total: 1 });
     expect(cuerpo.productos).toHaveLength(1);
     expect(cuerpo.productos[0]).toMatchObject({ id: filaTv.id, desde: 451.33, numTiendas: 2 });
     expect(cuerpo.productos[0].ofertas.map((o: { tienda: string; ir: string }) => [o.tienda, o.ir])).toEqual([
       ['Comandato', '/ir/11?pos=1'],
       ['Pycca', '/ir/12?pos=2'],
     ]);
+  });
+});
+
+describe('paginación de la búsqueda', () => {
+  const llamar = async (url: string) => {
+    const { cliente, llamadas } = clienteFalso({ buscar_productos: { data: [{ ...filaTv, total: 100 }], error: null } });
+    const r = await crearBuscarGET(crearCatalogo(cliente).buscar)(new Request(url));
+    return { cuerpo: await r.json(), args: llamadas[0]?.args };
+  };
+
+  it('la página 3 pide el desplazamiento 48 y devuelve el total de resultados, no solo los de la página', async () => {
+    const { cuerpo, args } = await llamar('http://localhost/api/buscar?q=laptop&pagina=3');
+    expect(args).toMatchObject({ p_limite: 24, p_desde: 48 });
+    expect(cuerpo).toMatchObject({ pagina: 3, porPagina: 24, total: 100 });
+  });
+
+  it.each([['0'], ['-2'], ['abc'], ['2.5'], ['']])('una página inválida (%j) es la primera', async valor => {
+    const { cuerpo, args } = await llamar(`http://localhost/api/buscar?q=laptop&pagina=${valor}`);
+    expect(args).toMatchObject({ p_desde: 0 });
+    expect(cuerpo.pagina).toBe(1);
+  });
+
+  it('una página enorme se recorta a la última que la base entrega, para no pedir desplazamientos imposibles', async () => {
+    const { cuerpo, args } = await llamar('http://localhost/api/buscar?q=laptop&pagina=999999');
+    expect(cuerpo.pagina).toBe(MAX_PAGINA);
+    expect(Number(args!.p_desde)).toBeLessThanOrEqual(10_000);
+  });
+
+  it('los filtros viajan a la base: disponibles, varias tiendas y tienda', async () => {
+    const { cliente, llamadas } = clienteFalso({ buscar_productos: { data: [], error: null } });
+    await crearCatalogo(cliente).buscar('laptop', 'precio_desc', { pagina: 2, soloDisponibles: true, soloVarias: true, tienda: 'kywi' });
+    expect(llamadas[0]!.args).toEqual({
+      p_q: 'laptop', p_orden: 'precio_desc', p_limite: 24, p_desde: 24,
+      p_solo_disponibles: true, p_solo_varias: true, p_tienda: 'kywi',
+    });
+  });
+
+  it('sin resultados el total es 0, y las facetas se leen de facetas_busqueda', async () => {
+    const { cliente } = clienteFalso({
+      buscar_productos: { data: [], error: null },
+      facetas_busqueda: { data: { total: '30', disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: '12' }] }, error: null },
+    });
+    const catalogo = crearCatalogo(cliente);
+    expect((await catalogo.buscar('zzzz')).total).toBe(0);
+    expect(await catalogo.facetas('laptop')).toEqual({ total: 30, disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: 12 }] });
   });
 });

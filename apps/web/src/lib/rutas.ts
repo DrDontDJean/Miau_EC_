@@ -1,17 +1,17 @@
 // Route handlers como fábricas: reciben sus dependencias para poder probarlos sin Next ni Supabase.
-import { ORDENES, type Orden, type Producto } from './catalogo';
+import { ORDENES, leerPagina, type OpcionesBusqueda, type Orden, type ResultadoBusqueda } from './catalogo';
 
 export const leerOrden = (v: string | null | undefined): Orden =>
   (ORDENES as string[]).includes(v ?? '') ? (v as Orden) : 'relevancia';
 
-export function crearBuscarGET(buscar: (q: string, orden: Orden) => Promise<Producto[]>) {
+export function crearBuscarGET(buscar: (q: string, orden: Orden, opciones: OpcionesBusqueda) => Promise<ResultadoBusqueda>) {
   return async function GET(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const q = (url.searchParams.get('q') ?? '').trim().slice(0, 80);
     if (q.length < 2) return Response.json({ error: 'Escribe al menos 2 caracteres.' }, { status: 400 });
     const orden = leerOrden(url.searchParams.get('orden'));
-    const productos = await buscar(q, orden);
-    return Response.json({ consulta: q, orden, productos });
+    const { productos, total, pagina, porPagina } = await buscar(q, orden, { pagina: leerPagina(url.searchParams.get('pagina')) });
+    return Response.json({ consulta: q, orden, pagina, porPagina, total, productos });
   };
 }
 
