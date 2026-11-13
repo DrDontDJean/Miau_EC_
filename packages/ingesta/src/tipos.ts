@@ -14,6 +14,14 @@ export type TiendaIngesta = Tienda & {
   paginas_por_corrida?: number;
 };
 
+/** Lo que una fuente puede necesitar de la corrida además del cliente HTTP. */
+export type ContextoFuente = {
+  /** robots.txt del host de lectura. Una fuente que pide URLs variables lo usa para comprobar cada una. */
+  leerRobots?: () => Promise<string>;
+  /** Fuente 'sitemap': URL → última vez que se vio la oferta (ISO), para decidir qué páginas leer hoy. */
+  ultimasVisitas?: () => Promise<Map<string, string>>;
+};
+
 /** Seam 1 de la ingesta: de dónde salen las ofertas. Una página por iteración. */
 export interface Fuente {
   leer(): AsyncIterable<OfertaCruda[]>;

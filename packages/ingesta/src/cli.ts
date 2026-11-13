@@ -35,15 +35,18 @@ try {
 
   const resultados = await Promise.all(tiendas.map(async (t): Promise<ResumenCorrida> => {
     const http = crearHttp({ peticionesPorSegundo: t.peticiones_por_segundo });
+    // Se lee una sola vez por corrida: la puerta de la corrida y la fuente comparten el mismo robots.txt.
+    let robots: Promise<string> | null = null;
+    const leerRobots = () => robots ??= (async () => {
+      const { texto, status } = await http.texto(`${origenDeRobots(t)}/robots.txt`);
+      if (status >= 500) throw new Error(`robots.txt respondió ${status}`); // RFC 9309: tratar como prohibido
+      return status >= 400 ? '' : texto;                                    // 4xx: sin restricciones
+    })();
     const r = await ejecutarCorrida(t, {
-      fuente: fuenteCon(t, http),
+      fuente: fuenteCon(t, http, { leerRobots }),
       almacen,
       limitePaginas,
-      leerRobots: async () => {
-        const { texto, status } = await http.texto(`${origenDeRobots(t)}/robots.txt`);
-        if (status >= 500) throw new Error(`robots.txt respondió ${status}`); // RFC 9309: tratar como prohibido
-        return status >= 400 ? '' : texto;                                    // 4xx: sin restricciones
-      },
+      leerRobots,
     });
     console.log(`  ${t.id}: ${r.estado} · ${r.validas}/${r.leidas} válidas · ${r.nuevas} nuevas · ${r.actualizadas} actualizadas · ` +
       `${r.agotadas} agotadas · ${r.en_cuarentena} en cuarentena · ${r.desactivadas} desactivadas${r.error ? ` · ${r.error}` : ''}`);

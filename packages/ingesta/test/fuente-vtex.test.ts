@@ -35,7 +35,9 @@ describe('fuente VTEX', () => {
 
     expect(paginas.map(p => p.length)).toEqual([50, 50, 20]);
     const busquedas = srv.peticiones.filter(p => p.url.includes('/products/search'));
-    expect(busquedas.map(p => new URL(p.url).searchParams.get('_from'))).toEqual(['0', '50', '100']);
+    // La última búsqueda (_from=0) es la del total global, con la que se comprueba que no falte nada.
+    expect(busquedas.map(p => new URL(p.url).searchParams.get('_from'))).toEqual(['0', '50', '100', '0']);
+    expect(srv.peticiones.some(p => p.url.includes('/category/tree/10'))).toBe(true);
     expect(paginas[0]![0]).toEqual({
       sku_tienda: 'p0',
       titulo: 'TELEVISOR MINI HOME ENV 18.5"',
@@ -58,7 +60,7 @@ describe('fuente VTEX', () => {
     const paginas = await todas(fuentePara(tienda(), { fetch: srv.fetch, esperar: async () => {} }).leer());
     expect(paginas.flat()).toHaveLength(70);
     const fqs = srv.peticiones.filter(p => p.url.includes('/products/search')).map(p => new URL(p.url).searchParams.get('fq'));
-    expect(fqs).toEqual(['C:/1/', 'C:/1/11/', 'C:/1/11/', 'C:/1/12/']);
+    expect(fqs).toEqual(['C:/1/', 'C:/1/11/', 'C:/1/11/', 'C:/1/12/', null]);   // null: el total global
   });
 
   it('un producto que aparece en dos categorías se entrega una sola vez', async () => {
@@ -82,7 +84,8 @@ describe('fuente VTEX', () => {
     }).leer());
     expect(srv.peticiones.every(p => p.agente?.startsWith('DecideAqui/'))).toBe(true);
     // árbol → (1 s) → búsqueda 429 → Retry-After 5 s → (sin espera extra: ya pasó 1 s) → búsqueda 206
-    expect(esperas).toEqual([1000, 5000]);
+    // y, tras la categoría, otro segundo de pausa antes de la búsqueda del total global
+    expect(esperas).toEqual([1000, 5000, 1000]);
   });
 
   it('si VTEX cambia la forma de sus productos, la corrida falla en vez de cargar basura', async () => {
