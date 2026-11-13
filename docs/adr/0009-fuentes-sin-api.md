@@ -26,6 +26,8 @@ fuente nueva, **sitemap**, que llega a las tiendas cuya API no se puede leer.
 6. **Presupuesto diario de páginas.** Una página por producto a 1 petición por segundo no cabe en un día para las tiendas
    grandes. Cada tienda sitemap tiene `paginas_por_corrida` (2.500 por omisión, unos 42 minutos). Cada corrida lee primero
    las URLs nunca vistas, luego las modificadas desde la última visita (`lastmod`) y luego las visitadas hace más tiempo.
+   Antes de todo eso, hasta el 40 % del presupuesto se dedica a las ofertas que se comparan con otras tiendas o que
+   recibieron salidas en los últimos 30 días, si llevan más de 20 horas sin verse: su precio es el que la gente mira.
    El precio de una oferta puede tener entre 1 y unos 8 días, y la web lo dice.
 7. **Cómo se retira una oferta de una tienda sitemap.** No se visita todo cada día, así que la regla de las dos ausencias
    no aplica. Se desactiva lo que sale del sitemap o devuelve 404 o 410. Si el sitemap trae menos de la mitad de las ofertas

@@ -65,7 +65,8 @@ vuelve sola a `activa` cuando su robots.txt lo permite.
 
 ## Limitaciones conocidas
 
-- La búsqueda también encuentra accesorios ("televisor 55" devuelve soportes). Falta filtrar por categoría.
+- La búsqueda también encuentra accesorios ("televisor 55" devuelve soportes), aunque ahora van después de los productos
+  (salvo que se busque uno, como "soporte tv"). Falta una categoría real por producto para poder filtrar.
 - El código de modelo no sirve para ferretería ni hogar (Kywi, Pycca): esas ofertas quedan como producto propio.
 - Mercado Libre Ecuador no está incluido: su API de búsqueda pide autenticación de aplicación.
 - Las tiendas leídas por sitemap se revisan por tandas (2.500 páginas por corrida, a 1 por segundo): el precio de una
@@ -73,5 +74,4 @@ vuelve sola a `activa` cuando su robots.txt lo permite.
 - Una categoría VTEX de más de 5.000 productos sin subcategorías no se alcanza completa: la corrida de esa tienda queda
   `parcial` y no desactiva nada. Lo mismo ocurre si el robots.txt de la tienda prohíbe el orden por nombre.
 - Una oferta agotada que nunca se vio con precio no se publica: no hay ningún precio que conservar.
-- Frecuento publica algunos productos con variantes sin precio: no se publican. Sus descuentos (`precio_lista`) no se
-  leen todavía.
+- Frecuento no entrega las variantes de sus productos en su lista (solo el producto): se publica una oferta por producto.

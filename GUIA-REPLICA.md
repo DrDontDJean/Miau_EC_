@@ -104,7 +104,7 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 | `apps/web` | Web Next.js 16 (App Router, Cache Components): inicio, `/buscar`, `/p/[id]` con historial, `/tiendas`, `/api/buscar` e `/ir/[id]`. `vercel.json` fija la región `iad1` |
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
 | `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
-| `supabase/migrations` | 16 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap, cierre de corridas abandonadas y frescura sin avisos duplicados |
+| `supabase/migrations` | 17 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap, cierre de corridas abandonadas frescura sin avisos duplicados y accesorios al final de la búsqueda |
 | `supabase/seed.sql` | 28 tiendas (24 activas, Smart Home EC `sin_permiso` por su robots.txt, y De Prati, El Bárbaro y Steren `pausada` porque responden 403) y 6 categorías |
 | `scripts/` | Wizard de configuración, validador del esquema (PGlite), carga del seed, resumen del catálogo y empaquetador |
 | `.github/workflows` | `ci.yml`, `migraciones.yml`, `ingesta.yml` (diaria) y `carga-k6.yml` (manual) |
@@ -126,8 +126,8 @@ cd comparador-ecuador
 npm install
 
 # 3. Comprueba que todo funciona sin ninguna cuenta todavía
-npm test                  # 176 pruebas: prototipo 8, dominio 27, ingesta 136 (contra PGlite), web 5
-npm run validar:esquema   # aplica las 16 migraciones en Postgres-WASM y recorre un escenario: 55 comprobaciones ✔
+npm test                  # 185 pruebas: prototipo 8, dominio 30, ingesta 142 (contra PGlite), web 5
+npm run validar:esquema   # aplica las 17 migraciones en Postgres-WASM y recorre un escenario: 59 comprobaciones ✔
 ```
 
 Si alguna falla aquí, no sigas: revisa la versión de Node (`node -v` debe ser 24 o más).
@@ -217,8 +217,8 @@ git push -u origin main
 
 Esto lanza dos workflows (en GitHub → Actions):
 
-- **CI**: tipos, 176 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
-- **Migraciones Supabase**: `supabase db push --db-url` aplica las 16 migraciones a tu proyecto. Usa el environment
+- **CI**: tipos, 185 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
+- **Migraciones Supabase**: `supabase db push --db-url` aplica las 17 migraciones a tu proyecto. Usa el environment
   `produccion`, que GitHub crea solo. Si quieres aprobar a mano cada migración, añade una regla en Settings →
   Environments → produccion → Required reviewers.
 
@@ -521,7 +521,7 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 
 ## 12. Lista final de verificación
 
-- [ ] `npm test`: 176 pruebas pasan · `npm run validar:esquema`: 55 ✔
+- [ ] `npm test`: 185 pruebas pasan · `npm run validar:esquema`: 59 ✔
 - [ ] `.env` creado por el wizard. `git status` no lo muestra
 - [ ] Secretos de GitHub: `DATABASE_URL` (y `VERCEL_AUTOMATION_BYPASS_SECRET` para k6)
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado
