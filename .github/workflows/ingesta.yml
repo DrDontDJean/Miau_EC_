@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tienda:
-        description: 'Solo esta tienda (vacío = todas las activas)'
+        description: 'Solo esta tienda (vacío = las activas y las sin permiso, que se vuelven a revisar)'
         required: false
       limite_paginas:
         description: 'Cortar tras N páginas por tienda (vacío = corrida completa)'
@@ -17,7 +17,9 @@ concurrency: ingesta   # nunca dos corridas a la vez
 jobs:
   corrida:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Las tiendas corren en paralelo; la más larga es una fuente sitemap con su presupuesto completo
+    # (2500 páginas a 1 por segundo: unos 42 minutos), o Kywi (unos 11 minutos).
+    timeout-minutes: 90
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       TIENDA: ${{ inputs.tienda }}
