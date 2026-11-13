@@ -12,12 +12,15 @@ export type ResumenCorrida = {
   corrida_id: number; tienda_id: string; estado: EstadoCorrida | 'en_curso';
   leidas: number; validas: number; en_cuarentena: number;
   nuevas: number; actualizadas: number; sin_cambios: number; desactivadas: number; error: string | null;
+  agotadas: number;
 };
 
 export type Lote = {
   validas: OfertaValida[];
   cuarentena: { sku_tienda: string | null; reglas: string[]; payload: OfertaCruda }[];
   advertencias: Advertencia[];
+  /** SKUs sin stock y sin precio: se marcan agotados conservando su último precio. */
+  agotadas: string[];
 };
 
 /** Seam 2 de la ingesta: dónde quedan las ofertas. */
@@ -35,9 +38,13 @@ export function almacenPostgres(ejecutar: Ejecutar): Almacen {
       const [fila] = await ejecutar('select ingesta.abrir_corrida($1) as id', [tiendaId]);
       return Number(fila!.id);
     },
-    async cargar(corridaId, { validas, cuarentena, advertencias }) {
+    async cargar(corridaId, { validas, cuarentena, advertencias, agotadas }) {
       for (let i = 0; i < validas.length; i += MAX_LOTE) {
         await ejecutar('select ingesta.cargar_lote($1::bigint, $2::jsonb)', [corridaId, validas.slice(i, i + MAX_LOTE)]);
+      }
+      // Una agotada no puede pasar por cargar_lote: la base exige precio > 0.
+      for (let i = 0; i < agotadas.length; i += MAX_LOTE) {
+        await ejecutar('select ingesta.marcar_agotadas($1::bigint, $2::jsonb)', [corridaId, agotadas.slice(i, i + MAX_LOTE)]);
       }
       if (cuarentena.length) await ejecutar('select ingesta.registrar_cuarentena($1::bigint, $2::jsonb)', [corridaId, cuarentena]);
       if (advertencias.length) await ejecutar('select ingesta.registrar_incidencias($1::bigint, $2::jsonb)', [corridaId, advertencias]);
@@ -51,7 +58,7 @@ export function almacenPostgres(ejecutar: Ejecutar): Almacen {
         corrida_id: n('id'), tienda_id: String(c!.tienda_id), estado: c!.estado as ResumenCorrida['estado'],
         leidas: n('leidas'), validas: n('validas'), en_cuarentena: n('en_cuarentena'), nuevas: n('nuevas'),
         actualizadas: n('actualizadas'), sin_cambios: n('sin_cambios'), desactivadas: n('desactivadas'),
-        error: (c!.error as string | null) ?? null,
+        error: (c!.error as string | null) ?? null, agotadas: n('agotadas'),
       };
     },
   };

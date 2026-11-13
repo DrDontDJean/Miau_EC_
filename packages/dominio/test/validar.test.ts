@@ -82,6 +82,22 @@ describe('validar', () => {
     expect(r.tipo === 'valida' && r.advertencias).toEqual([]);
   });
 
+  it.each([
+    ['precio 0', { precio: 0 }],
+    ['sin precio', { precio: null }],
+  ] as const)('sin stock y %s: es una agotada, no va a cuarentena', (_, cambio) => {
+    expect(validar({ ...tv, ...cambio, disponible: false }, comandato)).toEqual({ tipo: 'agotada', sku_tienda: '685' });
+  });
+
+  it.each([
+    ['precio negativo sin stock', { precio: -1, disponible: false }, ['precio_invalido']],
+    ['precio 0 con stock', { precio: 0, disponible: true }, ['precio_invalido']],
+    ['precio 0 sin dato de stock', { precio: 0, disponible: null }, ['precio_invalido']],
+    ['agotada con otro fallo bloqueante', { precio: 0, disponible: false, url: 'https://otra.com/x' }, ['precio_invalido', 'url_fuera_de_tienda']],
+  ] as const)('%s: sigue yendo a cuarentena', (_, cambio, reglas) => {
+    expect(validar({ ...tv, ...cambio }, comandato)).toEqual({ tipo: 'cuarentena', sku_tienda: '685', reglas });
+  });
+
   it('una oferta con varios fallos los informa todos', () => {
     const r = validar({ ...tv, precio: -1, titulo: '', moneda: 'COP' }, comandato);
     expect(r.tipo === 'cuarentena' && r.reglas.sort()).toEqual(['moneda_no_usd', 'precio_invalido', 'titulo_vacio']);

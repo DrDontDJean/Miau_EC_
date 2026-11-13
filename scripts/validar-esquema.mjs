@@ -86,6 +86,27 @@ ok(r3.desactivadas === 1, `la lámpara falta en 2 corridas seguidas: se desactiv
 const hist = await q(`select h.precio, h.valido_hasta is null abierto from public.precio_historial h join public.oferta o on o.id=h.oferta_id where o.sku_tienda='100' and o.tienda_id='comandato' order by valido_desde`);
 ok(hist.length === 2 && hist[1].abierto, `historial SCD2 de la TV: ${hist.map(h => h.precio).join(' → ')}`);
 
+// Pausar una tienda saca sus ofertas del precio desde sin desactivarlas; reactivarla lo restaura.
+const tvAhora = async () => uno(`select num_tiendas, precio_desde::float8 desde from public.producto where modelo = 'UN55U8000FPCZE'`);
+await q(`update public.tienda set estado = 'pausada' where id = 'comandato'`);
+const tvPausa = await tvAhora();
+ok(tvPausa.num_tiendas === 1 && tvPausa.desde === 591.82, `tienda pausada: la TV queda en 1 tienda desde 591.82 (obtenido ${tvPausa.num_tiendas}, ${tvPausa.desde})`);
+await q(`update public.tienda set estado = 'activa' where id = 'comandato'`);
+const tvVuelta = await tvAhora();
+ok(tvVuelta.num_tiendas === 2 && tvVuelta.desde === 45.13, `tienda reactivada: vuelve a 2 tiendas desde 45.13 (obtenido ${tvVuelta.num_tiendas}, ${tvVuelta.desde})`);
+
+// Una corrida correcta de una tienda sin permiso la devuelve a activa; una pausada no se toca.
+await q(`update public.tienda set estado = 'sin_permiso', motivo_estado = 'robots.txt: Disallow: /*?' where id = 'kywi'`);
+const ck = (await uno(`select ingesta.abrir_corrida('kywi') id`)).id;
+await q(`select ingesta.cerrar_corrida($1, 'parcial', 'prueba')`, [ck]);
+const kywi = await uno(`select estado::text, motivo_estado from public.tienda where id = 'kywi'`);
+ok(kywi.estado === 'activa' && kywi.motivo_estado === null, `corrida parcial de una tienda sin_permiso: vuelve a activa (${kywi.estado})`);
+await q(`update public.tienda set estado = 'pausada' where id = 'kywi'`);
+const cp = (await uno(`select ingesta.abrir_corrida('kywi') id`)).id;
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cp]);
+ok((await uno(`select estado::text e from public.tienda where id = 'kywi'`)).e === 'pausada', 'una tienda pausada no se reactiva sola');
+await q(`update public.tienda set estado = 'activa' where id = 'kywi'`);
+
 // Corte de seguridad: una corrida que lee menos de la mitad no desactiva nada.
 const c4 = (await uno(`select ingesta.abrir_corrida('novicompu') id`)).id;
 await q(`select ingesta.cargar_lote($1, $2)`, [c4, JSON.stringify([oferta('A1', 'Televisor Samsung UN55U8000FPCZE 55" HD Smart', 591.82, { modelo: 'UN55U8000FPCZE', dominio: 'novicompu.com' })])]);

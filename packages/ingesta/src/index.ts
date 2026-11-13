@@ -5,7 +5,7 @@ import { fuenteFeed } from './fuentes/feed.ts';
 import type { Fuente, TiendaIngesta } from './tipos.ts';
 
 export { permitido } from './robots.ts';
-export { ejecutarCorrida, rutaDeLectura, type DependenciasCorrida } from './corrida.ts';
+export { ejecutarCorrida, origenDeRobots, rutaDeLectura, type DependenciasCorrida } from './corrida.ts';
 export { almacenPostgres, type Almacen, type Ejecutar, type ResumenCorrida } from './almacen/postgres.ts';
 export { crearHttp, AGENTE } from './http.ts';
 export type { Fuente, TiendaIngesta } from './tipos.ts';
