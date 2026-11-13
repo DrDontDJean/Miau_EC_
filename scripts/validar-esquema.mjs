@@ -197,6 +197,42 @@ ok(pidiendoloSoporte[0].titulo.startsWith('Soporte') && pidiendoloSoporte.length
   `"soporte televisor 55": el soporte va primero y no se penaliza (${pidiendoloSoporte.map(r => r.titulo.slice(0, 14)).join(' | ')})`);
 await db.exec(`reset role`);
 
+// Paginación: 30 parlantes de una tienda. Las páginas no repiten ni pierden productos (incluso con empates de rango),
+// el total no depende del límite, y los filtros se aplican en la base antes de paginar.
+const cpag = (await uno(`select ingesta.abrir_corrida('newstore') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cpag, JSON.stringify(Array.from({ length: 30 }, (_, i) =>
+  oferta(`PG${i}`, `Parlante Bluetooth Portatil Estilo ${String.fromCharCode(65 + i)}`, 10 + i, { dominio: 'newstore.com', disponible: i % 3 !== 0 })))]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cpag]);
+await db.exec(`set role anon`);
+const pagina = (orden, limite, desde, extra = '') =>
+  q(`select id, titulo, precio_desde::float8 precio, total::int total from public.buscar_productos('parlante bluetooth', '${orden}', ${limite}, ${desde}${extra})`);
+const [pg1, pg2, pg3, pg4] = [await pagina('precio_asc', 12, 0), await pagina('precio_asc', 12, 12), await pagina('precio_asc', 12, 24), await pagina('precio_asc', 12, 60)];
+const juntas = [...pg1, ...pg2, ...pg3];
+ok(pg1.length === 12 && pg2.length === 12 && pg3.length === 6 && pg4.length === 0 && juntas.every(f => f.total === 30),
+  `paginar: 12 + 12 + 6 productos, el total es 30 en cada fila y una página fuera de rango viene vacía (${[pg1, pg2, pg3, pg4].map(p => p.length)})`);
+// Un producto sin ninguna oferta disponible no tiene "precio desde": va al final, y entre sí por id.
+const conPrecio = juntas.filter(f => f.precio !== null);
+const primerSinPrecio = juntas.findIndex(f => f.precio === null);
+ok(new Set(juntas.map(f => f.id)).size === 30 && conPrecio.length === 20 &&
+   conPrecio.every((f, i) => i === 0 || f.precio > conPrecio[i - 1].precio) &&
+   juntas.slice(primerSinPrecio).every(f => f.precio === null),
+  'las páginas por precio no repiten ni pierden productos: 20 con precio de menor a mayor a través de las páginas y los 10 agotados al final');
+const sinOrden = [];
+for (let desde = 0; desde < 30; desde += 7) sinOrden.push(...await pagina('relevancia', 7, desde));
+ok(sinOrden.length === 30 && new Set(sinOrden.map(f => f.id)).size === 30,
+  'con empates de rango (todos igual de relevantes), las páginas de 7 siguen sin repetir ni perder productos');
+const [disp] = await q(`select count(*)::int n, max(total)::int total from public.buscar_productos('parlante bluetooth', 'precio_asc', 60, 0, true)`);
+ok(disp.n === 20 && disp.total === 20, `filtro "solo disponibles" en la base: 20 de 30, y el total lo refleja (${disp.n} de ${disp.total})`);
+const [dePropia] = await q(`select count(*)::int n from public.buscar_productos('parlante bluetooth', 'precio_asc', 60, 0, false, false, 'newstore')`);
+const [deOtra] = await q(`select count(*)::int n from public.buscar_productos('parlante bluetooth', 'precio_asc', 60, 0, false, false, 'kywi')`);
+ok(dePropia.n === 30 && deOtra.n === 0, `filtro por tienda: 30 de newstore y ninguno de kywi (${dePropia.n}, ${deOtra.n})`);
+const varias = await q(`select num_tiendas, total::int total from public.buscar_productos('televisor', 'relevancia', 60, 0, false, true)`);
+ok(varias.length >= 1 && varias.every(f => f.num_tiendas > 1 && f.total === varias.length), `filtro "varias tiendas": solo productos de 2 o más tiendas (${varias.length})`);
+const [{ facetas }] = await q(`select public.facetas_busqueda('parlante bluetooth') facetas`);
+ok(facetas.total === 30 && facetas.disponibles === 20 && facetas.varias === 0 && facetas.tiendas.length === 1 && facetas.tiendas[0].id === 'newstore' && facetas.tiendas[0].n === 30,
+  `facetas de la búsqueda: ${JSON.stringify(facetas)}`);
+await db.exec(`reset role`);
+
 // Frescura: llamarla dos veces seguidas deja una sola incidencia por tienda desactualizada, y una tienda que
 // vuelve a tener una corrida correcta abre un episodio nuevo si se vuelve a atrasar.
 const fresca1 = (await uno(`select calidad.revisar_frescura() n`)).n;
