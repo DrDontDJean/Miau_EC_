@@ -34,7 +34,9 @@ function reglasPara(robotsTxt: string, agente: string): Regla[] {
     }
   }
   const token = agente.toLowerCase();
-  const propios = grupos.filter(g => g.agentes.some(a => a !== '*' && token.includes(a)));
+  // RFC 9309 §2.2.1: un grupo aplica si su user-agent es igual al nombre del robot, sin distinguir mayúsculas.
+  // Con includes, un grupo "User-agent: a" (o "deci") también aplicaba a DecideAqui.
+  const propios = grupos.filter(g => g.agentes.some(a => a !== '*' && a === token));
   const elegidos = propios.length ? propios : grupos.filter(g => g.agentes.includes('*'));
   // Varios grupos para el mismo agente se combinan (RFC 9309 §2.2.1).
   return elegidos.flatMap(g => g.reglas);
