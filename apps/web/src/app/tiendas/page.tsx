@@ -4,8 +4,6 @@ import { diaCorto, horaCorta } from '@/lib/fechas';
 
 export const metadata: Metadata = { title: 'Tiendas', description: 'Tiendas que compara DecideAquí y la última actualización de precios de cada una.' };
 
-const NUMEROS = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez'];
-
 export default async function Tiendas() {
   const tiendas = await tiendasActivas();
   return (
@@ -25,7 +23,6 @@ export default async function Tiendas() {
                 <td className="px-4 py-1">
                   <a href={t.origen} rel="noopener" className="inline-flex min-h-11 items-center font-bold text-enlace underline">{t.nombre}</a>
                   {t.plataforma === 'feed' && <span className="block pb-2 text-sm text-suave">Precios enviados por la tienda</span>}
-                  {t.plataforma === 'sitemap' && <span className="block pb-2 text-sm text-suave">Precios revisados por tandas, cada pocos días</span>}
                 </td>
                 <td className="px-4 py-3 tabular-nums">
                   {t.ultima_corrida_ok
@@ -37,9 +34,6 @@ export default async function Tiendas() {
           </tbody>
         </table>
       </div>
-      <p className="mt-6 text-suave">
-        Por ahora comparamos {tiendas.length === 1 ? 'esta tienda' : `estas ${NUMEROS[tiendas.length] ?? tiendas.length} tiendas`}.
-      </p>
     </section>
   );
 }
