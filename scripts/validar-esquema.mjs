@@ -30,6 +30,16 @@ for (const f of readdirSync(dir).sort()) {
 await db.exec(readFileSync(join(RAIZ, 'supabase', 'seed.sql'), 'utf8'));
 ok(true, 'seed.sql');
 
+// El seed: 24 tiendas leíbles, 1 sin permiso (Smart Home EC) y 2 pausadas (403), y se puede recargar sin duplicar.
+const porEstado = async () => Object.fromEntries((await db.query(`select estado::text e, count(*)::int n from public.tienda group by 1`)).rows.map(r => [r.e, r.n]));
+await db.exec(readFileSync(join(RAIZ, 'supabase', 'seed.sql'), 'utf8'));
+const estadosSeed = await porEstado();
+ok(estadosSeed.activa === 24 && estadosSeed.sin_permiso === 1 && estadosSeed.pausada === 2,
+  `seed recargado sin duplicar: 24 activas, 1 sin permiso y 2 pausadas (${JSON.stringify(estadosSeed)})`);
+const patrones = (await db.query(`select id, patron_producto from public.tienda where plataforma = 'sitemap'`)).rows;
+const malos = patrones.filter(p => { try { new RegExp(p.patron_producto); return false; } catch { return true; } });
+ok(patrones.length === 12 && malos.length === 0, `${patrones.length} tiendas sitemap con patrón de producto válido (inválidos: ${malos.map(m => m.id).join(', ') || 'ninguno'})`);
+
 const q = async (sql, params) => (await db.query(sql, params)).rows;
 const uno = async (sql, params) => (await q(sql, params))[0];
 
