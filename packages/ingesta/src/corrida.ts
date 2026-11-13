@@ -84,6 +84,9 @@ export async function ejecutarCorrida(tienda: TiendaIngesta, deps: DependenciasC
         return await deps.almacen.cerrar(corrida, 'parcial', `limitada a ${deps.limitePaginas} páginas`);
       }
     }
+    // Fuentes sitemap: lo que salió del sitemap o la tienda retiró se desactiva aquí; el resto no se visita a diario.
+    const reconciliacion = deps.fuente.reconciliar?.();
+    if (reconciliacion) await deps.almacen.reconciliar(corrida, reconciliacion.vigentes, reconciliacion.retiradas);
     // Una fuente que no pudo cubrir todo el catálogo no debe desactivar lo que no leyó.
     const incompleta = deps.fuente.incompleta?.() ?? null;
     if (incompleta) return await deps.almacen.cerrar(corrida, 'parcial', incompleta.slice(0, 500));

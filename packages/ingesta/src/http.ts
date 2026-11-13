@@ -15,6 +15,8 @@ export type OpcionesHttp = {
 export type Http = {
   json<T = unknown>(url: string): Promise<{ datos: T; cabeceras: Headers }>;
   texto(url: string): Promise<{ texto: string; status: number }>;
+  /** Cuerpo sin interpretar, para archivos comprimidos (sitemap.xml.gz). */
+  binario(url: string): Promise<{ datos: Uint8Array; status: number }>;
 };
 
 const dormir = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
@@ -36,7 +38,7 @@ export function crearHttp(o: OpcionesHttp = {}): Http {
       let r: Response;
       try {
         r = await f(url, {
-          headers: { 'User-Agent': AGENTE, Accept: 'application/json, text/plain, */*' },
+          headers: { 'User-Agent': AGENTE, Accept: 'application/json, text/html, application/xml, text/plain, */*' },
           signal: AbortSignal.timeout(timeoutMs),
         });
       } catch (e) {
@@ -61,6 +63,10 @@ export function crearHttp(o: OpcionesHttp = {}): Http {
     async texto(url: string) {
       const r = await pedir(url);
       return { texto: await r.text(), status: r.status };
+    },
+    async binario(url) {
+      const r = await pedir(url);
+      return { datos: new Uint8Array(await r.arrayBuffer()), status: r.status };
     },
   };
 }

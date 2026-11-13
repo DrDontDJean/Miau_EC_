@@ -42,8 +42,12 @@ try {
       if (status >= 500) throw new Error(`robots.txt respondió ${status}`); // RFC 9309: tratar como prohibido
       return status >= 400 ? '' : texto;                                    // 4xx: sin restricciones
     })();
+    // Fuentes sitemap: cuándo se vio cada oferta, para leer primero lo nuevo, lo modificado y lo más viejo.
+    const ultimasVisitas = async () => new Map(
+      ((await sql.unsafe('select url, visto_ultima_vez::text as visto from public.oferta where tienda_id = $1', [t.id])) as unknown as
+        { url: string; visto: string }[]).map(f => [f.url, f.visto] as const));
     const r = await ejecutarCorrida(t, {
-      fuente: fuenteCon(t, http, { leerRobots }),
+      fuente: fuenteCon(t, http, { leerRobots, ultimasVisitas }),
       almacen,
       limitePaginas,
       leerRobots,

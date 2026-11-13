@@ -30,4 +30,10 @@ export interface Fuente {
    * Una corrida incompleta cierra como 'parcial' y no desactiva ofertas.
    */
   incompleta?(): string | null;
+  /**
+   * Fuentes que no recorren todo el catálogo en cada corrida (sitemap): al terminar, las URLs que siguen
+   * vigentes en el sitemap y las que la tienda ya no sirve (404 o 410). La corrida desactiva las ofertas
+   * que ya no están en el sitemap o que fueron retiradas, en vez de aplicar la regla de las dos ausencias.
+   */
+  reconciliar?(): { vigentes: string[]; retiradas: string[] } | null;
 }

@@ -28,6 +28,8 @@ export interface Almacen {
   abrirCorrida(tiendaId: string): Promise<number>;
   cargar(corridaId: number, lote: Lote): Promise<void>;
   cerrar(corridaId: number, estado: EstadoCorrida, error?: string): Promise<ResumenCorrida>;
+  /** Fuentes sitemap: desactiva las ofertas que ya no están en el sitemap o que la tienda retiró. */
+  reconciliar(corridaId: number, vigentes: string[], retiradas: string[]): Promise<number>;
 }
 
 const MAX_LOTE = 1000; // límite de ingesta.cargar_lote
@@ -48,6 +50,11 @@ export function almacenPostgres(ejecutar: Ejecutar): Almacen {
       }
       if (cuarentena.length) await ejecutar('select ingesta.registrar_cuarentena($1::bigint, $2::jsonb)', [corridaId, cuarentena]);
       if (advertencias.length) await ejecutar('select ingesta.registrar_incidencias($1::bigint, $2::jsonb)', [corridaId, advertencias]);
+    },
+    async reconciliar(corridaId, vigentes, retiradas) {
+      const [fila] = await ejecutar('select ingesta.desactivar_fuera_de_sitemap($1::bigint, $2::jsonb, $3::jsonb) as n',
+        [corridaId, vigentes, retiradas]);
+      return Number(fila!.n);
     },
     async cerrar(corridaId, estado, error) {
       const [c] = await ejecutar(
