@@ -32,3 +32,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run ingesta --workspace packages/ingesta
+      # Falla (y GitHub avisa por correo) si una tienda lleva dos corridas malas, está desactualizada o la base pasa de 400 MB.
+      - name: Avisos de operación
+        if: always()
+        run: node scripts/avisos-operacion.mjs

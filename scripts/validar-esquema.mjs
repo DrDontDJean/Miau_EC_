@@ -267,6 +267,21 @@ await q(`update public.tienda set ultima_corrida_ok = now() - interval '2 days' 
 const fresca3 = (await uno(`select calidad.revisar_frescura() n`)).n;
 ok(fresca3 === 1, `una tienda con una corrida correcta posterior al último aviso, que se vuelve a atrasar, recibe un aviso nuevo (${fresca3})`);
 
+// Avisos de operación: dos corridas malas seguidas avisan una vez por episodio; una mala tras una buena no avisa;
+// la base de la prueba (pocos MB) no pasa el umbral de 400 MB.
+const base0 = (await uno(`select calidad.revisar_operacion() n`)).n;
+await q(`insert into ingesta.corrida (tienda_id, estado, iniciada_en, terminada_en, error) values
+  ('pycca', 'fallida', now() + interval '1 minute', now() + interval '2 minutes', 'HTTP 500'),
+  ('pycca', 'parcial', now() + interval '3 minutes', now() + interval '4 minutes', null)`);
+const op1 = (await uno(`select calidad.revisar_operacion() n`)).n;
+const op2 = (await uno(`select calidad.revisar_operacion() n`)).n;
+const avisoOp = await q(`select tienda_id, detalle from calidad.incidencia where regla_id = 'tienda_falla_repetida'`);
+ok(base0 === 0 && op1 === 1 && op2 === 0 && avisoOp.length === 1 && avisoOp[0].tienda_id === 'pycca' && avisoOp[0].detalle.estados[0] === 'parcial',
+  `revisar_operacion: ${base0} antes, ${op1} y luego ${op2} avisos (una tienda con dos corridas malas seguidas, una vez)`);
+const grande = await q(`select count(*)::int n from calidad.incidencia where regla_id = 'base_grande'`);
+ok(grande[0].n === 0, 'base pequeña: sin aviso base_grande');
+await q(`delete from ingesta.corrida where tienda_id = 'pycca' and iniciada_en > now()`);
+
 // ROLAP.
 await db.exec(`select analitica.refrescar()`);
 const comp = await q(`select tienda_id, productos_compartidos, veces_mas_barata, pct_mas_barata from analitica.competitividad_tienda order by 1`);

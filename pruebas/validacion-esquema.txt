@@ -1,7 +1,27 @@
-
-> validar:esquema
-> node scripts/validar-esquema.mjs
-
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
+The system cannot find the path specified.
 ✔ migración 20261106000100_base.sql
 ✔ migración 20261106000200_catalogo.sql
 ✔ migración 20261106000300_ingesta_calidad.sql
@@ -22,6 +42,7 @@
 ✔ migración 20261106001800_busqueda_paginada.sql
 ✔ migración 20261106001900_titulos_sin_entidades_html.sql
 ✔ migración 20261106002000_indice_productos_destacados.sql
+✔ migración 20261106002100_avisos_operacion.sql
 ✔ seed.sql
 ✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 3 pausadas ({"activa":24,"pausada":3,"sin_permiso":1})
 ✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
@@ -71,6 +92,8 @@
 ✔ facetas de la búsqueda: {"total":30,"varias":0,"tiendas":[{"n":30,"id":"newstore","nombre":"NewStore"}],"disponibles":20}
 ✔ revisar_frescura dos veces: 18 y luego 0 incidencias nuevas (una por tienda)
 ✔ una tienda con una corrida correcta posterior al último aviso, que se vuelve a atrasar, recibe un aviso nuevo (1)
+✔ revisar_operacion: 0 antes, 1 y luego 0 avisos (una tienda con dos corridas malas seguidas, una vez)
+✔ base pequeña: sin aviso base_grande
 ✔ competitividad_tienda: [{"tienda_id":"comandato","productos_compartidos":2,"veces_mas_barata":2,"pct_mas_barata":"100.0"},{"tienda_id":"novicompu","productos_compartidos":2,"veces_mas_barata":0,"pct_mas_barata":"0.0"}]
 ✔ precio_semanal: [{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"ekustore","ofertas":3,"precio_mediano":"15.00"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"newstore","ofertas":30,"precio_mediano":"24.50"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"randall","ofertas":3,"precio_mediano":"200.00"}]
 ✔ salida_diaria: [{"fecha":"2026-11-13T00:00:00.000Z","tienda_id":"novicompu","salidas":1}]
