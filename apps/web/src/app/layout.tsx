@@ -70,8 +70,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
               </p>
               <p className="mt-3 max-w-[52ch] text-sm leading-relaxed">
-                Compare precios de tiendas online de Ecuador. Los precios pueden cambiar; verifíquelos en la tienda.
-              </p>
+                Compare precios de tiendas online de Ecuador.              </p>
               <p className="mt-2 max-w-[52ch] text-sm leading-relaxed">Ninguna tienda paga por aparecer primero.</p>
             </div>
             <nav aria-label="Categorías">
