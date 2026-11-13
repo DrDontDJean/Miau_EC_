@@ -126,7 +126,7 @@ cd comparador-ecuador
 npm install
 
 # 3. Comprueba que todo funciona sin ninguna cuenta todavía
-npm test                  # 185 pruebas: prototipo 8, dominio 30, ingesta 142 (contra PGlite), web 5
+npm test                  # 186 pruebas: prototipo 8, dominio 30, ingesta 143 (contra PGlite), web 5
 npm run validar:esquema   # aplica las 17 migraciones en Postgres-WASM y recorre un escenario: 59 comprobaciones ✔
 ```
 
@@ -217,7 +217,7 @@ git push -u origin main
 
 Esto lanza dos workflows (en GitHub → Actions):
 
-- **CI**: tipos, 185 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
+- **CI**: tipos, 186 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
 - **Migraciones Supabase**: `supabase db push --db-url` aplica las 17 migraciones a tu proyecto. Usa el environment
   `produccion`, que GitHub crea solo. Si quieres aprobar a mano cada migración, añade una regla en Settings →
   Environments → produccion → Required reviewers.
@@ -521,7 +521,7 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 
 ## 12. Lista final de verificación
 
-- [ ] `npm test`: 185 pruebas pasan · `npm run validar:esquema`: 59 ✔
+- [ ] `npm test`: 186 pruebas pasan · `npm run validar:esquema`: 59 ✔
 - [ ] `.env` creado por el wizard. `git status` no lo muestra
 - [ ] Secretos de GitHub: `DATABASE_URL` (y `VERCEL_AUTOMATION_BYPASS_SECRET` para k6)
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado
