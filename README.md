@@ -67,6 +67,7 @@ vuelve sola a `activa` cuando su robots.txt lo permite.
 
 - La búsqueda también encuentra accesorios ("televisor 55" devuelve soportes), aunque ahora van después de los productos
   (salvo que se busque uno, como "soporte tv"). Falta una categoría real por producto para poder filtrar.
+- Los resultados se paginan de 24 en 24, hasta unas 400 páginas por búsqueda; una búsqueda más amplia pide afinar el texto.
 - El código de modelo no sirve para ferretería ni hogar (Kywi, Pycca): esas ofertas quedan como producto propio.
 - Mercado Libre Ecuador no está incluido: su API de búsqueda pide autenticación de aplicación.
 - Las tiendas leídas por sitemap se revisan por tandas (2.500 páginas por corrida, a 1 por segundo): el precio de una
