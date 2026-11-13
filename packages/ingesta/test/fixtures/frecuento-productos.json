@@ -1,0 +1,41 @@
+{
+ "count": 36931,
+ "limit": 2,
+ "pages": 18466,
+ "results": [
+  {
+   "id": 1119032,
+   "name": "Set de Cartas Pokémon Elite Trainer Box Aniversario 30 Años Inglés",
+   "code": "40650670",
+   "brand": "Pokemon",
+   "url": "https://www.frecuento.com/set-de-cartas-pokemon-elite-trainer-box-aniversario-30-anos-ingles/1119032/",
+   "has_stock": true,
+   "amount_total": "110.00",
+   "amount_discount": "0.00",
+   "discount_percentage": 0,
+   "has_offer": false,
+   "has_variants": false,
+   "photos": [
+    "https://d2o812a6k13pkp.cloudfront.net/fit-in/190x190/Productos/40650670_0120261030093638.jpg"
+   ],
+   "variants": []
+  },
+  {
+   "id": 955556,
+   "name": "Cinturón Hombre Kuero´s Diseño Reversible - Varios Colores",
+   "code": "50208285",
+   "brand": "Kuero's",
+   "url": "https://www.frecuento.com/cinturon-hombre-kueros-diseno-reversible-varios-colores/955556/",
+   "has_stock": true,
+   "amount_total": "8.20",
+   "amount_discount": "0.00",
+   "discount_percentage": 0,
+   "has_offer": false,
+   "has_variants": true,
+   "photos": [
+    "https://d2o812a6k13pkp.cloudfront.net/fit-in/190x190/Productos/50208285001_01.jpeg20260526145040.jpg"
+   ],
+   "variants": []
+  }
+ ]
+}
