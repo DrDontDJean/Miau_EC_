@@ -17,6 +17,7 @@
 ✔ migración 20261106001300_volver_de_sin_permiso.sql
 ✔ migración 20261106001400_lectura_por_sitemap.sql
 ✔ migración 20261106001500_cerrar_corridas_abandonadas.sql
+✔ migración 20261106001600_frescura_sin_duplicados.sql
 ✔ seed.sql
 ✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 3 pausadas ({"activa":24,"pausada":3,"sin_permiso":1})
 ✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
@@ -51,6 +52,8 @@
 ✔ anon no puede cambiar precios
 ✔ anon no puede llamar funciones internas (recalcular_productos)
 ✔ anon no puede cargar lotes de ingesta
+✔ revisar_frescura dos veces: 20 y luego 0 incidencias nuevas (una por tienda)
+✔ una tienda con una corrida correcta posterior al último aviso, que se vuelve a atrasar, recibe un aviso nuevo (1)
 ✔ competitividad_tienda: [{"tienda_id":"comandato","productos_compartidos":2,"veces_mas_barata":2,"pct_mas_barata":"100.0"},{"tienda_id":"novicompu","productos_compartidos":2,"veces_mas_barata":0,"pct_mas_barata":"0.0"}]
 ✔ precio_semanal: [{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"}]
 ✔ salida_diaria: [{"fecha":"2026-11-13T00:00:00.000Z","tienda_id":"novicompu","salidas":1}]

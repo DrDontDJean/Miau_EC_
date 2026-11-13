@@ -40,4 +40,20 @@ Disallow: /*.json$`;
     expect(permitido(robots, '/feed.json?v=2')).toBe(true);
     expect(permitido(robots, '/tv-samsung/p', 'OtroBot')).toBe(false);
   });
+
+  it('un grupo aplica solo si su user-agent es igual al nombre del robot (RFC 9309 §2.2.1)', () => {
+    // "a" y "deci" están dentro de "decideaqui", pero no son su nombre: manda el grupo de *.
+    for (const otro of ['a', 'deci', 'aqui']) {
+      const robots = `User-agent: ${otro}\nDisallow: /\n\nUser-agent: *\nDisallow: /checkout/`;
+      expect(permitido(robots, BUSQUEDA_VTEX), `grupo "${otro}"`).toBe(true);
+    }
+    // Y al revés: un grupo de otro robot no puede abrirnos lo que el grupo de * cierra.
+    expect(permitido(`User-agent: d\nAllow: /\n\nUser-agent: *\nDisallow: /`, BUSQUEDA_VTEX)).toBe(false);
+  });
+
+  it('el nombre del robot no distingue mayúsculas', () => {
+    const robots = `User-agent: *\nAllow: /\n\nUser-agent: DECIDEAQUI\nDisallow: /api/`;
+    expect(permitido(robots, BUSQUEDA_VTEX)).toBe(false);
+    expect(permitido(robots, '/tv-samsung/p')).toBe(true);
+  });
 });
