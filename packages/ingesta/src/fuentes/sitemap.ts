@@ -60,22 +60,39 @@ export function elegirHijos(locs: string[]): string[] {
   return conProductos.length ? conProductos : locs.filter(u => !NO_PRODUCTOS.test(nombre(u)));
 }
 
-/** Qué páginas leer hoy: nunca vistas, luego las modificadas desde la última visita y luego las más viejas. */
-export function elegirPaginas(entradas: Map<string, string | null>, visitas: Map<string, string>, presupuesto: number): string[] {
+const ATRASO_PRIORITARIAS_MS = 20 * 3_600_000;   // una prioritaria vista hace menos de 20 h no se vuelve a pedir hoy
+const CUPO_PRIORITARIAS = 0.4;                    // como mucho el 40 % del presupuesto, para no frenar el descubrimiento
+
+/**
+ * Qué páginas leer hoy. Primero las prioritarias que llevan más de 20 horas sin verse, hasta el 40 % del presupuesto:
+ * son las ofertas que se comparan con otras tiendas o que reciben salidas, y su precio es el que la gente mira.
+ * Luego las nunca vistas, las modificadas desde la última visita (lastmod) y las visitadas hace más tiempo.
+ */
+export function elegirPaginas(
+  entradas: Map<string, string | null>, visitas: Map<string, string>, presupuesto: number,
+  opciones: { prioritarias?: Set<string>; ahora?: number } = {},
+): string[] {
   const hora = (iso: string | null | undefined) => { const t = iso ? Date.parse(iso) : NaN; return Number.isNaN(t) ? null : t; };
+  const ahora = opciones.ahora ?? Date.now();
+  const prioritarias = opciones.prioritarias ?? new Set<string>();
   const nuevas: string[] = [];
   const modificadas: { url: string; lastmod: number }[] = [];
   const antiguas: { url: string; visita: number }[] = [];
+  const atrasadas: { url: string; visita: number }[] = [];
   for (const [url, lastmod] of entradas) {
     const visita = hora(visitas.get(url));
     if (visita === null) { nuevas.push(url); continue; }
+    if (prioritarias.has(url) && ahora - visita > ATRASO_PRIORITARIAS_MS) { atrasadas.push({ url, visita }); continue; }
     const modificacion = hora(lastmod);
     if (modificacion !== null && modificacion > visita) modificadas.push({ url, lastmod: modificacion });
     else antiguas.push({ url, visita });
   }
+  atrasadas.sort((a, b) => a.visita - b.visita);
+  const cupo = Math.floor(presupuesto * CUPO_PRIORITARIAS);
+  antiguas.push(...atrasadas.slice(cupo));   // las que no caben en el cupo compiten con las demás por antigüedad
   modificadas.sort((a, b) => b.lastmod - a.lastmod);
   antiguas.sort((a, b) => a.visita - b.visita);
-  return [...nuevas, ...modificadas.map(m => m.url), ...antiguas.map(a => a.url)].slice(0, presupuesto);
+  return [...atrasadas.slice(0, cupo).map(a => a.url), ...nuevas, ...modificadas.map(m => m.url), ...antiguas.map(a => a.url)].slice(0, presupuesto);
 }
 
 // ── Datos estructurados de una página de producto ──────────────────────────────────────────────────────
@@ -270,7 +287,9 @@ export function fuenteSitemap(tienda: TiendaIngesta, http: Http, contexto: Conte
       // Sin URLs no hay nada que reconciliar: desactivaría todo el catálogo por un sitemap vacío o mal leído.
       if (!productos.size) throw new Error(`El sitemap de ${tienda.id} no tiene URLs de producto que cumplan ${tienda.patron_producto}`);
 
-      const elegidas = elegirPaginas(productos, contexto.ultimasVisitas ? await contexto.ultimasVisitas() : new Map(), presupuesto);
+      const elegidas = elegirPaginas(
+        productos, contexto.ultimasVisitas ? await contexto.ultimasVisitas() : new Map(), presupuesto,
+        { prioritarias: contexto.prioritarias ? await contexto.prioritarias() : new Set() });
       let lote: OfertaCruda[] = [];
       let leidas = 0, sinDatos = 0, erroresSeguidos = 0;
       for (const url of elegidas) {

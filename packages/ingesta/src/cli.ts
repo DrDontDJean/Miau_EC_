@@ -46,8 +46,16 @@ try {
     const ultimasVisitas = async () => new Map(
       ((await sql.unsafe('select url, visto_ultima_vez::text as visto from public.oferta where tienda_id = $1', [t.id])) as unknown as
         { url: string; visto: string }[]).map(f => [f.url, f.visto] as const));
+    // Fuentes sitemap: las ofertas que se comparan con otras tiendas o que recibieron salidas en 30 días se releen primero.
+    const prioritarias = async () => new Set(
+      ((await sql.unsafe(
+        `select o.url from public.oferta o join public.producto p on p.id = o.producto_id
+          where o.tienda_id = $1 and o.activa
+            and (p.num_tiendas > 1 or exists (select 1 from public.salida s
+                  where s.oferta_id = o.id and not s.es_prueba and s.creado_en > now() - interval '30 days'))`, [t.id])) as unknown as
+        { url: string }[]).map(f => f.url));
     const r = await ejecutarCorrida(t, {
-      fuente: fuenteCon(t, http, { leerRobots, ultimasVisitas }),
+      fuente: fuenteCon(t, http, { leerRobots, ultimasVisitas, prioritarias }),
       almacen,
       limitePaginas,
       leerRobots,

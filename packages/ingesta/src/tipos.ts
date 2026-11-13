@@ -20,6 +20,8 @@ export type ContextoFuente = {
   leerRobots?: () => Promise<string>;
   /** Fuente 'sitemap': URL → última vez que se vio la oferta (ISO), para decidir qué páginas leer hoy. */
   ultimasVisitas?: () => Promise<Map<string, string>>;
+  /** Fuente 'sitemap': URLs de ofertas que se comparan con otras tiendas o reciben salidas, que se releen primero. */
+  prioritarias?: () => Promise<Set<string>>;
 };
 
 /** Seam 1 de la ingesta: de dónde salen las ofertas. Una página por iteración. */
