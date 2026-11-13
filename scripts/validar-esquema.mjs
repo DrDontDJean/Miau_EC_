@@ -214,6 +214,11 @@ ok(JSON.stringify(limpios) === JSON.stringify([`Literal &quot; sin doble decodif
 ok(enOfertas[0] === `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion` && enOfertas[1] === 'Monitor Plano 24" ya limpio Edicion' && enOfertas[2] === 'Literal &quot; sin doble decodificacion Edicion',
   'los títulos de oferta también quedan limpios');
 
+// La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.
+const idxDestacados = await uno(`select indexdef from pg_indexes where indexname = 'producto_destacados_idx'`);
+ok(idxDestacados && /\(num_tiendas DESC, precio_desde\)/.test(idxDestacados.indexdef) && /num_tiendas > 1/.test(idxDestacados.indexdef),
+  `índice parcial de productos destacados: ${idxDestacados?.indexdef.replace(/^.* USING /, '')}`);
+
 // Paginación: 30 parlantes de una tienda. Las páginas no repiten ni pierden productos (incluso con empates de rango),
 // el total no depende del límite, y los filtros se aplican en la base antes de paginar.
 const cpag = (await uno(`select ingesta.abrir_corrida('newstore') id`)).id;
