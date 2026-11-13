@@ -64,14 +64,33 @@ describe('fuente Magento', () => {
     await expect(leer(servidor({ items: [], sinDatos: true }))).rejects.toThrow(/respondió sin datos de productos/);
   });
 
-  it('si el total cambia mientras se lee, la fuente se declara incompleta', async () => {
-    const { fuente } = await leer(servidor({ items: catalogo(150), total: pagina => (pagina === 1 ? 150 : 148) }));
-    expect(fuente.incompleta?.()).toMatch(/cambió durante la lectura \(de 150 a 148\)/);
+  it('un cambio pequeño del total mientras se lee no cuenta: el catálogo se mueve durante la lectura', async () => {
+    // Caso real de Pintulac: el total pasó de 7.900 a 7.896 en los dos minutos que dura la lectura.
+    const { fuente, paginas } = await leer(servidor({ items: catalogo(996), total: pagina => (pagina === 1 ? 1000 : 996) }));
+    expect(paginas.flat()).toHaveLength(996);
+    expect(fuente.incompleta?.()).toBeNull();
   });
 
-  it('si una página llega con menos productos de los que debía, la fuente se declara incompleta', async () => {
+  it('si se leen muchos menos productos de los que declara la tienda, la fuente se declara incompleta', async () => {
     const { fuente } = await leer(servidor({ items: catalogo(130), total: () => 200 }));
-    expect(fuente.incompleta?.()).toMatch(/página 2 de pintulac llegó incompleta \(30 productos\)/);
+    expect(fuente.incompleta?.()).toMatch(/se leyeron 130 de los 200 productos que declara pintulac/);
+  });
+
+  it('una página que no es la última y llega con menos de 100 productos deja la fuente incompleta', async () => {
+    const completo = servidor({ items: catalogo(250), total: () => 250 });   // páginas de 100, 100 y 50: la última puede ser corta
+    const sana = fuentePara(pintulac, { fetch: completo.fetch, esperar: async () => {} });
+    await todas(sana.leer());
+    expect(sana.incompleta?.()).toBeNull();
+    // La misma tienda, pero la primera página llega con 60 de los 100 productos.
+    const recortada = (async (entrada: string | URL | Request, init?: RequestInit) => {
+      const r = await completo.fetch(entrada, init);
+      const cuerpo = await r.json() as { data: { products: { items: unknown[] } } };
+      if (/currentPage:1\D/.test(decodeURIComponent(String(entrada)))) cuerpo.data.products.items = cuerpo.data.products.items.slice(0, 60);
+      return new Response(JSON.stringify(cuerpo), { status: 200 });
+    }) as typeof fetch;
+    const corta = fuentePara(pintulac, { fetch: recortada, esperar: async () => {} });
+    await todas(corta.leer());
+    expect(corta.incompleta?.()).toMatch(/página 1 de pintulac llegó incompleta \(60 productos\)/);
   });
 
   it('si Magento cambia la forma de sus productos, la corrida falla en vez de cargar basura', async () => {
