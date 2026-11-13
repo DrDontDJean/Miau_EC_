@@ -105,7 +105,7 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
 | `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
 | `supabase/migrations` | 15 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap y cierre de corridas abandonadas |
-| `supabase/seed.sql` | 27 tiendas (23 activas, Smart Home EC `sin_permiso` por su robots.txt, y De Prati, El Bárbaro y Steren `pausada` porque responden 403) y 6 categorías |
+| `supabase/seed.sql` | 28 tiendas (24 activas, Smart Home EC `sin_permiso` por su robots.txt, y De Prati, El Bárbaro y Steren `pausada` porque responden 403) y 6 categorías |
 | `scripts/` | Wizard de configuración, validador del esquema (PGlite), carga del seed, resumen del catálogo y empaquetador |
 | `.github/workflows` | `ci.yml`, `migraciones.yml`, `ingesta.yml` (diaria) y `carga-k6.yml` (manual) |
 | `tests/carga` | Escenarios k6: humo, carga, estrés y pico |
@@ -246,7 +246,7 @@ select jobname, schedule from cron.job order by 1;
 
 ```bash
 node --env-file=.env scripts/cargar-seed.mjs
-# tiendas por estado: { activa: 23, pausada: 3, sin_permiso: 1 } · categorías: 6
+# tiendas por estado: { activa: 24, pausada: 3, sin_permiso: 1 } · categorías: 6
 ```
 
 ### 5.5 Primera ingesta
@@ -279,6 +279,7 @@ con su presupuesto completo) y carga más de 100.000 ofertas. Volumen aproximado
 | Boyacá | ~6.900 | sitemap |
 | EkuStore | ~4.100 | API Shopify |
 | Tventas | ~3.800 | sitemap |
+| SuperPaco | ~6.700 | API VTEX |
 | Marcimex | ~3.700 | API VTEX |
 | Novicompu | ~3.570 | API VTEX |
 | Artefacta | ~2.100 | sitemap |
@@ -526,7 +527,7 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado
 - [ ] Workflows **CI** y **Migraciones Supabase** en verde tras el primer push
 - [ ] 3 trabajos en `cron.job`
-- [ ] Seed cargado: 23 tiendas activas, 1 `sin_permiso`, 3 `pausada`, 6 categorías
+- [ ] Seed cargado: 24 tiendas activas, 1 `sin_permiso`, 3 `pausada`, 6 categorías
 - [ ] Primera ingesta: cada tienda probada sola con `limite_paginas: 2`; luego la completa, con las tiendas en `ok` (las leídas por sitemap llegan a su volumen completo tras varias corridas) y más de 100.000 ofertas
 - [ ] Vercel: Root Directory `apps/web`, 2 variables Config sin comillas, despliegue `Ready`
 - [ ] La web responde 200 en `/`, `/tiendas`, `/buscar`, `/api/buscar`; 400 y 404 en los casos inválidos; `/ir` da 302 con `utm_source`

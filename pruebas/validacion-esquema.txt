@@ -18,7 +18,7 @@
 ✔ migración 20261106001400_lectura_por_sitemap.sql
 ✔ migración 20261106001500_cerrar_corridas_abandonadas.sql
 ✔ seed.sql
-✔ seed recargado sin duplicar: 23 activas, 1 sin permiso y 3 pausadas ({"activa":23,"pausada":3,"sin_permiso":1})
+✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 3 pausadas ({"activa":24,"pausada":3,"sin_permiso":1})
 ✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
 ✔ emparejamiento por modelo: 2 tiendas desde 451.33 (obtenido 2, 451.33)
 ✔ oferta sin EAN se une al producto con EAN por su modelo ([{"tienda_id":"comandato","m":"ean"},{"tienda_id":"novicompu","m":"modelo"}])
