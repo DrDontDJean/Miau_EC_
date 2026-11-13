@@ -104,7 +104,7 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 | `apps/web` | Web Next.js 16 (App Router, Cache Components): inicio, `/buscar`, `/p/[id]` con historial, `/tiendas`, `/api/buscar` e `/ir/[id]`. `vercel.json` fija la región `iad1` |
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
 | `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
-| `supabase/migrations` | 20 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap, cierre de corridas abandonadas frescura sin avisos duplicados, accesorios al final de la búsqueda, búsqueda paginada con filtros y total, títulos sin entidades HTML e índice de los productos destacados |
+| `supabase/migrations` | 21 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap, cierre de corridas abandonadas frescura sin avisos duplicados, accesorios al final de la búsqueda, búsqueda paginada con filtros y total, títulos sin entidades HTML índice de los productos destacados y avisos de operación |
 | `supabase/seed.sql` | 28 tiendas (24 activas, Smart Home EC `sin_permiso` por su robots.txt, y De Prati, El Bárbaro y Steren `pausada` porque responden 403) y 6 categorías |
 | `scripts/` | Wizard de configuración, validador del esquema (PGlite), carga del seed, resumen del catálogo y empaquetador |
 | `.github/workflows` | `ci.yml`, `migraciones.yml`, `ingesta.yml` (diaria) y `carga-k6.yml` (manual) |
@@ -127,7 +127,7 @@ npm install
 
 # 3. Comprueba que todo funciona sin ninguna cuenta todavía
 npm test                  # 200 pruebas: prototipo 8, dominio 30, ingesta 144 (contra PGlite), web 18
-npm run validar:esquema   # aplica las 20 migraciones en Postgres-WASM y recorre un escenario: 72 comprobaciones ✔
+npm run validar:esquema   # aplica las 21 migraciones en Postgres-WASM y recorre un escenario: 75 comprobaciones ✔
 ```
 
 Si alguna falla aquí, no sigas: revisa la versión de Node (`node -v` debe ser 24 o más).
@@ -218,7 +218,7 @@ git push -u origin main
 Esto lanza dos workflows (en GitHub → Actions):
 
 - **CI**: tipos, 200 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
-- **Migraciones Supabase**: `supabase db push --db-url` aplica las 20 migraciones a tu proyecto. Usa el environment
+- **Migraciones Supabase**: `supabase db push --db-url` aplica las 21 migraciones a tu proyecto. Usa el environment
   `produccion`, que GitHub crea solo. Si quieres aprobar a mano cada migración, añade una regla en Settings →
   Environments → produccion → Required reviewers.
 
@@ -351,6 +351,7 @@ El `<id>` sale del campo `ir` de cualquier oferta en `/api/buscar`.
 | Ingesta de las tiendas activas (y revisión de las `sin_permiso`) | 06:17 (01:17 en Ecuador) | GitHub Actions, `ingesta.yml` |
 | Refresco de las vistas ROLAP | 08:17 | pg_cron, `analitica.refrescar()` |
 | Aviso de frescura (sin corrida correcta en 30 h; uno por día y tienda, no uno por hora) | cada hora | pg_cron, `calidad.revisar_frescura()` |
+| Aviso de operación (dos corridas malas seguidas de una tienda, o base de más de 400 MB; uno por episodio) | cada día y al final de la ingesta | pg_cron y `scripts/avisos-operacion.mjs`: el job falla y GitHub avisa por correo |
 | Purga: cuarentena > 30 días, incidencias > 90 días | 03:30 | pg_cron, `ingesta.purgar_antiguos()` |
 
 - **Por qué una vez al día y no cada 6 horas** (ADR 0008): ahorra minutos de Actions, carga menos a las tiendas, y
@@ -522,7 +523,7 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 
 ## 12. Lista final de verificación
 
-- [ ] `npm test`: 200 pruebas pasan · `npm run validar:esquema`: 72 ✔
+- [ ] `npm test`: 200 pruebas pasan · `npm run validar:esquema`: 75 ✔
 - [ ] `.env` creado por el wizard. `git status` no lo muestra
 - [ ] Secretos de GitHub: `DATABASE_URL` (y `VERCEL_AUTOMATION_BYPASS_SECRET` para k6)
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado
