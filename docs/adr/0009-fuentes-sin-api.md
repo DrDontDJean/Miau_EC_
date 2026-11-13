@@ -18,7 +18,8 @@ fuente nueva, **sitemap**, que llega a las tiendas cuya API no se puede leer.
    se salta; si pasa del 20 % en una corrida, la corrida queda `parcial`.
 4. **Un 403 no se evade.** Una respuesta 403, un desafío de Cloudflare o un captcha son una negativa. No se cambia el
    User-Agent, no se usa un navegador sin interfaz ni se rotan direcciones. Una racha de 10 errores seguidos detiene la
-   lectura de esa tienda. De Prati y El Bárbaro responden 403 a todo, incluida su portada: quedan pausadas hasta tener un
+   lectura de esa tienda. De Prati y El Bárbaro responden 403 a todo, incluida su portada, y Steren responde 403 a las
+   direcciones de GitHub Actions (aunque 200 desde otras redes): quedan pausadas hasta tener un
    feed o un permiso.
 5. **Solo `GET`.** En Magento, la consulta GraphQL va en la URL (`/graphql?query=…`), porque robots.txt se evalúa sobre la
    URL que se pide. No se pasa a `POST` para esquivar un `Disallow`.
@@ -35,15 +36,23 @@ fuente nueva, **sitemap**, que llega a las tiendas cuya API no se puede leer.
    pausada no se toca: la pausa es una decisión humana.
 9. **La moneda de Shopify se lee de `/meta.json`, no de `/cart.js`**, porque los robots.txt de las tiendas prohíben
    `/cart.js`.
+10. **De cada ficha solo se descarga el principio.** Las fichas VTEX pesan más de 3 MB, pero su JSON-LD está en los
+    primeros 80 KB. Se deja de leer en cuanto aparece el JSON-LD del producto, o a los 600 KB (las fichas de Artefacta
+    lo traen al final de unos 385 KB, con los metadatos Open Graph antes). Así se pide mucho menos a la tienda.
+11. **Las páginas se piden con `Accept: text/html`** y las APIs con `application/json`: PrestaShop responde vacío a
+    una página si ve primero `application/json`. Un `Retry-After` de más de 2 minutos corta la lectura de esa tienda
+    en vez de esperar horas.
 
 ## Consecuencias
 
-- DecideAquí compara 24 tiendas en lugar de 5, y más de 100.000 ofertas.
+- DecideAquí compara 23 tiendas en lugar de 5, y más de 100.000 ofertas.
 - Las tiendas sitemap tienen precios con algunos días de atraso. Es un costo de leer sin API; el feed lo resuelve.
 - El workflow de ingesta pasa de 60 a 90 minutos de tope y gasta unos 1.800 minutos de GitHub Actions al mes con el
   presupuesto completo en todas las tiendas sitemap. Un repositorio privado se queda en el límite gratuito de 2.000;
   uno público no tiene límite, y bajar `paginas_por_corrida` reduce el gasto.
 - Una tienda que cambie su formato (quite su JSON-LD, mueva su sitemap) se nota en `calidad.resumen_corrida`: la corrida
   queda `parcial` o `fallida` en vez de publicar datos malos o desactivar ofertas vigentes.
+- Una corrida interrumpida ya no bloquea a su tienda: al abrir la siguiente, las que llevan más de 3 horas `en_curso`
+  se cierran como `fallida` (migración 1500).
 - Quedan fuera las tiendas que bloquean el acceso automático (403) y las que prohíben todo el sitio, hasta tener un
   acuerdo. El contrato del feed está en `docs/feed-tiendas.md`.

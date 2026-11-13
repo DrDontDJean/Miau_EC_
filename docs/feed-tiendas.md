@@ -2,7 +2,7 @@
 
 Documento para enviar a una tienda que quiera que DecideAquí compare sus precios sin que tengamos que leer su sitio.
 Es el camino previsto para las tiendas que no se pueden leer de forma automática (ADR 0007 y 0009): Smart Home EC,
-De Prati y El Bárbaro hoy, y cualquier otra que lo prefiera.
+De Prati, El Bárbaro y Steren Ecuador hoy, y cualquier otra que lo prefiera.
 
 ## Qué pedimos
 
@@ -75,6 +75,6 @@ No hace falta código nuevo. Si la tienda estaba pausada, hay que activarla a ma
 
 Contactar a las tiendas lo hace una persona del proyecto, no el worker. Por prioridad:
 
-1. **De Prati y El Bárbaro**: responden 403 a todo acceso automático, incluidos su portada y su sitemap.
+1. **De Prati, El Bárbaro y Steren Ecuador**: responden 403 a todo acceso automático (Steren, solo desde las direcciones de GitHub Actions), incluidos su portada y su sitemap.
 2. **Smart Home EC**: su robots.txt prohíbe leer todo el sitio.
 3. Cualquier tienda activa que prefiera enviar sus precios: el feed es más rápido y exacto que la lectura de sus páginas.

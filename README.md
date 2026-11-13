@@ -46,21 +46,21 @@ El `.env` lo crea `bash scripts/wizard-configuracion.sh` (GitHub, Supabase y Ver
 
 ## Tiendas
 
-24 tiendas activas, según cómo se lee cada una (ADR 0009):
+23 tiendas activas, según cómo se lee cada una (ADR 0009):
 
 | Fuente | Tiendas |
 |---|---|
 | API VTEX | Comandato, Novicompu, Kywi, Pycca y Marcimex |
 | API WooCommerce | Computron |
 | API Shopify | Colineal, EkuStore, NewStore y Randall Tech |
-| API Magento (GraphQL) | La Ganga, Pintulac y Steren Ecuador |
+| API Magento (GraphQL) | La Ganga y Pintulac |
 | API propia | Frecuento |
 | Sitemap + datos estructurados de cada página de producto | Créditos Económicos, Almacenes Japón, Orve Hogar, Artefacta, Coral, TIA, Sukasa, Tventas, Almacenes Boyacá y Fybeca |
 
 Créditos Económicos, Almacenes Japón, Orve Hogar, Artefacta y Coral prohíben su API de catálogo en el robots.txt
 (`Disallow: /*?`), pero permiten sus páginas de producto: se leen por sitemap. Siguen sin poder leerse, y entran solo con
 un feed o un permiso ([docs/feed-tiendas.md](docs/feed-tiendas.md)): Smart Home EC (su robots.txt prohíbe todo el sitio,
-`sin_permiso`) y De Prati y El Bárbaro (responden 403 a todo acceso automático, `pausada`). Una tienda `sin_permiso`
+`sin_permiso`) y De Prati, El Bárbaro y Steren Ecuador (responden 403 a todo acceso automático, o a las direcciones de GitHub Actions en el caso de Steren; `pausada`). Una tienda `sin_permiso`
 vuelve sola a `activa` cuando su robots.txt lo permite.
 
 ## Limitaciones conocidas

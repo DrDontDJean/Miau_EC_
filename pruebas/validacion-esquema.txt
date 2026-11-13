@@ -16,8 +16,9 @@
 ✔ migración 20261106001200_ofertas_agotadas.sql
 ✔ migración 20261106001300_volver_de_sin_permiso.sql
 ✔ migración 20261106001400_lectura_por_sitemap.sql
+✔ migración 20261106001500_cerrar_corridas_abandonadas.sql
 ✔ seed.sql
-✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 2 pausadas ({"activa":24,"pausada":2,"sin_permiso":1})
+✔ seed recargado sin duplicar: 23 activas, 1 sin permiso y 3 pausadas ({"activa":23,"pausada":3,"sin_permiso":1})
 ✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
 ✔ emparejamiento por modelo: 2 tiendas desde 451.33 (obtenido 2, 451.33)
 ✔ oferta sin EAN se une al producto con EAN por su modelo ([{"tienda_id":"comandato","m":"ean"},{"tienda_id":"novicompu","m":"modelo"}])
@@ -31,6 +32,8 @@
 ✔ historial SCD2 de la TV: 451.33 → 45.13
 ✔ tienda pausada: la TV queda en 1 tienda desde 591.82 (obtenido 1, 591.82)
 ✔ tienda reactivada: vuelve a 2 tiendas desde 45.13 (obtenido 2, 45.13)
+✔ una corrida reciente en curso sigue bloqueando otra de la misma tienda
+✔ corrida abandonada: se cierra fallida y se abre la nueva (fallida)
 ✔ corrida parcial de una tienda sin_permiso: vuelve a activa (activa)
 ✔ una tienda pausada no se reactiva sola
 ✔ corrida vacía tras una con datos: estado parcial, desactivadas 0
@@ -60,9 +63,11 @@ Resumen de calidad por corrida:
 │ 1       │ 2          │ 'novicompu' │ 'ok'       │ 2      │ 2       │ 0             │ 0            │ '{}'                     │
 │ 2       │ 3          │ 'comandato' │ 'ok'       │ 2      │ 2       │ 0             │ 0            │ '{"salto_precio":1}'     │
 │ 3       │ 4          │ 'comandato' │ 'ok'       │ 2      │ 2       │ 0             │ 1            │ '{}'                     │
-│ 4       │ 5          │ 'kywi'      │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
-│ 5       │ 6          │ 'kywi'      │ 'ok'       │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
-│ 6       │ 7          │ 'novicompu' │ 'ok'       │ 1      │ 1       │ 0             │ 0            │ '{}'                     │
-│ 7       │ 8          │ 'novicompu' │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{"caida_de_volumen":1}' │
-│ 8       │ 9          │ 'kywi'      │ 'en_curso' │ 1      │ 0       │ 1             │ 0            │ '{"precio_invalido":1}'  │
+│ 4       │ 5          │ 'randall'   │ 'fallida'  │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
+│ 5       │ 7          │ 'randall'   │ 'ok'       │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
+│ 6       │ 8          │ 'kywi'      │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
+│ 7       │ 9          │ 'kywi'      │ 'ok'       │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
+│ 8       │ 10         │ 'novicompu' │ 'ok'       │ 1      │ 1       │ 0             │ 0            │ '{}'                     │
+│ 9       │ 11         │ 'novicompu' │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{"caida_de_volumen":1}' │
+│ 10      │ 12         │ 'kywi'      │ 'en_curso' │ 1      │ 0       │ 1             │ 0            │ '{"precio_invalido":1}'  │
 └─────────┴────────────┴─────────────┴────────────┴────────┴─────────┴───────────────┴──────────────┴──────────────────────────┘

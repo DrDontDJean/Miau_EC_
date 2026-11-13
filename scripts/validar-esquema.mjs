@@ -30,12 +30,13 @@ for (const f of readdirSync(dir).sort()) {
 await db.exec(readFileSync(join(RAIZ, 'supabase', 'seed.sql'), 'utf8'));
 ok(true, 'seed.sql');
 
-// El seed: 24 tiendas leíbles, 1 sin permiso (Smart Home EC) y 2 pausadas (403), y se puede recargar sin duplicar.
+// El seed: 23 tiendas activas, 1 sin permiso (Smart Home EC) y 3 pausadas (403: De Prati, El Bárbaro y Steren), y se
+// puede recargar sin duplicar.
 const porEstado = async () => Object.fromEntries((await db.query(`select estado::text e, count(*)::int n from public.tienda group by 1`)).rows.map(r => [r.e, r.n]));
 await db.exec(readFileSync(join(RAIZ, 'supabase', 'seed.sql'), 'utf8'));
 const estadosSeed = await porEstado();
-ok(estadosSeed.activa === 24 && estadosSeed.sin_permiso === 1 && estadosSeed.pausada === 2,
-  `seed recargado sin duplicar: 24 activas, 1 sin permiso y 2 pausadas (${JSON.stringify(estadosSeed)})`);
+ok(estadosSeed.activa === 23 && estadosSeed.sin_permiso === 1 && estadosSeed.pausada === 3,
+  `seed recargado sin duplicar: 23 activas, 1 sin permiso y 3 pausadas (${JSON.stringify(estadosSeed)})`);
 const patrones = (await db.query(`select id, patron_producto from public.tienda where plataforma = 'sitemap'`)).rows;
 const malos = patrones.filter(p => { try { new RegExp(p.patron_producto); return false; } catch { return true; } });
 ok(patrones.length === 12 && malos.length === 0, `${patrones.length} tiendas sitemap con patrón de producto válido (inválidos: ${malos.map(m => m.id).join(', ') || 'ninguno'})`);
@@ -104,6 +105,16 @@ ok(tvPausa.num_tiendas === 1 && tvPausa.desde === 591.82, `tienda pausada: la TV
 await q(`update public.tienda set estado = 'activa' where id = 'comandato'`);
 const tvVuelta = await tvAhora();
 ok(tvVuelta.num_tiendas === 2 && tvVuelta.desde === 45.13, `tienda reactivada: vuelve a 2 tiendas desde 45.13 (obtenido ${tvVuelta.num_tiendas}, ${tvVuelta.desde})`);
+
+// Una corrida abandonada (proceso muerto) no bloquea a su tienda: tras 3 horas se cierra sola al abrir la siguiente.
+const ca = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+try { await db.query(`select ingesta.abrir_corrida('randall')`); ok(false, 'dos corridas en curso de la misma tienda'); }
+catch { ok(true, 'una corrida reciente en curso sigue bloqueando otra de la misma tienda'); }
+await q(`update ingesta.corrida set iniciada_en = now() - interval '4 hours' where id = $1`, [ca]);
+const cb = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+const vieja = await uno(`select estado::text e, error from ingesta.corrida where id = $1`, [ca]);
+ok(cb > ca && vieja.e === 'fallida' && /interrumpió/.test(vieja.error), `corrida abandonada: se cierra fallida y se abre la nueva (${vieja.e})`);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cb]);
 
 // Una corrida correcta de una tienda sin permiso la devuelve a activa; una pausada no se toca.
 await q(`update public.tienda set estado = 'sin_permiso', motivo_estado = 'robots.txt: Disallow: /*?' where id = 'kywi'`);

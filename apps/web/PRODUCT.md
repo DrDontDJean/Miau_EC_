@@ -23,7 +23,7 @@ Solo agrupa ofertas que son realmente el mismo producto (por EAN o código de mo
 
 ## Capabilities and Constraints
 - Next.js 16 (App Router, Cache Components) con Tailwind 4 y Supabase; despliegue en Vercel con Root Directory `apps/web`.
-- Tiendas activas: 24, leídas por API pública (VTEX, WooCommerce, Shopify, Magento, Frecuento) o, si su API está prohibida en robots.txt, por sitemap (ver README y ADR 0009). Las que prohíben todo el sitio o bloquean el acceso automático esperan un feed.
+- Tiendas activas: 23, leídas por API pública (VTEX, WooCommerce, Shopify, Magento, Frecuento) o, si su API está prohibida en robots.txt, por sitemap (ver README y ADR 0009). Las que prohíben todo el sitio o bloquean el acceso automático esperan un feed.
 - Limitaciones conocidas: la búsqueda también devuelve accesorios; el código de modelo no sirve para ferretería ni hogar; Mercado Libre Ecuador no está incluido.
 - Usar el vocabulario de GLOSSARY.md en la interfaz y evitar los términos que marca como "Avoid". Ante el comprador se dice "actualizado" (no "leído") y "Disponible / Agotado" (no "stock").
 
