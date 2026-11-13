@@ -6,7 +6,7 @@ const frecuento = tienda({
   id: 'frecuento', nombre: 'Frecuento', origen: 'https://www.frecuento.com', plataforma: 'frecuento',
   origen_api: 'https://app.frecuento.com',
 });
-type Fila = { id: number; amount_total: string; has_stock: boolean };
+type Fila = { id: number; amount_total: string; amount_incl_tax?: string | null; has_stock: boolean };
 const [simple, conVariantes] = fixture<{ results: Fila[] }>('frecuento-productos.json').results as [Fila, Fila];
 
 /** Páginas de la API: cada una lleva count y pages como la real. */
@@ -45,6 +45,22 @@ describe('fuente Frecuento', () => {
     const padre = { ...structuredClone(conVariantes), amount_total: '0.00', has_stock: false };
     const { paginas } = await leer(servidor([[padre]]));
     expect(paginas[0]![0]).toMatchObject({ precio: 0, disponible: false });
+  });
+
+  it('con descuento, el precio de lista es el de antes con IVA (amount_incl_tax); sin descuento no hay precio de lista', async () => {
+    // Filas reales de la API: 9,99 → 5,00 (50 %) y 30,80 → 9,24 (70 %); sin descuento, los dos son iguales.
+    const con = (total: string, antes: string | null | undefined) => ({ ...structuredClone(simple), amount_total: total, amount_incl_tax: antes });
+    const { paginas } = await leer(servidor([[
+      { ...con('5.00', '9.99'), id: 1 }, { ...con('9.24', '30.80'), id: 2 },
+      { ...con('110.00', '110.00'), id: 3 }, { ...con('8.20', undefined), id: 4 }, { ...con('8.20', null), id: 5 },
+    ]]));
+    expect(paginas[0]!.map(o => o.precio_lista)).toEqual([9.99, 30.8, null, null, null]);
+    expect(paginas[0]!.map(o => o.precio)).toEqual([5, 9.24, 110, 8.2, 8.2]);
+  });
+
+  it('un precio de antes menor que el final no se toma como precio de lista', async () => {
+    const raro = { ...structuredClone(simple), amount_total: '12.00', amount_incl_tax: '9.00' };
+    expect((await leer(servidor([[raro]]))).paginas[0]![0]!.precio_lista).toBeNull();
   });
 
   it('si se leen menos productos de los que declara la tienda, la fuente se declara incompleta', async () => {
