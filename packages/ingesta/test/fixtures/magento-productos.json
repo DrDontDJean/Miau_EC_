@@ -1,0 +1,51 @@
+{
+ "data": {
+  "products": {
+   "total_count": 7906,
+   "items": [
+    {
+     "sku": "E579.13-BL",
+     "name": "1/2 JUEGO ACCESORIOS PORCELANA BLANCO",
+     "url_key": "1-2-juego-accesorios-porcelana-blanco",
+     "url_suffix": ".html",
+     "stock_status": "IN_STOCK",
+     "image": {
+      "url": "https://www.pintulac.com.ec/media/catalog/product/cache/00139b58a2c265df45428fb70407888a/e/5/e579.13-bl.jpg"
+     },
+     "price_range": {
+      "minimum_price": {
+       "final_price": {
+        "value": 10.212001,
+        "currency": "USD"
+       },
+       "regular_price": {
+        "value": 10.212001
+       }
+      }
+     }
+    },
+    {
+     "sku": "CHMP2966",
+     "name": "10 ACCESORIOS NEUMATICOS 1/4\" NPT CAMPBELL",
+     "url_key": "juego-10-accesorios-1-4-in-npt-ch",
+     "url_suffix": ".html",
+     "stock_status": "IN_STOCK",
+     "image": {
+      "url": "https://www.pintulac.com.ec/media/catalog/product/cache/00139b58a2c265df45428fb70407888a/c/h/chmp2966_4.jpg"
+     },
+     "price_range": {
+      "minimum_price": {
+       "final_price": {
+        "value": 20.861001,
+        "currency": "USD"
+       },
+       "regular_price": {
+        "value": 20.861001
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}
