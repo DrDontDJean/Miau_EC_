@@ -1,0 +1,63 @@
+{
+ "products": [
+  {
+   "id": 10384487383280,
+   "title": "Disco Duro Western Digital (WD) 1 TB",
+   "handle": "disco-duro-western-digital-wd-1-tb",
+   "vendor": "WESTERN DIGITAL",
+   "product_type": "Discos",
+   "variants": [
+    {
+     "id": 50757036343536,
+     "title": "Default Title",
+     "sku": "WDPSDDWDPURPLE26",
+     "available": true,
+     "price": "154.10",
+     "compare_at_price": null,
+     "featured_image": null
+    }
+   ],
+   "images": [
+    {
+     "src": "https://cdn.shopify.com/s/files/1/0749/7308/5936/files/cfdfb82d07d44c28314bd035e1e2b7cb.jpg?v=1794348061"
+    }
+   ]
+  },
+  {
+   "id": 10665755410613,
+   "title": "Bata de Baño Deluxe Unisex Beige",
+   "handle": "bata-de-bano-deluxe-unisex-beige",
+   "vendor": "Colineal",
+   "product_type": "Salidas de Baño",
+   "variants": [
+    {
+     "id": 53691930804405,
+     "title": "Large",
+     "sku": "7861215932413",
+     "available": true,
+     "price": "59.50",
+     "compare_at_price": "85.00",
+     "featured_image": {
+      "src": "https://cdn.shopify.com/s/files/1/2098/0315/files/7861215932413-2.jpg?v=1793806940"
+     }
+    },
+    {
+     "id": 53733230379189,
+     "title": "XLarge",
+     "sku": "7861215932414",
+     "available": true,
+     "price": "66.50",
+     "compare_at_price": "95.00",
+     "featured_image": {
+      "src": "https://cdn.shopify.com/s/files/1/2098/0315/files/7861215932413-2.jpg?v=1793806940"
+     }
+    }
+   ],
+   "images": [
+    {
+     "src": "https://cdn.shopify.com/s/files/1/2098/0315/files/7861215932413-2.jpg?v=1793806940"
+    }
+   ]
+  }
+ ]
+}

@@ -2,6 +2,7 @@ import { crearHttp, type Http, type OpcionesHttp } from './http.ts';
 import { fuenteVtex } from './fuentes/vtex.ts';
 import { fuenteWoocommerce } from './fuentes/woocommerce.ts';
 import { fuenteFeed } from './fuentes/feed.ts';
+import { fuenteShopify } from './fuentes/shopify.ts';
 import type { ContextoFuente, Fuente, TiendaIngesta } from './tipos.ts';
 
 export { permitido } from './robots.ts';
@@ -20,6 +21,7 @@ export function fuenteCon(tienda: TiendaIngesta, http: Http, contexto: ContextoF
   switch (tienda.plataforma) {
     case 'vtex': return fuenteVtex(tienda, http, contexto);
     case 'woocommerce': return fuenteWoocommerce(tienda, http);
+    case 'shopify': return fuenteShopify(tienda, http, contexto);
     case 'feed': return fuenteFeed(tienda, http);
     default: throw new Error(`Plataforma sin fuente: ${tienda.plataforma}`);
   }
