@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { claveDeProducto } from '../src/index.ts';
+import { claveDeProducto, codigosModelo } from '../src/index.ts';
 
 describe('claveDeProducto', () => {
   it('usa el EAN cuando su dígito de control es válido', () => {
@@ -25,6 +25,28 @@ describe('claveDeProducto', () => {
     // Título real de Novicompu que agrupó 5 monitores distintos en la primera corrida.
     expect(claveDeProducto({ titulo: 'Monitor ENV Gaming FHD IPS 144Hz | 24 pulgadas 1920x1080' }).modelo).toBeNull();
     expect(claveDeProducto({ titulo: 'Monitor 27" 2560X1440 VG27AQ3A Asus' }).modelo).toBe('VG27AQ3A');
+  });
+
+  it('un modelo escrito con guion o pegado es el mismo (títulos reales de Pycca, Novicompu y Marcimex)', () => {
+    const modelo = (titulo: string) => claveDeProducto({ titulo }).modelo;
+    expect(modelo('Lavadora Semiautomática 11Kg Indurama LRI-11BLSAP')).toBe('LRI11BLSAP');
+    expect(modelo('LAVADORA SEMIAUT LRI11BLSAP')).toBe('LRI11BLSAP');
+    expect(modelo('Encimera a Gas 60cm Indurama EGI-604VDNE')).toBe(modelo('ENCIMERA EGI604VDNE'));
+    expect(modelo('Tostadora 2 Rebanadas 7V Indurama ITSNE-24')).toBe(modelo('Tostadora Indurama Itsne24 Cr 750W'));
+    expect(modelo('Laptop HP 15-fc0287la AMD Ryzen 7 7730U')).toBe('15FC0287LA');   // el "15-" solo no sirve
+    expect(modelo('Batidora de Mano HM9105E-GEB | Blanco')).toBe('HM9105EGEB');
+  });
+
+  it('no une medidas ni rangos: llantas, especificaciones y revoluciones no son modelos', () => {
+    expect(codigosModelo('Llanta 185/60R14 Kumho')).not.toContain('18560R14');
+    expect(codigosModelo('UPS 1000VA/500W Forza')).not.toContain('1000VA500W');
+    expect(codigosModelo('Lijadora Orbital 5" 320W 8000-13000OPM Porten')).not.toContain('800013000OPM');
+    expect(codigosModelo('Parlante con Wi-Fi 6 y 3-5 horas')).toEqual([]);
+  });
+
+  it('ignora la puntuación pegada al código y no repite candidatos', () => {
+    expect(codigosModelo('Cocina Mabe (EM-7625FX0), gris')).toContain('EM7625FX0');
+    expect(codigosModelo('LRI-11BLSAP LRI-11BLSAP').filter(c => c === 'LRI11BLSAP')).toHaveLength(1);
   });
 
   it('sin EAN ni código de modelo, no hay clave', () => {
