@@ -25,7 +25,7 @@ insert into public.tienda (id, nombre, origen, plataforma, estado, motivo_estado
   -- API pública: Magento (GraphQL)
   ('laganga',   'La Ganga',             'https://laganga.com',             'magento',     'activa',      null, null, null, null),
   ('pintulac',  'Pintulac',             'https://www.pintulac.com.ec',     'magento',     'activa',      null, null, null, null),
-  ('steren',    'Steren Ecuador',       'https://www.steren.com.ec',       'magento',     'activa',      null, null, null, null),
+  ('steren',    'Steren Ecuador',       'https://www.steren.com.ec',       'magento',     'pausada',     '403 desde los servidores de GitHub Actions (responde 200 desde otras redes); pendiente de un feed o un permiso', null, null, null),
   -- API propia en otro host
   ('frecuento', 'Frecuento',            'https://www.frecuento.com',       'frecuento',   'activa',      null, 'https://app.frecuento.com', null, null),
   -- Sitemap + datos estructurados: su API de catálogo no se puede leer (robots.txt, 403 o clave)

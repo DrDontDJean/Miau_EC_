@@ -4,7 +4,7 @@ import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { fuentePara } from '../src/index.ts';
 import {
-  analizarSitemap, elegirHijos, elegirPaginas, extraerProducto,
+  analizarSitemap, elegirHijos, elegirPaginas, extraerProducto, skuDe, tieneProducto,
 } from '../src/fuentes/sitemap.ts';
 import { fetchFalso, tienda, todas, type Respuesta } from './apoyo.ts';
 
@@ -82,6 +82,46 @@ describe('extraerProducto', () => {
     expect(extraerProducto('<html><body><h1>Quiénes somos</h1></body></html>')).toBeNull();
     expect(extraerProducto(jsonLd(producto({ offers: undefined })))).toBeNull();
     expect(extraerProducto(jsonLd({ '@type': 'Organization', name: 'Tienda' }))).toBeNull();
+  });
+});
+
+describe('lectura parcial de la página', () => {
+  it('tieneProducto avisa cuando el JSON-LD del producto ya llegó completo', () => {
+    const cabecera = '<html><head><title>x</title></head><body>';
+    const ld = JSON.stringify(producto());
+    expect(tieneProducto(cabecera)).toBe(false);
+    expect(tieneProducto(`${cabecera}<script type="application/ld+json">${ld.slice(0, 40)}`)).toBe(false);   // el bloque no terminó
+    expect(tieneProducto(`${cabecera}<script type="application/ld+json">${ld}</script>`)).toBe(true);
+    expect(tieneProducto(`<script type="application/ld+json">{"@type": ["Product","Thing"],"name":"x"}</script>`)).toBe(true);
+    expect(tieneProducto('<script type="application/ld+json">{"@type":"Organization"}</script>')).toBe(false);
+  });
+
+  it('skuDe usa el SKU de la tienda o la ruta, y resume las rutas de más de 100 caracteres', () => {
+    expect(skuDe('00008442', '/x/p')).toBe('00008442');
+    expect(skuDe(null, '/mini-wafflera-umco-550-w-negro-958263/p')).toBe('mini-wafflera-umco-550-w-negro-958263/p');
+    expect(skuDe(null, '/')).toBeNull();
+    const largo = skuDe(null, `/${'a'.repeat(150)}/p`)!;
+    expect(largo).toMatch(/^h-[0-9a-f]{40}$/);
+    expect(largo.length).toBeLessThanOrEqual(100);
+    expect(skuDe(null, `/${'a'.repeat(150)}/p`)).toBe(largo);   // estable entre corridas
+    expect(skuDe(null, `/${'b'.repeat(150)}/p`)).not.toBe(largo);
+  });
+
+  it('una ficha de varios MB se lee igual: lo que importa está al principio', async () => {
+    const enorme = `<html><head></head><body><script type="application/ld+json">${JSON.stringify(producto())}</script>${'<div>relleno</div>'.repeat(300_000)}</body></html>`;
+    expect(enorme.length).toBeGreaterThan(3_000_000);
+    const srv = servidor({ '/sitemap.xml': urlset(`${ORIGEN}/a-p1/p`), '/a-p1/p': enorme });
+    const { ofertas } = await leer(srv);
+    expect(ofertas).toHaveLength(1);
+    expect(ofertas[0]).toMatchObject({ sku_tienda: '00008442', precio: 490.55, disponible: true });
+  });
+
+  it('una ficha sin SKU y con una ruta larguísima entrega un SKU que cabe en la base', async () => {
+    const ruta = `/${'producto-con-un-nombre-muy-largo-'.repeat(6)}p99/p`;
+    const sinSku = jsonLd(producto({ sku: undefined }));
+    const srv = servidor({ '/sitemap.xml': urlset(`${ORIGEN}${ruta}`), [ruta]: sinSku });
+    const { ofertas } = await leer(srv);
+    expect(ofertas[0]!.sku_tienda).toMatch(/^h-[0-9a-f]{40}$/);
   });
 });
 

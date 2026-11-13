@@ -7,6 +7,7 @@
 // Una página por producto a 1 petición por segundo: cada corrida lee como mucho `paginas_por_corrida`
 // páginas, en este orden: URLs nunca vistas, URLs con <lastmod> posterior a la última visita y las
 // visitadas hace más tiempo. El precio de una oferta puede tener, por tanto, algunos días.
+import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import type { OfertaCruda } from '@comparador/dominio';
 import type { Http } from '../http.ts';
@@ -14,7 +15,10 @@ import { permitido } from '../robots.ts';
 import type { ContextoFuente, Fuente, TiendaIngesta } from '../tipos.ts';
 
 const LOTE = 50;
-const MAX_PAGINA = 3_000_000;       // bytes: una página más grande no es una ficha de producto
+// De cada página solo se lee el principio, hasta que aparece el JSON-LD del producto o se llega a este tope.
+// Las fichas VTEX pesan más de 3 MB, pero su JSON-LD está en los primeros 80 KB; las de Artefacta lo traen
+// al final de unos 385 KB, con los metadatos Open Graph antes, en la cabecera.
+const MAX_BYTES_PAGINA = 600_000;
 const MAX_SITEMAPS = 300;
 const PROFUNDIDAD = 4;
 const ERRORES_SEGUIDOS = 10;        // un 403 o un 429 repetido es una negativa: se detiene la lectura
@@ -176,6 +180,19 @@ function desdeOpenGraph(html: string): Partial<ProductoPagina> {
   };
 }
 
+/** ¿Ya llegó completo el JSON-LD de un producto? Con eso se deja de descargar la página. */
+export function tieneProducto(leido: string): boolean {
+  const m = /"@type"\s*:\s*(?:\[\s*)?"Product"/.exec(leido);
+  return m !== null && leido.indexOf('</script>', m.index) >= 0;
+}
+
+/** SKU de la oferta: el de la tienda o, sin él, la ruta; si pasa de 100 caracteres (límite de la base), un resumen estable. */
+export function skuDe(sku: string | null, ruta: string): string | null {
+  const crudo = sku ?? (decodeURIComponent(ruta).replace(/^\/+|\/+$/g, '') || null);
+  if (crudo === null || crudo.length <= 100) return crudo;
+  return `h-${createHash('sha1').update(crudo).digest('hex')}`;
+}
+
 /** El producto de una página, o null si no trae un precio en datos estructurados. */
 export function extraerProducto(html: string): ProductoPagina | null {
   const ld = desdeJsonLd(html);
@@ -257,7 +274,7 @@ export function fuenteSitemap(tienda: TiendaIngesta, http: Http, contexto: Conte
       let lote: OfertaCruda[] = [];
       let leidas = 0, sinDatos = 0, erroresSeguidos = 0;
       for (const url of elegidas) {
-        const { texto: pagina, status } = await http.texto(url);
+        const { texto: pagina, status } = await http.inicio(url, tieneProducto, MAX_BYTES_PAGINA);
         leidas++;
         if (status === 404 || status === 410) { retiradas.push(url); erroresSeguidos = 0; continue; }
         if (status !== 200) {
@@ -267,11 +284,11 @@ export function fuenteSitemap(tienda: TiendaIngesta, http: Http, contexto: Conte
           continue;
         }
         erroresSeguidos = 0;
-        const p = pagina.length > MAX_PAGINA ? null : extraerProducto(pagina);
+        const p = extraerProducto(pagina);
         if (!p) { sinDatos++; continue; }
         const u = new URL(url);
         lote.push({
-          sku_tienda: p.sku ?? (decodeURIComponent(u.pathname).replace(/^\/+|\/+$/g, '') || null),
+          sku_tienda: skuDe(p.sku, u.pathname),
           titulo: p.nombre,
           url,   // la del sitemap: es la canónica y con ella se sabe cuándo se vio por última vez
           imagen_url: p.imagen,

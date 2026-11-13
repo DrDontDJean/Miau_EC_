@@ -104,8 +104,8 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 | `apps/web` | Web Next.js 16 (App Router, Cache Components): inicio, `/buscar`, `/p/[id]` con historial, `/tiendas`, `/api/buscar` e `/ir/[id]`. `vercel.json` fija la región `iad1` |
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
 | `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
-| `supabase/migrations` | 14 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso` y lectura por sitemap |
-| `supabase/seed.sql` | 27 tiendas (24 activas, Smart Home EC `sin_permiso` por su robots.txt y De Prati y El Bárbaro `pausada` porque responden 403) y 6 categorías |
+| `supabase/migrations` | 15 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap y cierre de corridas abandonadas |
+| `supabase/seed.sql` | 27 tiendas (23 activas, Smart Home EC `sin_permiso` por su robots.txt, y De Prati, El Bárbaro y Steren `pausada` porque responden 403) y 6 categorías |
 | `scripts/` | Wizard de configuración, validador del esquema (PGlite), carga del seed, resumen del catálogo y empaquetador |
 | `.github/workflows` | `ci.yml`, `migraciones.yml`, `ingesta.yml` (diaria) y `carga-k6.yml` (manual) |
 | `tests/carga` | Escenarios k6: humo, carga, estrés y pico |
@@ -126,8 +126,8 @@ cd comparador-ecuador
 npm install
 
 # 3. Comprueba que todo funciona sin ninguna cuenta todavía
-npm test                  # 142 pruebas: prototipo 8, dominio 27, ingesta 102 (contra PGlite), web 5
-npm run validar:esquema   # aplica las 14 migraciones en Postgres-WASM y recorre un escenario: 49 comprobaciones ✔
+npm test                  # 154 pruebas: prototipo 8, dominio 27, ingesta 114 (contra PGlite), web 5
+npm run validar:esquema   # aplica las 15 migraciones en Postgres-WASM y recorre un escenario: 52 comprobaciones ✔
 ```
 
 Si alguna falla aquí, no sigas: revisa la versión de Node (`node -v` debe ser 24 o más).
@@ -217,8 +217,8 @@ git push -u origin main
 
 Esto lanza dos workflows (en GitHub → Actions):
 
-- **CI**: tipos, 142 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
-- **Migraciones Supabase**: `supabase db push --db-url` aplica las 14 migraciones a tu proyecto. Usa el environment
+- **CI**: tipos, 154 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
+- **Migraciones Supabase**: `supabase db push --db-url` aplica las 15 migraciones a tu proyecto. Usa el environment
   `produccion`, que GitHub crea solo. Si quieres aprobar a mano cada migración, añade una regla en Settings →
   Environments → produccion → Required reviewers.
 
@@ -246,7 +246,7 @@ select jobname, schedule from cron.job order by 1;
 
 ```bash
 node --env-file=.env scripts/cargar-seed.mjs
-# tiendas por estado: { activa: 24, pausada: 2, sin_permiso: 1 } · categorías: 6
+# tiendas por estado: { activa: 23, pausada: 3, sin_permiso: 1 } · categorías: 6
 ```
 
 ### 5.5 Primera ingesta
@@ -281,7 +281,7 @@ con su presupuesto completo) y carga más de 100.000 ofertas. Volumen aproximado
 | Tventas | ~3.800 | sitemap |
 | Marcimex | ~3.700 | API VTEX |
 | Novicompu | ~3.570 | API VTEX |
-| Artefacta, Steren | ~2.100 cada una | sitemap, API Magento |
+| Artefacta | ~2.100 | sitemap |
 | Colineal | ~1.700 | API Shopify |
 | Computron | ~1.300 | API WooCommerce |
 | NewStore | ~780 | API Shopify |
@@ -507,6 +507,9 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 | Corrida `parcial` con el error "categorías truncadas", "tramo(s) con error del servidor" o "se leyeron N de los M productos" | La fuente VTEX no pudo cubrir todo: una categoría de más de 5.000 productos sin subcategorías, un tramo que sigue dando 500 o productos fuera del árbol de categorías | Es una salvaguarda: no desactiva nada. El motivo exacto está en `ingesta.corrida.error`. Si la tienda prohíbe el orden por nombre en su robots.txt, solo se alcanzan 2.500 productos por categoría |
 | Una oferta de una tienda sitemap muestra un precio de hace días | Se revisa por tandas, a 1 página por segundo | Es lo esperado: la web muestra cuándo se actualizó. Sube `paginas_por_corrida` si hace falta (§7) |
 | Una tienda sitemap queda `parcial` con "no trajeron datos de producto" | Más del 20 % de sus páginas no trae JSON-LD ni Open Graph con precio: la tienda cambió su formato, o el `patron_producto` deja pasar páginas que no son de producto | Revisa `patron_producto` de esa tienda y una de sus páginas. Mientras tanto no desactiva nada |
+| Una tienda responde 403 desde GitHub Actions y 200 desde otra red (Steren) | Su protección (Cloudflare) bloquea las direcciones de los servidores de GitHub | No se evade: la tienda queda `pausada` hasta tener un feed o un permiso |
+| Una tienda sitemap no carga ninguna oferta | Pidió la ficha con un `Accept` que el servidor responde vacío, o el JSON-LD está después del tope de lectura (600 KB) | Revisa una ficha con `curl` y el `patron_producto`; las fichas se leen solo hasta que aparece su JSON-LD |
+| Una tienda no vuelve a correr y su última corrida sigue `en_curso` | El proceso murió sin cerrarla (workflow cancelado o con tiempo agotado) | Ya se resuelve sola: al abrir la siguiente corrida, las que llevan más de 3 horas `en_curso` se cierran como `fallida` |
 | Shopify: "robots.txt prohíbe /meta.json" o moneda distinta de USD | La moneda de las tiendas Shopify se lee de `/meta.json` (no de `/cart.js`, que su robots.txt prohíbe) | Si la tienda prohíbe `/meta.json`, pásala a feed. Una moneda distinta de USD manda las ofertas a cuarentena (`moneda_no_usd`) |
 | Next.js: error con `useSearchParams` o con `Date.now()` al compilar | Reglas de Cache Components | Ya resuelto. Si editas páginas: hooks de cliente dentro de `<Suspense>` y la hora como prop después de leer los `searchParams` |
 | `npm install -w packages/x` no registra la dependencia | npm espera el nombre del workspace | `npm install <paquete> --workspace @comparador/x` |
@@ -517,13 +520,13 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 
 ## 12. Lista final de verificación
 
-- [ ] `npm test`: 142 pruebas pasan · `npm run validar:esquema`: 49 ✔
+- [ ] `npm test`: 154 pruebas pasan · `npm run validar:esquema`: 52 ✔
 - [ ] `.env` creado por el wizard. `git status` no lo muestra
 - [ ] Secretos de GitHub: `DATABASE_URL` (y `VERCEL_AUTOMATION_BYPASS_SECRET` para k6)
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado
 - [ ] Workflows **CI** y **Migraciones Supabase** en verde tras el primer push
 - [ ] 3 trabajos en `cron.job`
-- [ ] Seed cargado: 24 tiendas activas, 1 `sin_permiso`, 2 `pausada`, 6 categorías
+- [ ] Seed cargado: 23 tiendas activas, 1 `sin_permiso`, 3 `pausada`, 6 categorías
 - [ ] Primera ingesta: cada tienda probada sola con `limite_paginas: 2`; luego la completa, con las tiendas en `ok` (las leídas por sitemap llegan a su volumen completo tras varias corridas) y más de 100.000 ofertas
 - [ ] Vercel: Root Directory `apps/web`, 2 variables Config sin comillas, despliegue `Ready`
 - [ ] La web responde 200 en `/`, `/tiendas`, `/buscar`, `/api/buscar`; 400 y 404 en los casos inválidos; `/ir` da 302 con `utm_source`
