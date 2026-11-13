@@ -174,6 +174,87 @@ await prohibido(`select public.recalcular_productos(array[]::uuid[])`, 'anon no 
 await prohibido(`select ingesta.cargar_lote(1, '[]'::jsonb)`, 'anon no puede cargar lotes de ingesta');
 await db.exec(`reset role`);
 
+// Accesorios: "televisor 55" no encabeza con soportes y cables aunque cuesten menos, pero quien busca "soporte
+// televisor 55" los ve primero. Nunca se ocultan.
+const cacc = (await uno(`select ingesta.abrir_corrida('ekustore') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cacc, JSON.stringify([
+  oferta('S1', 'Soporte para Televisor 55 pulgadas fijo de pared', 15, { dominio: 'ekustore.com' }),
+  oferta('S2', 'Cable HDMI para televisor 55 pulgadas 2 metros', 6, { dominio: 'ekustore.com' }),
+  oferta('S3', 'Televisor 55 pulgadas Smart con soporte de pared incluido', 500, { dominio: 'ekustore.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cacc]);
+const marcas = await q(`select left(titulo, 8) t, es_accesorio a from public.producto where titulo ~ '^(Soporte|Cable|Televisor 55 pul)' order by 1`);
+ok(JSON.stringify(marcas.map(m => [m.t, m.a])) === '[["Cable HD",true],["Soporte ",true],["Televiso",false]]',
+  `es_accesorio: cable y soporte sí, televisor con soporte incluido no (${JSON.stringify(marcas.map(m => [m.t, m.a]))})`);
+await db.exec(`set role anon`);
+const sinPedirlos = await q(`select titulo from public.buscar_productos('televisor 55', 'precio_asc', 24)`);
+const idxTv = sinPedirlos.map((r, i) => (/^Televisor/.test(r.titulo) ? i : -1)).filter(i => i >= 0);
+const idxAcc = sinPedirlos.map((r, i) => (/^(Soporte|Cable)/.test(r.titulo) ? i : -1)).filter(i => i >= 0);
+ok(idxTv.length >= 2 && idxAcc.length === 2 && Math.max(...idxTv) < Math.min(...idxAcc),
+  `"televisor 55" por precio: los televisores van antes que el soporte y el cable, que cuestan menos (${sinPedirlos.map(r => r.titulo.slice(0, 12)).join(' | ')})`);
+const pidiendoloSoporte = await q(`select titulo from public.buscar_productos('soporte televisor 55', 'precio_asc', 24)`);
+ok(pidiendoloSoporte[0].titulo.startsWith('Soporte') && pidiendoloSoporte.length === 2,
+  `"soporte televisor 55": el soporte va primero y no se penaliza (${pidiendoloSoporte.map(r => r.titulo.slice(0, 14)).join(' | ')})`);
+await db.exec(`reset role`);
+
+// Títulos con entidades HTML (de antes de que la fuente sitemap las decodificara): la migración 1900 los limpia en oferta
+// y en producto, decodifica "&amp;" al final y deja intactos los que ya están limpios. Se vuelve a ejecutar sobre datos sucios.
+const csuc = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [csuc, JSON.stringify([
+  oferta('E1', 'Monitor Curvo 27&quot; Tom &amp; Jerry &apos;Pro&apos; Edicion', 300, { dominio: 'randall-tech.com' }),
+  oferta('E2', 'Monitor Plano 24" ya limpio Edicion', 200, { dominio: 'randall-tech.com' }),
+  oferta('E3', 'Literal &amp;quot; sin doble decodificacion Edicion', 100, { dominio: 'randall-tech.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [csuc]);
+await db.exec(readFileSync(join(dir, readdirSync(dir).find(f => f.includes('titulos_sin_entidades_html'))), 'utf8'));
+const limpios = (await q(`select titulo from public.producto where titulo like '%Edicion' order by titulo`)).map(r => r.titulo);
+const enOfertas = (await q(`select titulo from public.oferta where sku_tienda in ('E1','E2','E3') order by sku_tienda`)).map(r => r.titulo);
+ok(JSON.stringify(limpios) === JSON.stringify([`Literal &quot; sin doble decodificacion Edicion`, `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion`, `Monitor Plano 24" ya limpio Edicion`]),
+  `títulos de producto sin entidades HTML, sin decodificar dos veces (${JSON.stringify(limpios)})`);
+ok(enOfertas[0] === `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion` && enOfertas[1] === 'Monitor Plano 24" ya limpio Edicion' && enOfertas[2] === 'Literal &quot; sin doble decodificacion Edicion',
+  'los títulos de oferta también quedan limpios');
+
+// La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.
+const idxDestacados = await uno(`select indexdef from pg_indexes where indexname = 'producto_destacados_idx'`);
+ok(idxDestacados && /\(num_tiendas DESC, precio_desde\)/.test(idxDestacados.indexdef) && /num_tiendas > 1/.test(idxDestacados.indexdef),
+  `índice parcial de productos destacados: ${idxDestacados?.indexdef.replace(/^.* USING /, '')}`);
+
+// Paginación: 30 parlantes de una tienda. Las páginas no repiten ni pierden productos (incluso con empates de rango),
+// el total no depende del límite, y los filtros se aplican en la base antes de paginar.
+const cpag = (await uno(`select ingesta.abrir_corrida('newstore') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cpag, JSON.stringify(Array.from({ length: 30 }, (_, i) =>
+  oferta(`PG${i}`, `Parlante Bluetooth Portatil Estilo ${String.fromCharCode(65 + i)}`, 10 + i, { dominio: 'newstore.com', disponible: i % 3 !== 0 })))]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cpag]);
+await db.exec(`set role anon`);
+const pagina = (orden, limite, desde, extra = '') =>
+  q(`select id, titulo, precio_desde::float8 precio, total::int total from public.buscar_productos('parlante bluetooth', '${orden}', ${limite}, ${desde}${extra})`);
+const [pg1, pg2, pg3, pg4] = [await pagina('precio_asc', 12, 0), await pagina('precio_asc', 12, 12), await pagina('precio_asc', 12, 24), await pagina('precio_asc', 12, 60)];
+const juntas = [...pg1, ...pg2, ...pg3];
+ok(pg1.length === 12 && pg2.length === 12 && pg3.length === 6 && pg4.length === 0 && juntas.every(f => f.total === 30),
+  `paginar: 12 + 12 + 6 productos, el total es 30 en cada fila y una página fuera de rango viene vacía (${[pg1, pg2, pg3, pg4].map(p => p.length)})`);
+// Un producto sin ninguna oferta disponible no tiene "precio desde": va al final, y entre sí por id.
+const conPrecio = juntas.filter(f => f.precio !== null);
+const primerSinPrecio = juntas.findIndex(f => f.precio === null);
+ok(new Set(juntas.map(f => f.id)).size === 30 && conPrecio.length === 20 &&
+   conPrecio.every((f, i) => i === 0 || f.precio > conPrecio[i - 1].precio) &&
+   juntas.slice(primerSinPrecio).every(f => f.precio === null),
+  'las páginas por precio no repiten ni pierden productos: 20 con precio de menor a mayor a través de las páginas y los 10 agotados al final');
+const sinOrden = [];
+for (let desde = 0; desde < 30; desde += 7) sinOrden.push(...await pagina('relevancia', 7, desde));
+ok(sinOrden.length === 30 && new Set(sinOrden.map(f => f.id)).size === 30,
+  'con empates de rango (todos igual de relevantes), las páginas de 7 siguen sin repetir ni perder productos');
+const [disp] = await q(`select count(*)::int n, max(total)::int total from public.buscar_productos('parlante bluetooth', 'precio_asc', 60, 0, true)`);
+ok(disp.n === 20 && disp.total === 20, `filtro "solo disponibles" en la base: 20 de 30, y el total lo refleja (${disp.n} de ${disp.total})`);
+const [dePropia] = await q(`select count(*)::int n from public.buscar_productos('parlante bluetooth', 'precio_asc', 60, 0, false, false, 'newstore')`);
+const [deOtra] = await q(`select count(*)::int n from public.buscar_productos('parlante bluetooth', 'precio_asc', 60, 0, false, false, 'kywi')`);
+ok(dePropia.n === 30 && deOtra.n === 0, `filtro por tienda: 30 de newstore y ninguno de kywi (${dePropia.n}, ${deOtra.n})`);
+const varias = await q(`select num_tiendas, total::int total from public.buscar_productos('televisor', 'relevancia', 60, 0, false, true)`);
+ok(varias.length >= 1 && varias.every(f => f.num_tiendas > 1 && f.total === varias.length), `filtro "varias tiendas": solo productos de 2 o más tiendas (${varias.length})`);
+const [{ facetas }] = await q(`select public.facetas_busqueda('parlante bluetooth') facetas`);
+ok(facetas.total === 30 && facetas.disponibles === 20 && facetas.varias === 0 && facetas.tiendas.length === 1 && facetas.tiendas[0].id === 'newstore' && facetas.tiendas[0].n === 30,
+  `facetas de la búsqueda: ${JSON.stringify(facetas)}`);
+await db.exec(`reset role`);
+
 // Frescura: llamarla dos veces seguidas deja una sola incidencia por tienda desactualizada, y una tienda que
 // vuelve a tener una corrida correcta abre un episodio nuevo si se vuelve a atrasar.
 const fresca1 = (await uno(`select calidad.revisar_frescura() n`)).n;

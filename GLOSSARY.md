@@ -29,7 +29,7 @@ Decisión de que una oferta corresponde a un producto: por EAN, por código de m
 _Avoid_: matching, mapeo, deduplicación
 
 **Código de modelo**:
-Referencia del fabricante extraída del título de la oferta (letras y números, al menos 6 caracteres), como 65MNUHD.
+Referencia del fabricante extraída del título de la oferta (letras y números, al menos 6 caracteres), como 65MNUHD. Un código escrito con guion se une: "LRI-11BLSAP" y "LRI11BLSAP" son el mismo.
 _Avoid_: referencia, part number
 
 ## Precios
@@ -63,6 +63,10 @@ _Avoid_: job, crawl, sync, ejecución
 **Agotada**:
 Oferta que la tienda publica sin stock y sin precio. No es un fallo: se muestra como "Agotado" con su último precio conocido y no cuenta para el precio desde. Si nunca se vio con precio, no se publica.
 _Avoid_: sin precio, descontinuada, rota
+
+**Accesorio**:
+Producto cuyo título empieza como un complemento de otro (soporte, cable, funda, cargador, repuesto) o dice "para" seguido de un aparato. En la búsqueda va después de los demás productos, salvo que se busque uno.
+_Avoid_: complemento, aditamento
 
 **Cuarentena**:
 Lugar donde quedan las ofertas que fallan una regla bloqueante. No se publican.

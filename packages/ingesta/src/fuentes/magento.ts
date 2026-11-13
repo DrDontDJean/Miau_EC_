@@ -7,6 +7,7 @@ import type { Http } from '../http.ts';
 import type { Fuente, TiendaIngesta } from '../tipos.ts';
 
 const POR_PAGINA = 100;
+const TOLERANCIA = 0.99;   // menos del 1 % de diferencia con el total declarado no cuenta
 
 const consulta = (pagina: number) =>
   `{products(search:"",pageSize:${POR_PAGINA},currentPage:${pagina},sort:{name:ASC}){total_count ` +
@@ -63,6 +64,7 @@ export function fuenteMagento(tienda: TiendaIngesta, http: Http): Fuente {
       motivo = null;
       let totalInicial: number | null = null;
       let paginas = 1;
+      let leidos = 0;
       for (let pagina = 1; pagina <= paginas; pagina++) {
         const { datos } = await http.json<unknown>(`${tienda.origen}/graphql?query=${encodeURIComponent(consulta(pagina))}`);
         const r = Respuesta.safeParse(datos);
@@ -71,11 +73,17 @@ export function fuenteMagento(tienda: TiendaIngesta, http: Http): Fuente {
         if (!r.data.data) throw new Error(`Magento (${tienda.id}) respondió sin datos de productos`);
         const { total_count: total, items } = r.data.data.products;
         if (totalInicial === null) { totalInicial = total; paginas = Math.ceil(total / POR_PAGINA); }
-        if (total !== totalInicial) motivo = `El total de ${tienda.id} cambió durante la lectura (de ${totalInicial} a ${total})`;
-        if (items.length < Math.min(POR_PAGINA, totalInicial - (pagina - 1) * POR_PAGINA)) {
+        // Una página que no es la última debe venir llena. La última puede traer menos si el catálogo cambió.
+        if (pagina < paginas && items.length < POR_PAGINA) {
           motivo ??= `La página ${pagina} de ${tienda.id} llegó incompleta (${items.length} productos)`;
         }
+        leidos += items.length;
         if (items.length) yield items.map(i => aOferta(i, tienda.origen));
+      }
+      // El catálogo cambia mientras se lee (Pintulac: de 7.900 a 7.896 en dos minutos): una diferencia de menos
+      // del 1 % no cuenta. Si faltan más, la corrida queda parcial y no desactiva nada.
+      if (totalInicial !== null && leidos < totalInicial * TOLERANCIA) {
+        motivo ??= `se leyeron ${leidos} de los ${totalInicial} productos que declara ${tienda.id}`;
       }
     },
   };

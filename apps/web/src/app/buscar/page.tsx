@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { buscarCacheado } from '@/lib/datos';
+import { buscarCacheado, facetasCacheadas } from '@/lib/datos';
+import { POR_PAGINA, leerPagina } from '@/lib/catalogo';
 import { leerOrden } from '@/lib/rutas';
+import { Paginacion } from '@/components/paginacion';
 import { EsqueletoRejilla, RejillaProductos, tarjetaDeProducto } from '@/components/ofertas';
 import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
 import { SalidasRapidas } from '@/components/salidas';
@@ -35,6 +37,7 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
   const sp = await searchParams;
   const q = texto(sp.q).trim().slice(0, 80);
   const orden = leerOrden(texto(sp.orden) || null);
+  const pagina = leerPagina(texto(sp.pagina));
 
   if (q.length < 2) {
     return (
@@ -46,9 +49,9 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
     );
   }
 
-  const todos = await buscarCacheado(q, orden);
+  const facetas = await facetasCacheadas(q);
 
-  if (todos.length === 0) {
+  if (facetas.total === 0) {
     return (
       <section>
         <h1 className="text-2xl font-extrabold tracking-tight">Sin resultados para <q>{q}</q></h1>
@@ -60,37 +63,38 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
     );
   }
 
-  // Filtros sobre lo que ya llegó de la búsqueda: no cambian la consulta.
+  // Los filtros se aplican en la base antes de paginar; el lateral cuenta cuántos productos cumple cada uno.
+  const tiendas = facetas.tiendas.map(t => [t.id, t.nombre] as const);
   const filtros = { stock: texto(sp.stock) === '1', varias: texto(sp.varias) === '1', tienda: texto(sp.tienda) };
-  const tiendas = [...new Map(todos.flatMap(p => p.ofertas).map(o => [o.tiendaId, o.tienda])).entries()]
-    .sort((a, b) => a[1].localeCompare(b[1]));
   if (!tiendas.some(([id]) => id === filtros.tienda)) filtros.tienda = '';
 
-  const productos = todos.filter(p =>
-    (!filtros.stock || p.ofertas.some(o => o.disponible)) &&
-    (!filtros.varias || p.numTiendas > 1) &&
-    (!filtros.tienda || p.ofertas.some(o => o.tiendaId === filtros.tienda)));
+  const { productos, total } = await buscarCacheado(q, orden, {
+    pagina, soloDisponibles: filtros.stock, soloVarias: filtros.varias, tienda: filtros.tienda,
+  });
+  const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
-  const ruta = (cambio: Partial<typeof filtros> & { orden?: string }) => {
-    const f = { ...filtros, orden, ...cambio };
+  // Cambiar el orden o un filtro vuelve a la primera página; los enlaces de página conservan todo lo demás.
+  const ruta = (cambio: Partial<typeof filtros> & { orden?: string; pagina?: number }) => {
+    const f = { ...filtros, orden, pagina: 1, ...cambio };
     const p = new URLSearchParams({ q });
     if (f.orden !== 'relevancia') p.set('orden', f.orden);
     if (f.stock) p.set('stock', '1');
     if (f.varias) p.set('varias', '1');
     if (f.tienda) p.set('tienda', f.tienda);
+    if (f.pagina > 1) p.set('pagina', String(f.pagina));
     return `/buscar?${p}`;
   };
   const hayFiltros = filtros.stock || filtros.varias || filtros.tienda !== '';
-  const limitado = todos.length >= 24; // buscar_productos devuelve como mucho 24
   const cantidad = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
-  const resumen = hayFiltros && productos.length < todos.length
-    ? `${productos.length} de ${cantidad(todos.length)}`
-    : cantidad(todos.length);
+  const resumen = [
+    hayFiltros && total < facetas.total ? `${total} de ${cantidad(facetas.total)}` : cantidad(total),
+    paginas > 1 && `página ${pagina} de ${paginas}`,
+  ].filter(Boolean).join(' · ');
   // Cuántos de los resultados cumple cada filtro, para mostrarlo junto a él.
   const conteo = {
-    stock: todos.filter(p => p.ofertas.some(o => o.disponible)).length,
-    varias: todos.filter(p => p.numTiendas > 1).length,
-    tienda: (id: string) => todos.filter(p => p.ofertas.some(o => o.tiendaId === id)).length,
+    stock: facetas.disponibles,
+    varias: facetas.varias,
+    tienda: (id: string) => facetas.tiendas.find(t => t.id === id)?.n ?? 0,
   };
   const categoria = RAPIDAS.find(r => r.q === q.toLowerCase())?.q ?? '';
 
@@ -202,13 +206,24 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
         <div className="flex min-w-0 flex-col gap-4">
           {productos.length === 0 ? (
             <section className="rounded-2xl bg-superficie p-6">
-              <p className="font-semibold">Ningún resultado cumple esos filtros.</p>
-              <Link href={ruta({ stock: false, varias: false, tienda: '' })} className="mt-2 inline-flex min-h-11 items-center font-semibold text-enlace underline">Quitar filtros y ver los {todos.length}</Link>
+              {pagina > 1 && !hayFiltros ? (
+                <>
+                  <p className="font-semibold">Esa página no existe.</p>
+                  <Link href={ruta({ pagina: 1 })} className="mt-2 inline-flex min-h-11 items-center font-semibold text-enlace underline">Volver a los primeros resultados</Link>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">Ningún resultado cumple esos filtros.</p>
+                  <Link href={ruta({ stock: false, varias: false, tienda: '' })} className="mt-2 inline-flex min-h-11 items-center font-semibold text-enlace underline">Quitar filtros y ver los {facetas.total}</Link>
+                </>
+              )}
             </section>
           ) : (
-            <div className="catalogo-rejilla"><RejillaProductos productos={productos.map(tarjetaDeProducto)} /></div>
+            <>
+              <div className="catalogo-rejilla"><RejillaProductos productos={productos.map(tarjetaDeProducto)} /></div>
+              <Paginacion actual={pagina} paginas={paginas} href={n => ruta({ pagina: n })} />
+            </>
           )}
-          {limitado && <p className="text-sm text-suave">Se muestran los primeros {todos.length} resultados. Para afinar la búsqueda, añada la marca o el modelo.</p>}
         </div>
       </div>
     </div>

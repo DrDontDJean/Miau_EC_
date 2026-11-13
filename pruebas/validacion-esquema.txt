@@ -18,6 +18,10 @@
 ✔ migración 20261106001400_lectura_por_sitemap.sql
 ✔ migración 20261106001500_cerrar_corridas_abandonadas.sql
 ✔ migración 20261106001600_frescura_sin_duplicados.sql
+✔ migración 20261106001700_accesorios_al_final.sql
+✔ migración 20261106001800_busqueda_paginada.sql
+✔ migración 20261106001900_titulos_sin_entidades_html.sql
+✔ migración 20261106002000_indice_productos_destacados.sql
 ✔ seed.sql
 ✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 3 pausadas ({"activa":24,"pausada":3,"sin_permiso":1})
 ✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
@@ -52,10 +56,23 @@
 ✔ anon no puede cambiar precios
 ✔ anon no puede llamar funciones internas (recalcular_productos)
 ✔ anon no puede cargar lotes de ingesta
-✔ revisar_frescura dos veces: 20 y luego 0 incidencias nuevas (una por tienda)
+✔ es_accesorio: cable y soporte sí, televisor con soporte incluido no ([["Cable HD",true],["Soporte ",true],["Televiso",false]])
+✔ "televisor 55" por precio: los televisores van antes que el soporte y el cable, que cuestan menos (Televisor 55 | Televisor 55 | Cable HDMI p | Soporte para)
+✔ "soporte televisor 55": el soporte va primero y no se penaliza (Soporte para T | Televisor 55 p)
+✔ títulos de producto sin entidades HTML, sin decodificar dos veces (["Literal &quot; sin doble decodificacion Edicion","Monitor Curvo 27\" Tom & Jerry 'Pro' Edicion","Monitor Plano 24\" ya limpio Edicion"])
+✔ los títulos de oferta también quedan limpios
+✔ índice parcial de productos destacados: btree (num_tiendas DESC, precio_desde) WHERE (num_tiendas > 1)
+✔ paginar: 12 + 12 + 6 productos, el total es 30 en cada fila y una página fuera de rango viene vacía (12,12,6,0)
+✔ las páginas por precio no repiten ni pierden productos: 20 con precio de menor a mayor a través de las páginas y los 10 agotados al final
+✔ con empates de rango (todos igual de relevantes), las páginas de 7 siguen sin repetir ni perder productos
+✔ filtro "solo disponibles" en la base: 20 de 30, y el total lo refleja (20 de 20)
+✔ filtro por tienda: 30 de newstore y ninguno de kywi (30, 0)
+✔ filtro "varias tiendas": solo productos de 2 o más tiendas (1)
+✔ facetas de la búsqueda: {"total":30,"varias":0,"tiendas":[{"n":30,"id":"newstore","nombre":"NewStore"}],"disponibles":20}
+✔ revisar_frescura dos veces: 18 y luego 0 incidencias nuevas (una por tienda)
 ✔ una tienda con una corrida correcta posterior al último aviso, que se vuelve a atrasar, recibe un aviso nuevo (1)
 ✔ competitividad_tienda: [{"tienda_id":"comandato","productos_compartidos":2,"veces_mas_barata":2,"pct_mas_barata":"100.0"},{"tienda_id":"novicompu","productos_compartidos":2,"veces_mas_barata":0,"pct_mas_barata":"0.0"}]
-✔ precio_semanal: [{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"}]
+✔ precio_semanal: [{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"ekustore","ofertas":3,"precio_mediano":"15.00"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"newstore","ofertas":30,"precio_mediano":"24.50"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"randall","ofertas":3,"precio_mediano":"200.00"}]
 ✔ salida_diaria: [{"fecha":"2026-11-13T00:00:00.000Z","tienda_id":"novicompu","salidas":1}]
 
 Resumen de calidad por corrida:
@@ -73,4 +90,7 @@ Resumen de calidad por corrida:
 │ 8       │ 10         │ 'novicompu' │ 'ok'       │ 1      │ 1       │ 0             │ 0            │ '{}'                     │
 │ 9       │ 11         │ 'novicompu' │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{"caida_de_volumen":1}' │
 │ 10      │ 12         │ 'kywi'      │ 'en_curso' │ 1      │ 0       │ 1             │ 0            │ '{"precio_invalido":1}'  │
+│ 11      │ 13         │ 'ekustore'  │ 'ok'       │ 3      │ 3       │ 0             │ 0            │ '{}'                     │
+│ 12      │ 14         │ 'randall'   │ 'ok'       │ 3      │ 3       │ 0             │ 0            │ '{}'                     │
+│ 13      │ 15         │ 'newstore'  │ 'ok'       │ 30     │ 30      │ 0             │ 0            │ '{}'                     │
 └─────────┴────────────┴─────────────┴────────────┴────────┴─────────┴───────────────┴──────────────┴──────────────────────────┘

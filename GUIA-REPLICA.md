@@ -104,7 +104,7 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 | `apps/web` | Web Next.js 16 (App Router, Cache Components): inicio, `/buscar`, `/p/[id]` con historial, `/tiendas`, `/api/buscar` e `/ir/[id]`. `vercel.json` fija la región `iad1` |
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
 | `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
-| `supabase/migrations` | 16 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap, cierre de corridas abandonadas y frescura sin avisos duplicados |
+| `supabase/migrations` | 20 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso`, lectura por sitemap, cierre de corridas abandonadas frescura sin avisos duplicados, accesorios al final de la búsqueda, búsqueda paginada con filtros y total, títulos sin entidades HTML e índice de los productos destacados |
 | `supabase/seed.sql` | 28 tiendas (24 activas, Smart Home EC `sin_permiso` por su robots.txt, y De Prati, El Bárbaro y Steren `pausada` porque responden 403) y 6 categorías |
 | `scripts/` | Wizard de configuración, validador del esquema (PGlite), carga del seed, resumen del catálogo y empaquetador |
 | `.github/workflows` | `ci.yml`, `migraciones.yml`, `ingesta.yml` (diaria) y `carga-k6.yml` (manual) |
@@ -126,8 +126,8 @@ cd comparador-ecuador
 npm install
 
 # 3. Comprueba que todo funciona sin ninguna cuenta todavía
-npm test                  # 176 pruebas: prototipo 8, dominio 27, ingesta 136 (contra PGlite), web 5
-npm run validar:esquema   # aplica las 16 migraciones en Postgres-WASM y recorre un escenario: 55 comprobaciones ✔
+npm test                  # 200 pruebas: prototipo 8, dominio 30, ingesta 144 (contra PGlite), web 18
+npm run validar:esquema   # aplica las 20 migraciones en Postgres-WASM y recorre un escenario: 72 comprobaciones ✔
 ```
 
 Si alguna falla aquí, no sigas: revisa la versión de Node (`node -v` debe ser 24 o más).
@@ -217,8 +217,8 @@ git push -u origin main
 
 Esto lanza dos workflows (en GitHub → Actions):
 
-- **CI**: tipos, 176 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
-- **Migraciones Supabase**: `supabase db push --db-url` aplica las 16 migraciones a tu proyecto. Usa el environment
+- **CI**: tipos, 200 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
+- **Migraciones Supabase**: `supabase db push --db-url` aplica las 20 migraciones a tu proyecto. Usa el environment
   `produccion`, que GitHub crea solo. Si quieres aprobar a mano cada migración, añade una regla en Settings →
   Environments → produccion → Required reviewers.
 
@@ -511,6 +511,7 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 | Una tienda responde 403 desde GitHub Actions y 200 desde otra red (Steren) | Su protección (Cloudflare) bloquea las direcciones de los servidores de GitHub | No se evade: la tienda queda `pausada` hasta tener un feed o un permiso |
 | Una tienda sitemap no carga ninguna oferta | Pidió la ficha con un `Accept` que el servidor responde vacío, o el JSON-LD está después del tope de lectura (600 KB) | Revisa una ficha con `curl` y el `patron_producto`; las fichas se leen solo hasta que aparece su JSON-LD |
 | Una tienda no vuelve a correr y su última corrida sigue `en_curso` | El proceso murió sin cerrarla (workflow cancelado o con tiempo agotado) | Ya se resuelve sola: al abrir la siguiente corrida, las que llevan más de 3 horas `en_curso` se cierran como `fallida` |
+| La compilación de la web (o la vista previa de Vercel) falla con `canceling statement due to statement timeout` | Una consulta de la web tarda más de 3 s (el límite del rol anon) porque recorre una tabla grande sin índice; pasó con los productos destacados de la portada al llegar a 128.000 productos | Revisa con `explain` que la consulta use un índice. La de destacados usa `producto_destacados_idx` (migración 2000) |
 | Shopify: "robots.txt prohíbe /meta.json" o moneda distinta de USD | La moneda de las tiendas Shopify se lee de `/meta.json` (no de `/cart.js`, que su robots.txt prohíbe) | Si la tienda prohíbe `/meta.json`, pásala a feed. Una moneda distinta de USD manda las ofertas a cuarentena (`moneda_no_usd`) |
 | Next.js: error con `useSearchParams` o con `Date.now()` al compilar | Reglas de Cache Components | Ya resuelto. Si editas páginas: hooks de cliente dentro de `<Suspense>` y la hora como prop después de leer los `searchParams` |
 | `npm install -w packages/x` no registra la dependencia | npm espera el nombre del workspace | `npm install <paquete> --workspace @comparador/x` |
@@ -521,7 +522,7 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 
 ## 12. Lista final de verificación
 
-- [ ] `npm test`: 176 pruebas pasan · `npm run validar:esquema`: 55 ✔
+- [ ] `npm test`: 200 pruebas pasan · `npm run validar:esquema`: 72 ✔
 - [ ] `.env` creado por el wizard. `git status` no lo muestra
 - [ ] Secretos de GitHub: `DATABASE_URL` (y `VERCEL_AUTOMATION_BYPASS_SECRET` para k6)
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado

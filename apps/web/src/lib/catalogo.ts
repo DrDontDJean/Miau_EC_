@@ -38,6 +38,23 @@ type FilaOferta = {
 type FilaProducto = {
   id: string; titulo: string; marca: string | null; imagen_url: string | null;
   precio_desde: number | string | null; num_tiendas: number; ofertas: FilaOferta[] | null;
+  /** Cuántos resultados cumplen la búsqueda y los filtros, sin contar el límite (migración 1800). */
+  total?: number | string | null;
+};
+
+/** Productos por página de resultados. */
+export const POR_PAGINA = 24;
+/** La base no entrega más allá de este desplazamiento (migración 1800): unas 416 páginas. */
+export const MAX_PAGINA = Math.floor(10_000 / POR_PAGINA) + 1;
+
+export type OpcionesBusqueda = { pagina?: number; soloDisponibles?: boolean; soloVarias?: boolean; tienda?: string };
+export type ResultadoBusqueda = { productos: Producto[]; total: number; pagina: number; porPagina: number };
+export type Facetas = { total: number; disponibles: number; varias: number; tiendas: { id: string; nombre: string; n: number }[] };
+
+/** Número de página válido: entero entre 1 y MAX_PAGINA; cualquier otra cosa es la primera. */
+export const leerPagina = (v: string | null | undefined): number => {
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1 ? Math.min(n, MAX_PAGINA) : 1;
 };
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
@@ -66,10 +83,27 @@ export function aProducto(f: FilaProducto): Producto {
 
 export function crearCatalogo(cliente: ClienteSupabase) {
   return {
-    async buscar(q: string, orden: Orden = 'relevancia', limite = 24): Promise<Producto[]> {
-      const { data, error } = await cliente.rpc('buscar_productos', { p_q: q, p_orden: orden, p_limite: limite, p_desde: 0 });
+    async buscar(q: string, orden: Orden = 'relevancia', opciones: OpcionesBusqueda = {}): Promise<ResultadoBusqueda> {
+      const pagina = Math.min(Math.max(1, Math.floor(opciones.pagina ?? 1)), MAX_PAGINA);
+      const { data, error } = await cliente.rpc('buscar_productos', {
+        p_q: q, p_orden: orden, p_limite: POR_PAGINA, p_desde: (pagina - 1) * POR_PAGINA,
+        p_solo_disponibles: opciones.soloDisponibles === true, p_solo_varias: opciones.soloVarias === true,
+        p_tienda: opciones.tienda || null,
+      });
       if (error) throw new Error(`buscar_productos: ${error.message}`);
-      return ((data as FilaProducto[] | null) ?? []).map(aProducto);
+      const filas = (data as FilaProducto[] | null) ?? [];
+      return { productos: filas.map(aProducto), total: Number(filas[0]?.total ?? 0), pagina, porPagina: POR_PAGINA };
+    },
+
+    /** Cuántos productos tiene la búsqueda en total, disponibles, en varias tiendas y por tienda (sin filtros). */
+    async facetas(q: string): Promise<Facetas> {
+      const { data, error } = await cliente.rpc('facetas_busqueda', { p_q: q });
+      if (error) throw new Error(`facetas_busqueda: ${error.message}`);
+      const f = (data ?? {}) as Partial<Facetas>;
+      return {
+        total: Number(f.total ?? 0), disponibles: Number(f.disponibles ?? 0), varias: Number(f.varias ?? 0),
+        tiendas: (f.tiendas ?? []).map(t => ({ id: t.id, nombre: t.nombre, n: Number(t.n) })),
+      };
     },
 
     /** Registra la salida y devuelve la URL de la tienda, o null si la oferta no está activa. */

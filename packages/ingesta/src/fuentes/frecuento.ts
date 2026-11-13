@@ -1,8 +1,13 @@
 // Fuente Frecuento: API REST que usa su propia web (app.frecuento.com/products/), 500 productos por página.
 // El parámetro offset se ignora: hay que paginar con page. La respuesta no trae moneda (USD, Ecuador).
 // Un producto con variantes puede llegar con amount_total 0: validar() lo trata como agotado si no tiene
-// stock, o lo manda a cuarentena si dice tenerlo. precio_lista queda null mientras no se confirme cómo se
-// combinan has_offer, amount_discount y discount_percentage.
+// stock, o lo manda a cuarentena si dice tenerlo. La lista de productos nunca trae las variantes (has_variants
+// es verdadero pero variants viene vacío): se publica una oferta por producto.
+//
+// Descuentos (confirmado con 122 productos con descuento de la API, el 12 de noviembre de 2026): amount_total es
+// el precio final y, cuando hay descuento, amount_incl_tax es el precio de antes con IVA (9,99 y 5,00 son un 50 %;
+// 30,80 y 9,24, un 70 %). Sin descuento los dos son iguales. has_offer nunca se activa. El precio de lista es
+// amount_incl_tax cuando es mayor que amount_total.
 import { z } from 'zod';
 import type { OfertaCruda } from '@comparador/dominio';
 import type { Http } from '../http.ts';
@@ -18,6 +23,7 @@ const Item = z.object({
   brand: z.string().nullish(),
   has_stock: z.boolean().nullish(),
   amount_total: z.union([z.string(), z.number()]),
+  amount_incl_tax: z.union([z.string(), z.number()]).nullish(),
   photos: z.array(z.unknown()).nullish(),
 });
 type Item = z.infer<typeof Item>;
@@ -30,13 +36,15 @@ const Pagina = z.object({
 
 export function aOferta(i: Item): OfertaCruda {
   const foto = i.photos?.find((f): f is string => typeof f === 'string') ?? null;
+  const precio = Number(i.amount_total);
+  const antes = i.amount_incl_tax == null ? null : Number(i.amount_incl_tax);
   return {
     sku_tienda: String(i.id),
     titulo: i.name,
     url: i.url,
     imagen_url: foto,
-    precio: Number(i.amount_total),
-    precio_lista: null,
+    precio,
+    precio_lista: antes !== null && antes > precio ? antes : null,
     moneda: 'USD',
     disponible: i.has_stock ?? null,
     ean: null,

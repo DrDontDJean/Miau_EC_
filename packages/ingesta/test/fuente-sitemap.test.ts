@@ -35,6 +35,14 @@ describe('extraerProducto', () => {
     });
   });
 
+  it('decodifica las entidades HTML del nombre y de la marca, que las tiendas VTEX dejan en el JSON-LD', () => {
+    const html = jsonLd(producto({ name: 'Laptop HP 15-DY2172 | 15.6&quot; 8GB &amp; SSD &apos;512&apos;', brand: { '@type': 'Brand', name: 'Tom &amp; Jerry' } }));
+    expect(extraerProducto(html)).toMatchObject({ nombre: `Laptop HP 15-DY2172 | 15.6" 8GB & SSD '512'`, marca: 'Tom & Jerry' });
+    // Un texto que ya viene limpio no cambia, y un "&amp;quot;" se decodifica una sola vez.
+    expect(extraerProducto(jsonLd(producto({ name: 'Cable 3" Tom & Jerry' })))!.nombre).toBe('Cable 3" Tom & Jerry');
+    expect(extraerProducto(jsonLd(producto({ name: 'Literal &amp;quot;' })))!.nombre).toBe('Literal &quot;');
+  });
+
   it('encuentra el producto dentro de @graph y con @type como lista', () => {
     const html = jsonLd({ '@context': 'https://schema.org', '@graph': [{ '@type': 'WebSite', name: 'Tienda' }, producto({ '@type': ['Product', 'Thing'] })] });
     expect(extraerProducto(html)).toMatchObject({ nombre: 'Encimera a gas Teka GBC 95030', precio: 490.55 });
@@ -82,6 +90,48 @@ describe('extraerProducto', () => {
     expect(extraerProducto('<html><body><h1>Quiénes somos</h1></body></html>')).toBeNull();
     expect(extraerProducto(jsonLd(producto({ offers: undefined })))).toBeNull();
     expect(extraerProducto(jsonLd({ '@type': 'Organization', name: 'Tienda' }))).toBeNull();
+  });
+});
+
+describe('prioridad de las ofertas que se comparan', () => {
+  const AHORA = Date.parse('2026-11-13T12:00:00Z');
+  const haceHoras = (h: number) => new Date(AHORA - h * 3_600_000).toISOString();
+  const u = (n: string) => `https://t.example/${n}`;
+  const entradas = new Map<string, string | null>(['a', 'b', 'c', 'd', 'e', 'f'].map(n => [u(n), null]));
+
+  it('una prioritaria atrasada se lee antes que las nunca vistas; una vista hace pocas horas no', () => {
+    const visitas = new Map([[u('a'), haceHoras(72)], [u('b'), haceHoras(2)], [u('c'), haceHoras(30)]]);
+    const orden = elegirPaginas(entradas, visitas, 10, { prioritarias: new Set([u('a'), u('b'), u('c')]), ahora: AHORA });
+    expect(orden.slice(0, 2)).toEqual([u('a'), u('c')]);              // las dos atrasadas, la más vieja primero
+    expect(orden.slice(2, 5)).toEqual([u('d'), u('e'), u('f')]);      // luego lo nunca visto
+    expect(orden[5]).toBe(u('b'));                                    // b se vio hace 2 h: no hay prisa
+  });
+
+  it('las prioritarias no pueden con más del 40 % del presupuesto: el resto compite por antigüedad', () => {
+    const todas = new Map<string, string | null>(Array.from({ length: 12 }, (_, i) => [u(`p${i}`), null]));
+    const visitas = new Map(Array.from({ length: 12 }, (_, i) => [u(`p${i}`), haceHoras(100 + i)] as const));
+    const nuevas = new Map(todas); nuevas.set(u('nueva'), null);
+    const orden = elegirPaginas(nuevas, visitas, 5, { prioritarias: new Set([...todas.keys()]), ahora: AHORA });
+    expect(orden).toHaveLength(5);
+    expect(orden.slice(0, 2)).toEqual([u('p11'), u('p10')]);          // cupo de 2 (40 % de 5): las más viejas
+    expect(orden[2]).toBe(u('nueva'));                                // y enseguida lo nunca visto, que no se frena
+  });
+
+  it('sin prioritarias, el orden es el de siempre', () => {
+    const visitas = new Map([[u('a'), haceHoras(72)], [u('b'), haceHoras(2)]]);
+    expect(elegirPaginas(entradas, visitas, 10, { ahora: AHORA })).toEqual([u('c'), u('d'), u('e'), u('f'), u('a'), u('b')]);
+  });
+
+  it('la fuente pide primero las ofertas que se comparan, aunque haya páginas nunca vistas', async () => {
+    const srv = servidor({
+      '/sitemap.xml': urlset(`${ORIGEN}/nueva-p1/p`, `${ORIGEN}/comparada-p2/p`),
+      '/nueva-p1/p': pagina('nueva'), '/comparada-p2/p': pagina('comparada'),
+    });
+    const visitas = new Map([[`${ORIGEN}/comparada-p2/p`, '2026-11-01T00:00:00Z']]);
+    const { ofertas } = await leer(srv, { ...crecos, paginas_por_corrida: 10 }, {   // cupo de 4 prioritarias
+      ultimasVisitas: async () => visitas, prioritarias: async () => new Set([`${ORIGEN}/comparada-p2/p`]),
+    });
+    expect(ofertas.map(o => o.sku_tienda)).toEqual(['comparada', 'nueva']);
   });
 });
 
