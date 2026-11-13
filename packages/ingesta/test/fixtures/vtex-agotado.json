@@ -1,0 +1,65 @@
+[
+ {
+  "productId": "8101",
+  "productName": "LAVADORA SAMSUNG 17KG WA17T6260BY",
+  "brand": "SAMSUNG",
+  "link": "https://www.novicompu.com/lavadora-samsung-17kg-wa17t6260by/p",
+  "items": [
+   {
+    "itemId": "9950",
+    "name": "LAVADORA SAMSUNG 17KG WA17T6260BY",
+    "ean": "",
+    "images": [
+     {
+      "imageUrl": "https://novicompu.vteximg.com.br/arquivos/ids/190001/WA17T6260BY.png"
+     }
+    ],
+    "sellers": [
+     {
+      "sellerId": "1",
+      "commertialOffer": {
+       "Price": 0,
+       "ListPrice": 0,
+       "AvailableQuantity": 0,
+       "IsAvailable": false
+      }
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "productId": "8102",
+  "productName": "PARLANTE JBL FLIP 6",
+  "brand": "JBL",
+  "link": "https://www.novicompu.com/parlante-jbl-flip-6/p",
+  "items": [
+   {
+    "itemId": "9951",
+    "name": "PARLANTE JBL FLIP 6",
+    "ean": "",
+    "images": [],
+    "sellers": [
+     {
+      "sellerId": "1",
+      "commertialOffer": {
+       "Price": 0,
+       "ListPrice": 0,
+       "AvailableQuantity": 0,
+       "IsAvailable": false
+      }
+     },
+     {
+      "sellerId": "2",
+      "commertialOffer": {
+       "Price": 139.9,
+       "ListPrice": 159.9,
+       "AvailableQuantity": 0,
+       "IsAvailable": false
+      }
+     }
+    ]
+   }
+  ]
+ }
+]

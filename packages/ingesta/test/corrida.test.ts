@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { OfertaCruda } from '@comparador/dominio';
-import { almacenPostgres, ejecutarCorrida, type Fuente } from '../src/index.ts';
+import { almacenPostgres, ejecutarCorrida, origenDeRobots, rutaDeLectura, type Fuente } from '../src/index.ts';
 import { baseDePrueba } from './base-pglite.ts';
 import { tienda } from './apoyo.ts';
 
@@ -13,6 +13,26 @@ const oferta = (sku: string, titulo: string, precio: number, extra: Partial<Ofer
 });
 
 const fuenteDe = (...paginas: OfertaCruda[][]): Fuente => ({ async *leer() { yield* paginas; } });
+
+describe('rutaDeLectura y origenDeRobots', () => {
+  it.each([
+    ['vtex', {}, '/api/catalog_system/pub/products/search?fq=C:/1/&_from=0&_to=49'],
+    ['woocommerce', {}, '/wp-json/wc/store/v1/products?page=1&per_page=100'],
+    ['shopify', {}, '/products.json?limit=250&page=1'],
+    ['magento', {}, '/graphql?query=%7Bproducts%7Btotal_count%7D%7D'],
+    ['frecuento', { origen_api: 'https://app.frecuento.com' }, '/products/?limit=500&page=1'],
+    ['sitemap', {}, '/sitemap.xml'],
+    ['sitemap', { url_sitemap: 'https://www.crecos.com/sitemap/product-0.xml' }, '/sitemap/product-0.xml'],
+    ['feed', { url_feed: 'https://www.comandato.com/f.csv' }, null],
+  ] as const)('%s %j → %s', (plataforma, extra, esperada) => {
+    expect(rutaDeLectura(tienda({ plataforma, ...extra }))).toBe(esperada);
+  });
+
+  it('el robots.txt que manda es el del host de la API si es distinto del de la tienda', () => {
+    expect(origenDeRobots(tienda())).toBe('https://www.novicompu.com');
+    expect(origenDeRobots(tienda({ plataforma: 'frecuento', origen_api: 'https://app.frecuento.com' }))).toBe('https://app.frecuento.com');
+  });
+});
 
 describe('ejecutarCorrida', () => {
   it('carga las válidas, manda a cuarentena las inválidas, anota advertencias y cierra en ok', async () => {
@@ -49,6 +69,96 @@ describe('ejecutarCorrida', () => {
     expect(resumen).toMatchObject({ estado: 'sin_permiso', leidas: 0 });
     expect(resumen.error).toMatch(/robots\.txt prohíbe \/api\/catalog_system/);
     expect(await ejecutar(`select estado from public.tienda where id = 'comandato'`)).toEqual([{ estado: 'sin_permiso' }]);
+  });
+
+  it('una tienda sin_permiso cuyo robots.txt ya lo permite lee su catálogo y vuelve a activa', async () => {
+    const { ejecutar } = await baseDePrueba();
+    const almacen = almacenPostgres(ejecutar);
+    await ejecutar(`update public.tienda set estado = 'sin_permiso', motivo_estado = 'robots.txt: Disallow: /*?' where id = 'comandato'`);
+    const r = await ejecutarCorrida(comandato, {
+      fuente: fuenteDe([oferta('1', 'Televisor UN55U8000FPCZE Samsung', 400)]), almacen, leerRobots: async () => ROBOTS_ABIERTO,
+    });
+    expect(r.estado).toBe('ok');
+    expect(await ejecutar(`select estado::text, motivo_estado from public.tienda where id = 'comandato'`))
+      .toEqual([{ estado: 'activa', motivo_estado: null }]);
+  });
+
+  it('si el robots.txt sigue prohibiendo, la tienda sin_permiso no lee nada más y sigue sin permiso', async () => {
+    const { ejecutar } = await baseDePrueba();
+    await ejecutar(`update public.tienda set estado = 'sin_permiso', motivo_estado = 'robots.txt: Disallow: /*?' where id = 'comandato'`);
+    let leida = false;
+    const r = await ejecutarCorrida(comandato, {
+      fuente: { async *leer() { leida = true; yield []; } },
+      almacen: almacenPostgres(ejecutar), leerRobots: async () => 'User-agent: *\nDisallow: /*?',
+    });
+    expect(leida).toBe(false);
+    expect(r.estado).toBe('sin_permiso');
+    expect(await ejecutar(`select estado::text e from public.tienda where id = 'comandato'`)).toEqual([{ e: 'sin_permiso' }]);
+  });
+
+  it('una tienda que pasa a sin_permiso deja de contar en num_tiendas y precio_desde del producto compartido', async () => {
+    const { ejecutar } = await baseDePrueba();
+    const almacen = almacenPostgres(ejecutar);
+    const novicompu = tienda({ id: 'novicompu', origen: 'https://www.novicompu.com' });
+    await ejecutarCorrida(comandato, {
+      fuente: fuenteDe([oferta('1', 'Televisor UN55U8000FPCZE Samsung', 400)]), almacen, leerRobots: async () => ROBOTS_ABIERTO,
+    });
+    await ejecutarCorrida(novicompu, {
+      fuente: fuenteDe([{ ...oferta('N1', 'Televisor Samsung UN55U8000FPCZE', 500), url: 'https://www.novicompu.com/n1/p' }]),
+      almacen, leerRobots: async () => ROBOTS_ABIERTO,
+    });
+    const consulta = `select num_tiendas::int n, precio_desde::float8 desde, jsonb_array_length(ofertas) visibles
+                        from public.buscar_productos('televisor samsung')`;
+    expect(await ejecutar(consulta)).toEqual([{ n: 2, desde: 400, visibles: 2 }]);
+
+    const r = await ejecutarCorrida(comandato, {
+      fuente: fuenteDe(), almacen, leerRobots: async () => 'User-agent: *\nDisallow: /*?',
+    });
+    expect(r.estado).toBe('sin_permiso');
+    expect(await ejecutar(consulta)).toEqual([{ n: 1, desde: 500, visibles: 1 }]);
+    // Las ofertas no se desactivan: vuelven si la tienda recupera el permiso.
+    expect(await ejecutar(`select activa from public.oferta where tienda_id = 'comandato'`)).toEqual([{ activa: true }]);
+  });
+
+  it('una fuente que se declara incompleta cierra la corrida como parcial, con el motivo, y no desactiva nada', async () => {
+    const { ejecutar } = await baseDePrueba();
+    const almacen = almacenPostgres(ejecutar);
+    const corrida = (fuente: Fuente) => ejecutarCorrida(comandato, { fuente, almacen, leerRobots: async () => ROBOTS_ABIERTO });
+    const tv = oferta('1', 'Televisor UN55U8000FPCZE', 451.33);
+    await corrida(fuenteDe([tv, oferta('2', 'Refrigeradora RI480XYZ', 699)]));
+    await corrida(fuenteDe([tv]));   // la refrigeradora falta una vez
+    const motivo = 'La fuente no cubrió todo el catálogo: faltan categorías';
+    const r = await corrida({ async *leer() { yield [tv]; }, incompleta: () => motivo });
+    // Con estado 'ok' la refrigeradora se habría desactivado: falta en dos corridas seguidas.
+    expect(r).toMatchObject({ estado: 'parcial', error: motivo, desactivadas: 0 });
+    expect(await ejecutar(`select count(*)::int n from public.oferta where activa`)).toEqual([{ n: 2 }]);
+  });
+
+  it('una oferta que llega agotada conserva su último precio, queda sin stock y no va a cuarentena', async () => {
+    const { ejecutar } = await baseDePrueba();
+    const almacen = almacenPostgres(ejecutar);
+    const corrida = (...paginas: OfertaCruda[][]) =>
+      ejecutarCorrida(comandato, { fuente: fuenteDe(...paginas), almacen, leerRobots: async () => ROBOTS_ABIERTO });
+    const agotada = (sku: string, titulo: string) => oferta(sku, titulo, 0, { disponible: false });
+
+    await corrida([oferta('100', 'Televisor UN55U8000FPCZE Samsung', 451.33), oferta('200', 'Lavadora WA17T6260BY', 520)]);
+    const r = await corrida(
+      [agotada('100', 'Televisor UN55U8000FPCZE Samsung'), agotada('300', 'Refrigeradora RI480XYZ Indurama')],
+      // El mismo SKU llega con precio en otra lectura de la corrida: esa lectura manda.
+      [oferta('200', 'Lavadora WA17T6260BY', 520), agotada('200', 'Lavadora WA17T6260BY')],
+    );
+
+    expect(r).toMatchObject({ estado: 'ok', agotadas: 2, leidas: 3, validas: 3, en_cuarentena: 0 });
+    expect(await ejecutar(`select sku_tienda, precio::float8 precio, disponible, activa from public.oferta order by 1`)).toEqual([
+      { sku_tienda: '100', precio: 451.33, disponible: false, activa: true },
+      { sku_tienda: '200', precio: 520, disponible: true, activa: true },
+    ]);   // la agotada que nunca se vio con precio (300) no se publica
+    expect(await ejecutar(`select count(*)::int n from ingesta.cuarentena`)).toEqual([{ n: 0 }]);
+    const historial = await ejecutar(`
+      select h.precio::float8 precio, h.disponible from public.precio_historial h
+        join public.oferta o on o.id = h.oferta_id where o.sku_tienda = '100' order by h.valido_desde`);
+    expect(historial).toEqual([{ precio: 451.33, disponible: true }, { precio: 451.33, disponible: false }]);
+    expect(await ejecutar(`select agotadas from calidad.resumen_corrida where corrida_id = $1`, [r.corrida_id])).toEqual([{ agotadas: 2 }]);
   });
 
   it('si la tienda falla a mitad de camino, la corrida queda fallida, con el error y lo ya cargado', async () => {

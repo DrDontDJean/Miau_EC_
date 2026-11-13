@@ -42,7 +42,9 @@ export type Advertencia = { regla_id: ReglaAdvertencia; sku_tienda: string; deta
 
 export type Validacion =
   | { tipo: 'valida'; oferta: OfertaValida; advertencias: Advertencia[] }
-  | { tipo: 'cuarentena'; sku_tienda: string | null; reglas: ReglaBloqueante[] };
+  | { tipo: 'cuarentena'; sku_tienda: string | null; reglas: ReglaBloqueante[] }
+  /** Sin stock y sin precio (VTEX y otras mandan Price 0): es una lectura correcta, no un fallo. */
+  | { tipo: 'agotada'; sku_tienda: string };
 
 const limpiar = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
 
@@ -64,6 +66,12 @@ export function validar(c: OfertaCruda, tienda: Tienda): Validacion {
   if (titulo.length < 3) reglas.push('titulo_vacio');
   if (!sku) reglas.push('sku_ausente');
   if (c.moneda && c.moneda.toUpperCase() !== 'USD') reglas.push('moneda_no_usd');
+  // Agotada: sin stock y sin precio (o con precio 0), sin ningún otro fallo bloqueante.
+  // Un precio negativo, o precio 0 en una oferta disponible, siguen siendo precio_invalido.
+  const sinPrecio = c.precio === null || c.precio === undefined || c.precio === 0;
+  if (c.disponible === false && sinPrecio && reglas.length === 1 && reglas[0] === 'precio_invalido') {
+    return { tipo: 'agotada', sku_tienda: sku };
+  }
   if (reglas.length) return { tipo: 'cuarentena', sku_tienda: sku || null, reglas };
 
   const precio = Number(c.precio);

@@ -1,5 +1,5 @@
 
-> comparador-ecuador@0.1.0 validar:esquema
+> validar:esquema
 > node scripts/validar-esquema.mjs
 
 ✔ migración 20261106000100_base.sql
@@ -7,7 +7,18 @@
 ✔ migración 20261106000300_ingesta_calidad.sql
 ✔ migración 20261106000400_seguridad_api.sql
 ✔ migración 20261106000500_analitica_rolap.sql
+✔ migración 20261106000600_calidad_emparejamiento.sql
+✔ migración 20261106000700_ingesta_diaria.sql
+✔ migración 20261106000800_nombre_decideaqui.sql
+✔ migración 20261106000900_plataformas_nuevas.sql
+✔ migración 20261106001000_columnas_tienda_fuentes.sql
+✔ migración 20261106001100_precio_desde_tiendas_activas.sql
+✔ migración 20261106001200_ofertas_agotadas.sql
+✔ migración 20261106001300_volver_de_sin_permiso.sql
+✔ migración 20261106001400_lectura_por_sitemap.sql
 ✔ seed.sql
+✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 2 pausadas ({"activa":24,"pausada":2,"sin_permiso":1})
+✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
 ✔ emparejamiento por modelo: 2 tiendas desde 451.33 (obtenido 2, 451.33)
 ✔ oferta sin EAN se une al producto con EAN por su modelo ([{"tienda_id":"comandato","m":"ean"},{"tienda_id":"novicompu","m":"modelo"}])
 ✔ se crean 3 productos (TV, lámpara, iPhone)
@@ -18,6 +29,10 @@
 ✔ la segunda corrida confirma el salto y lo publica
 ✔ la lámpara falta en 2 corridas seguidas: se desactiva (1)
 ✔ historial SCD2 de la TV: 451.33 → 45.13
+✔ tienda pausada: la TV queda en 1 tienda desde 591.82 (obtenido 1, 591.82)
+✔ tienda reactivada: vuelve a 2 tiendas desde 45.13 (obtenido 2, 45.13)
+✔ corrida parcial de una tienda sin_permiso: vuelve a activa (activa)
+✔ una tienda pausada no se reactiva sola
 ✔ corrida vacía tras una con datos: estado parcial, desactivadas 0
 ✔ oferta inválida a cuarentena
 ✔ CHECK precio > 0 rechaza precios negativos
@@ -26,7 +41,7 @@
 ✔ búsqueda con tilde de más ('televisór') encuentra el televisor
 ✔ una palabra sin relación (refrigeradora) no devuelve resultados falsos
 ✔ con error de tipeo ('televisro samsun') responde por trigramas: Televisor 55" 4K UHD Tizen UN55U8000FPCZE Samsung
-✔ registrar_salida → https://www.novicompu.com/A1/p?utm_source=comparador-ec&utm_medium=cpc&utm_content=pos-2
+✔ registrar_salida → https://www.novicompu.com/A1/p?utm_source=decideaqui&utm_medium=cpc&utm_content=pos-2
 ✔ anon no puede leer la tabla de salidas
 ✔ anon no puede leer el esquema ingesta
 ✔ anon no puede insertar tiendas
@@ -34,18 +49,20 @@
 ✔ anon no puede llamar funciones internas (recalcular_productos)
 ✔ anon no puede cargar lotes de ingesta
 ✔ competitividad_tienda: [{"tienda_id":"comandato","productos_compartidos":2,"veces_mas_barata":2,"pct_mas_barata":"100.0"},{"tienda_id":"novicompu","productos_compartidos":2,"veces_mas_barata":0,"pct_mas_barata":"0.0"}]
-✔ precio_semanal: [{"semana":"2026-11-02T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-02T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"}]
-✔ salida_diaria: [{"fecha":"2026-11-06T00:00:00.000Z","tienda_id":"novicompu","salidas":1}]
+✔ precio_semanal: [{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-09T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"}]
+✔ salida_diaria: [{"fecha":"2026-11-13T00:00:00.000Z","tienda_id":"novicompu","salidas":1}]
 
 Resumen de calidad por corrida:
-┌─────────┬────────────┬─────────────┬────────────┬────────┬─────────┬───────────────┬──────────────
+┌─────────┬────────────┬─────────────┬────────────┬────────┬─────────┬───────────────┬──────────────┬──────────────────────────┐
 │ (index) │ corrida_id │ tienda_id   │ estado     │ leidas │ validas │ en_cuarentena │ desactivadas │ incidencias              │
-├─────────┼────────────┼─────────────┼────────────┼────────┼─────────┼───────────────┼──────────────
+├─────────┼────────────┼─────────────┼────────────┼────────┼─────────┼───────────────┼──────────────┼──────────────────────────┤
 │ 0       │ 1          │ 'comandato' │ 'ok'       │ 3      │ 3       │ 0             │ 0            │ '{}'                     │
 │ 1       │ 2          │ 'novicompu' │ 'ok'       │ 2      │ 2       │ 0             │ 0            │ '{}'                     │
 │ 2       │ 3          │ 'comandato' │ 'ok'       │ 2      │ 2       │ 0             │ 0            │ '{"salto_precio":1}'     │
 │ 3       │ 4          │ 'comandato' │ 'ok'       │ 2      │ 2       │ 0             │ 1            │ '{}'                     │
-│ 4       │ 5          │ 'novicompu' │ 'ok'       │ 1      │ 1       │ 0             │ 0            │ '{}'                     │
-│ 5       │ 6          │ 'novicompu' │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{"caida_de_volumen":1}' │
-│ 6       │ 7          │ 'kywi'      │ 'en_curso' │ 1      │ 0       │ 1             │ 0            │ '{"precio_invalido":1}'  │
-└─────────┴────────────┴─────────────┴────────────┴────────┴─────────┴───────────────┴──────────────
+│ 4       │ 5          │ 'kywi'      │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
+│ 5       │ 6          │ 'kywi'      │ 'ok'       │ 0      │ 0       │ 0             │ 0            │ '{}'                     │
+│ 6       │ 7          │ 'novicompu' │ 'ok'       │ 1      │ 1       │ 0             │ 0            │ '{}'                     │
+│ 7       │ 8          │ 'novicompu' │ 'parcial'  │ 0      │ 0       │ 0             │ 0            │ '{"caida_de_volumen":1}' │
+│ 8       │ 9          │ 'kywi'      │ 'en_curso' │ 1      │ 0       │ 1             │ 0            │ '{"precio_invalido":1}'  │
+└─────────┴────────────┴─────────────┴────────────┴────────┴─────────┴───────────────┴──────────────┴──────────────────────────┘

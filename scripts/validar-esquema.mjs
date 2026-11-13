@@ -30,6 +30,16 @@ for (const f of readdirSync(dir).sort()) {
 await db.exec(readFileSync(join(RAIZ, 'supabase', 'seed.sql'), 'utf8'));
 ok(true, 'seed.sql');
 
+// El seed: 24 tiendas leíbles, 1 sin permiso (Smart Home EC) y 2 pausadas (403), y se puede recargar sin duplicar.
+const porEstado = async () => Object.fromEntries((await db.query(`select estado::text e, count(*)::int n from public.tienda group by 1`)).rows.map(r => [r.e, r.n]));
+await db.exec(readFileSync(join(RAIZ, 'supabase', 'seed.sql'), 'utf8'));
+const estadosSeed = await porEstado();
+ok(estadosSeed.activa === 24 && estadosSeed.sin_permiso === 1 && estadosSeed.pausada === 2,
+  `seed recargado sin duplicar: 24 activas, 1 sin permiso y 2 pausadas (${JSON.stringify(estadosSeed)})`);
+const patrones = (await db.query(`select id, patron_producto from public.tienda where plataforma = 'sitemap'`)).rows;
+const malos = patrones.filter(p => { try { new RegExp(p.patron_producto); return false; } catch { return true; } });
+ok(patrones.length === 12 && malos.length === 0, `${patrones.length} tiendas sitemap con patrón de producto válido (inválidos: ${malos.map(m => m.id).join(', ') || 'ninguno'})`);
+
 const q = async (sql, params) => (await db.query(sql, params)).rows;
 const uno = async (sql, params) => (await q(sql, params))[0];
 
@@ -85,6 +95,27 @@ const r3 = await uno(`select * from ingesta.cerrar_corrida($1, 'ok')`, [c3]);
 ok(r3.desactivadas === 1, `la lámpara falta en 2 corridas seguidas: se desactiva (${r3.desactivadas})`);
 const hist = await q(`select h.precio, h.valido_hasta is null abierto from public.precio_historial h join public.oferta o on o.id=h.oferta_id where o.sku_tienda='100' and o.tienda_id='comandato' order by valido_desde`);
 ok(hist.length === 2 && hist[1].abierto, `historial SCD2 de la TV: ${hist.map(h => h.precio).join(' → ')}`);
+
+// Pausar una tienda saca sus ofertas del precio desde sin desactivarlas; reactivarla lo restaura.
+const tvAhora = async () => uno(`select num_tiendas, precio_desde::float8 desde from public.producto where modelo = 'UN55U8000FPCZE'`);
+await q(`update public.tienda set estado = 'pausada' where id = 'comandato'`);
+const tvPausa = await tvAhora();
+ok(tvPausa.num_tiendas === 1 && tvPausa.desde === 591.82, `tienda pausada: la TV queda en 1 tienda desde 591.82 (obtenido ${tvPausa.num_tiendas}, ${tvPausa.desde})`);
+await q(`update public.tienda set estado = 'activa' where id = 'comandato'`);
+const tvVuelta = await tvAhora();
+ok(tvVuelta.num_tiendas === 2 && tvVuelta.desde === 45.13, `tienda reactivada: vuelve a 2 tiendas desde 45.13 (obtenido ${tvVuelta.num_tiendas}, ${tvVuelta.desde})`);
+
+// Una corrida correcta de una tienda sin permiso la devuelve a activa; una pausada no se toca.
+await q(`update public.tienda set estado = 'sin_permiso', motivo_estado = 'robots.txt: Disallow: /*?' where id = 'kywi'`);
+const ck = (await uno(`select ingesta.abrir_corrida('kywi') id`)).id;
+await q(`select ingesta.cerrar_corrida($1, 'parcial', 'prueba')`, [ck]);
+const kywi = await uno(`select estado::text, motivo_estado from public.tienda where id = 'kywi'`);
+ok(kywi.estado === 'activa' && kywi.motivo_estado === null, `corrida parcial de una tienda sin_permiso: vuelve a activa (${kywi.estado})`);
+await q(`update public.tienda set estado = 'pausada' where id = 'kywi'`);
+const cp = (await uno(`select ingesta.abrir_corrida('kywi') id`)).id;
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cp]);
+ok((await uno(`select estado::text e from public.tienda where id = 'kywi'`)).e === 'pausada', 'una tienda pausada no se reactiva sola');
+await q(`update public.tienda set estado = 'activa' where id = 'kywi'`);
 
 // Corte de seguridad: una corrida que lee menos de la mitad no desactiva nada.
 const c4 = (await uno(`select ingesta.abrir_corrida('novicompu') id`)).id;

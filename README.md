@@ -10,7 +10,7 @@ Monorepo con npm workspaces (Node.js 24 o superior):
 |---|---|
 | `apps/web` | Web en Next.js 16 (App Router, Cache Components): inicio, `/buscar`, `/p/[id]` con historial de precios, `/tiendas`, `/api/buscar` e `/ir/[id]` |
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
-| `packages/ingesta` | Worker: fuentes VTEX, WooCommerce y feed; robots.txt; `ejecutarCorrida` contra Supabase |
+| `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed; robots.txt; `ejecutarCorrida` contra Supabase |
 | `supabase/` | Migraciones (OLTP, ingesta y calidad, seguridad, ROLAP) y `seed.sql` |
 | `prototipo/` | Primera versión, que consultaba las tiendas en vivo en cada búsqueda |
 | `tests/carga/` | Pruebas k6 (humo, carga, estrés, pico), de ejecución manual |
@@ -20,7 +20,7 @@ npm install
 npm test                    # todas las pruebas: prototipo, dominio, ingesta (contra PGlite) y web
 npm run validar:esquema     # migraciones + escenario de ingesta en Postgres (PGlite)
 npm run dev                 # web en http://localhost:3000 (lee las claves del .env de la raíz)
-npm run ingesta             # corrida de todas las tiendas activas contra DATABASE_URL
+npm run ingesta             # corrida de las tiendas activas y sin permiso (se revisan) contra DATABASE_URL
 LIMITE_PAGINAS=2 npm run ingesta   # corrida corta de prueba (cierra como 'parcial')
 node --env-file=.env scripts/resumen-catalogo.mjs   # resumen de solo lectura de lo cargado
 ```
@@ -46,12 +46,32 @@ El `.env` lo crea `bash scripts/wizard-configuracion.sh` (GitHub, Supabase y Ver
 
 ## Tiendas
 
-Activas: Comandato, Novicompu, Kywi, Pycca (VTEX) y Computron (WooCommerce). Créditos Económicos,
-Almacenes Japón, Orve Hogar y Marcimex quedan `sin_permiso` porque su robots.txt prohíbe la búsqueda
-(`Disallow: /*?`); pueden entrar con un feed acordado (`plataforma = 'feed'`, `url_feed`).
+24 tiendas activas, según cómo se lee cada una (ADR 0009):
+
+| Fuente | Tiendas |
+|---|---|
+| API VTEX | Comandato, Novicompu, Kywi, Pycca y Marcimex |
+| API WooCommerce | Computron |
+| API Shopify | Colineal, EkuStore, NewStore y Randall Tech |
+| API Magento (GraphQL) | La Ganga, Pintulac y Steren Ecuador |
+| API propia | Frecuento |
+| Sitemap + datos estructurados de cada página de producto | Créditos Económicos, Almacenes Japón, Orve Hogar, Artefacta, Coral, TIA, Sukasa, Tventas, Almacenes Boyacá y Fybeca |
+
+Créditos Económicos, Almacenes Japón, Orve Hogar, Artefacta y Coral prohíben su API de catálogo en el robots.txt
+(`Disallow: /*?`), pero permiten sus páginas de producto: se leen por sitemap. Siguen sin poder leerse, y entran solo con
+un feed o un permiso ([docs/feed-tiendas.md](docs/feed-tiendas.md)): Smart Home EC (su robots.txt prohíbe todo el sitio,
+`sin_permiso`) y De Prati y El Bárbaro (responden 403 a todo acceso automático, `pausada`). Una tienda `sin_permiso`
+vuelve sola a `activa` cuando su robots.txt lo permite.
 
 ## Limitaciones conocidas
 
 - La búsqueda también encuentra accesorios ("televisor 55" devuelve soportes). Falta filtrar por categoría.
 - El código de modelo no sirve para ferretería ni hogar (Kywi, Pycca): esas ofertas quedan como producto propio.
 - Mercado Libre Ecuador no está incluido: su API de búsqueda pide autenticación de aplicación.
+- Las tiendas leídas por sitemap se revisan por tandas (2.500 páginas por corrida, a 1 por segundo): el precio de una
+  oferta puede tener entre 1 y unos 8 días. La web muestra cuándo se actualizó cada oferta.
+- Una categoría VTEX de más de 5.000 productos sin subcategorías no se alcanza completa: la corrida de esa tienda queda
+  `parcial` y no desactiva nada. Lo mismo ocurre si el robots.txt de la tienda prohíbe el orden por nombre.
+- Una oferta agotada que nunca se vio con precio no se publica: no hay ningún precio que conservar.
+- Frecuento publica algunos productos con variantes sin precio: no se publican. Sus descuentos (`precio_lista`) no se
+  leen todavía.

@@ -25,6 +25,7 @@ export default async function Tiendas() {
                 <td className="px-4 py-1">
                   <a href={t.origen} rel="noopener" className="inline-flex min-h-11 items-center font-bold text-enlace underline">{t.nombre}</a>
                   {t.plataforma === 'feed' && <span className="block pb-2 text-sm text-suave">Precios enviados por la tienda</span>}
+                  {t.plataforma === 'sitemap' && <span className="block pb-2 text-sm text-suave">Precios revisados por tandas, cada pocos días</span>}
                 </td>
                 <td className="px-4 py-3 tabular-nums">
                   {t.ultima_corrida_ok

@@ -8,7 +8,7 @@ El paquete trae todo el código, las migraciones, las pruebas, los workflows y l
 clave, contraseña, URL de proyecto, dato cargado ni historial de git del autor original. Cada quien crea sus propias
 cuentas y secretos. Los datos de precios se generan solos con la primera ingesta.
 
-Tiempo estimado: unas 2 horas la primera vez, contando la ingesta completa (12 minutos) y las pruebas de carga (25 minutos).
+Tiempo estimado: unas 2 horas la primera vez, contando la ingesta completa (hasta una hora) y las pruebas de carga (25 minutos).
 
 ---
 
@@ -91,7 +91,7 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 
 | Cuenta | Plan | Límites que importan |
 |---|---|---|
-| GitHub | Free | Repositorio privado: 2.000 minutos de Actions al mes. La ingesta diaria gasta unos 330 y CI unos 3 por push. Uno público no tiene límite |
+| GitHub | Free | Repositorio privado: 2.000 minutos de Actions al mes. La ingesta diaria gasta hasta unos 1.800 con el presupuesto completo de las tiendas leídas por sitemap (ver §7) y CI unos 3 por push, así que en un repositorio privado conviene bajar `paginas_por_corrida`. Uno público no tiene límite |
 | Supabase | Free | 500 MB de base (el proyecto usa unos 100 MB el primer año). **Se pausa tras 7 días sin actividad**; la ingesta diaria lo evita |
 | Vercel | Hobby | **Solo uso no comercial**. Solo despliega commits del dueño de la cuenta (ver 5.2). 1 millón de invocaciones al mes |
 
@@ -103,14 +103,14 @@ En macOS o Linux funciona igual. El wizard es bash y los comandos de esta guía 
 |---|---|
 | `apps/web` | Web Next.js 16 (App Router, Cache Components): inicio, `/buscar`, `/p/[id]` con historial, `/tiendas`, `/api/buscar` e `/ir/[id]`. `vercel.json` fija la región `iad1` |
 | `packages/dominio` | Reglas puras: `validar` (calidad de datos) y `claveDeProducto` (EAN o código de modelo) |
-| `packages/ingesta` | Worker: fuentes VTEX, WooCommerce y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
-| `supabase/migrations` | 8 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria y nombre |
-| `supabase/seed.sql` | 9 tiendas (5 activas y 4 `sin_permiso` por su robots.txt) y 6 categorías |
+| `packages/ingesta` | Worker: fuentes VTEX, WooCommerce, Shopify, Magento, Frecuento, sitemap con datos estructurados y feed, robots.txt, 1 petición/s por tienda, `ejecutarCorrida` y CLI |
+| `supabase/migrations` | 14 migraciones: base, catálogo, ingesta y calidad, seguridad y API, ROLAP y pg_cron, emparejamiento, ingesta diaria, nombre, plataformas nuevas, columnas de tienda para las fuentes, precio desde solo con tiendas activas, ofertas agotadas, vuelta desde `sin_permiso` y lectura por sitemap |
+| `supabase/seed.sql` | 27 tiendas (24 activas, Smart Home EC `sin_permiso` por su robots.txt y De Prati y El Bárbaro `pausada` porque responden 403) y 6 categorías |
 | `scripts/` | Wizard de configuración, validador del esquema (PGlite), carga del seed, resumen del catálogo y empaquetador |
 | `.github/workflows` | `ci.yml`, `migraciones.yml`, `ingesta.yml` (diaria) y `carga-k6.yml` (manual) |
 | `tests/carga` | Escenarios k6: humo, carga, estrés y pico |
 | `prototipo/` | Primera versión, que consultaba las tiendas en vivo. Solo como referencia |
-| `docs/` | Arquitectura (`arquitectura.md` y `.html`) y 8 ADR con el porqué de cada decisión |
+| `docs/` | Arquitectura (`arquitectura.md` y `.html`), 9 ADR con el porqué de cada decisión y `feed-tiendas.md`, el contrato del feed para las tiendas que no se pueden leer |
 | `pruebas/` | Evidencia: investigación de idealo, pruebas del prototipo y resultados k6 contra Vercel |
 | `GLOSSARY.md` | Vocabulario del dominio: oferta, producto, corrida, cuarentena, salida… |
 
@@ -126,8 +126,8 @@ cd comparador-ecuador
 npm install
 
 # 3. Comprueba que todo funciona sin ninguna cuenta todavía
-npm test                  # 52 pruebas: prototipo 8, dominio 21, ingesta 18 (contra PGlite), web 5
-npm run validar:esquema   # aplica las 8 migraciones en Postgres-WASM y recorre un escenario: 37 comprobaciones ✔
+npm test                  # 142 pruebas: prototipo 8, dominio 27, ingesta 102 (contra PGlite), web 5
+npm run validar:esquema   # aplica las 14 migraciones en Postgres-WASM y recorre un escenario: 49 comprobaciones ✔
 ```
 
 Si alguna falla aquí, no sigas: revisa la versión de Node (`node -v` debe ser 24 o más).
@@ -217,8 +217,8 @@ git push -u origin main
 
 Esto lanza dos workflows (en GitHub → Actions):
 
-- **CI**: tipos, 52 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
-- **Migraciones Supabase**: `supabase db push --db-url` aplica las 8 migraciones a tu proyecto. Usa el environment
+- **CI**: tipos, 142 pruebas, validación del esquema y sintaxis k6. Unos 3 minutos.
+- **Migraciones Supabase**: `supabase db push --db-url` aplica las 14 migraciones a tu proyecto. Usa el environment
   `produccion`, que GitHub crea solo. Si quieres aprobar a mano cada migración, añade una regla en Settings →
   Environments → produccion → Required reviewers.
 
@@ -246,7 +246,7 @@ select jobname, schedule from cron.job order by 1;
 
 ```bash
 node --env-file=.env scripts/cargar-seed.mjs
-# tiendas por estado: { activa: 5, sin_permiso: 4 } · categorías: 6
+# tiendas por estado: { activa: 24, pausada: 2, sin_permiso: 1 } · categorías: 6
 ```
 
 ### 5.5 Primera ingesta
@@ -260,16 +260,37 @@ Luego la completa, con los campos vacíos, o:
 gh workflow run ingesta.yml
 ```
 
-También se puede correr en local con `npm run ingesta` (usa tu `.env`). Una corrida completa tarda unos 12 minutos y
-carga unas 47.000 ofertas:
+También se puede correr en local con `npm run ingesta` (usa tu `.env`). Antes de la corrida completa, lanza **una tienda a la vez**
+con `tienda` y `limite_paginas: 2` y revisa `calidad.resumen_corrida` (porcentaje de válidas, incidencias y cuarentena).
+Una tienda que falle se pausa con `update public.tienda set estado = 'pausada' where id = '…'`.
 
-| Tienda | Ofertas válidas (nov 2026) |
-|---|---|
-| Kywi | ~31.500 |
-| Pycca | ~10.300 |
-| Novicompu | ~3.570 |
-| Computron | ~1.300 |
-| Comandato | ~320 |
+La corrida completa tarda hasta una hora (las tiendas corren en paralelo y la más larga es una tienda leída por sitemap
+con su presupuesto completo) y carga más de 100.000 ofertas. Volumen aproximado (nov 2026):
+
+| Tienda | Ofertas válidas | Fuente |
+|---|---|---|
+| Frecuento | ~36.900 | API propia |
+| Kywi | ~31.500 | API VTEX |
+| Fybeca | hasta ~20.000 | sitemap |
+| Pycca | ~10.300 | API VTEX |
+| Coral | ≥10.600 | sitemap |
+| Créditos Económicos, Almacenes Japón | ~7.500 cada una | sitemap |
+| Pintulac | ~7.900 | API Magento |
+| Boyacá | ~6.900 | sitemap |
+| EkuStore | ~4.100 | API Shopify |
+| Tventas | ~3.800 | sitemap |
+| Marcimex | ~3.700 | API VTEX |
+| Novicompu | ~3.570 | API VTEX |
+| Artefacta, Steren | ~2.100 cada una | sitemap, API Magento |
+| Colineal | ~1.700 | API Shopify |
+| Computron | ~1.300 | API WooCommerce |
+| NewStore | ~780 | API Shopify |
+| Comandato, La Ganga | ~320 cada una | API VTEX, API Magento |
+| Randall Tech | ~110 | API Shopify |
+| TIA, Sukasa, Orve Hogar | por medir | sitemap |
+
+Las tiendas leídas por sitemap llegan a su volumen completo tras varias corridas: cada corrida lee como mucho
+`paginas_por_corrida` páginas (ver §7).
 
 Unos 80 productos aparecen en dos o más tiendas. Para revisarlo, en modo de solo lectura:
 
@@ -326,7 +347,7 @@ El `<id>` sale del campo `ir` de cualquier oferta en `/api/buscar`.
 
 | Qué | Cuándo (UTC) | Dónde |
 |---|---|---|
-| Ingesta de las 5 tiendas activas | 06:17 (01:17 en Ecuador) | GitHub Actions, `ingesta.yml` |
+| Ingesta de las tiendas activas (y revisión de las `sin_permiso`) | 06:17 (01:17 en Ecuador) | GitHub Actions, `ingesta.yml` |
 | Refresco de las vistas ROLAP | 08:17 | pg_cron, `analitica.refrescar()` |
 | Aviso de frescura (sin corrida correcta en 30 h) | cada hora | pg_cron, `calidad.revisar_frescura()` |
 | Purga: cuarentena > 30 días, incidencias > 90 días | 03:30 | pg_cron, `ingesta.purgar_antiguos()` |
@@ -336,8 +357,20 @@ El `<id>` sale del campo `ir` de cualquier oferta en `/api/buscar`.
   lo dice.
 - **Promociones** (Black Friday, Cyber Monday): lanza corridas extra con "Run workflow", o cambia el cron a
   `'17 */6 * * *'` esos días.
+- **Tiendas leídas por sitemap** (Créditos Económicos, Almacenes Japón, Orve Hogar, Artefacta, Coral, TIA, Sukasa,
+  Tventas, Boyacá y Fybeca; ADR 0009): una página por producto, a 1 por segundo. Cada corrida lee como mucho
+  `paginas_por_corrida` páginas (2.500 por omisión, unos 42 minutos): primero las nunca vistas, luego las modificadas
+  desde la última visita y luego las más viejas. Una vuelta completa tarda `ceil(productos / 2.500)` días, así que el precio
+  de una oferta puede tener hasta ese atraso, y la web lo dice. Para bajar el consumo de Actions, o subirlo en Black
+  Friday, cambia `paginas_por_corrida` (entre 1 y 10.000): `update public.tienda set paginas_por_corrida = 1000 where id = 'fybeca'`.
+  No subas el ritmo de 1 petición por segundo.
 - **Salvaguardas automáticas:**
-  - Una oferta se desactiva tras 2 ausencias.
+  - Una oferta se desactiva tras 2 ausencias. En las tiendas leídas por sitemap no aplica: se desactivan las que salen del
+    sitemap o devuelven 404 o 410, y solo si el sitemap trae al menos la mitad de las ofertas activas.
+  - Una fuente que no cubre todo el catálogo (categoría VTEX de más de 5.000 productos, tramo con error 500 que no se
+    recupera, productos que faltan del total que declara la tienda, más del 20 % de páginas sin datos) cierra `parcial`,
+    con el motivo en `ingesta.corrida.error`, y no desactiva nada.
+  - Una tienda `sin_permiso` se vuelve a revisar en cada corrida con una sola petición, y vuelve a `activa` sola.
   - Un salto de precio de más del 70 % espera la corrida siguiente.
   - Si una tienda trae menos de la mitad que en la corrida anterior, la corrida cierra como `parcial` y no desactiva nada.
 - **Calidad**: `select * from calidad.resumen_corrida;` y las tablas `ingesta.cuarentena` y `calidad.incidencia`.
@@ -432,9 +465,13 @@ Nunca edites una migración ya aplicada: crea una nueva. Después corre `npm tes
 
 ## 10. Reglas que no se deben romper
 
-- **robots.txt manda.** El worker lo lee antes de cada tienda y no entra si lo prohíbe. Créditos Económicos, Almacenes
-  Japón, Orve Hogar y Marcimex quedan `sin_permiso` por `Disallow: /*?`. Solo pueden entrar con un feed acordado
-  (`plataforma = 'feed'`, `url_feed`), nunca saltándose la regla (ADR 0007).
+- **robots.txt manda.** El worker lo lee antes de cada tienda y no entra si lo prohíbe. Una tienda que prohíbe su API
+  (`Disallow: /*?`) se lee por sitemap, que sí permite; si prohíbe todo el sitio (Smart Home EC), solo entra con un feed
+  acordado (`plataforma = 'feed'`, `url_feed`; ver `docs/feed-tiendas.md`), nunca saltándose la regla (ADR 0007 y 0009).
+  Cada URL de producto se comprueba contra el robots.txt antes de pedirla, y las consultas Magento van por `GET`, nunca por
+  `POST` para esquivar un `Disallow`.
+- **Un 403 no se evade.** Ni con otro User-Agent, ni con un navegador sin interfaz, ni rotando direcciones. De Prati y
+  El Bárbaro están pausadas por eso.
 - **Ritmo amable**: 1 petición por segundo por tienda, reintentos que respetan `Retry-After` y un User-Agent honesto.
   No subas el ritmo.
 - **Sin payload crudo**: se guarda solo lo normalizado y el historial SCD2 (ADR 0003).
@@ -467,6 +504,10 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 | `gh: command not found` tras instalarlo | La terminal no recargó el PATH | Cierra y abre la terminal. El wizard también prueba `C:\Program Files\GitHub CLI` |
 | Aviso `tienda_desactualizada` sin motivo | El cron de GitHub se retrasa a veces más de 1 hora | El umbral ya es de 30 h. Revisa si de verdad falló una corrida |
 | Corrida `parcial` sin límite de páginas | La tienda devolvió menos de la mitad que la vez anterior | Es una salvaguarda. Revisa la tienda; la siguiente corrida normal lo resuelve |
+| Corrida `parcial` con el error "categorías truncadas", "tramo(s) con error del servidor" o "se leyeron N de los M productos" | La fuente VTEX no pudo cubrir todo: una categoría de más de 5.000 productos sin subcategorías, un tramo que sigue dando 500 o productos fuera del árbol de categorías | Es una salvaguarda: no desactiva nada. El motivo exacto está en `ingesta.corrida.error`. Si la tienda prohíbe el orden por nombre en su robots.txt, solo se alcanzan 2.500 productos por categoría |
+| Una oferta de una tienda sitemap muestra un precio de hace días | Se revisa por tandas, a 1 página por segundo | Es lo esperado: la web muestra cuándo se actualizó. Sube `paginas_por_corrida` si hace falta (§7) |
+| Una tienda sitemap queda `parcial` con "no trajeron datos de producto" | Más del 20 % de sus páginas no trae JSON-LD ni Open Graph con precio: la tienda cambió su formato, o el `patron_producto` deja pasar páginas que no son de producto | Revisa `patron_producto` de esa tienda y una de sus páginas. Mientras tanto no desactiva nada |
+| Shopify: "robots.txt prohíbe /meta.json" o moneda distinta de USD | La moneda de las tiendas Shopify se lee de `/meta.json` (no de `/cart.js`, que su robots.txt prohíbe) | Si la tienda prohíbe `/meta.json`, pásala a feed. Una moneda distinta de USD manda las ofertas a cuarentena (`moneda_no_usd`) |
 | Next.js: error con `useSearchParams` o con `Date.now()` al compilar | Reglas de Cache Components | Ya resuelto. Si editas páginas: hooks de cliente dentro de `<Suspense>` y la hora como prop después de leer los `searchParams` |
 | `npm install -w packages/x` no registra la dependencia | npm espera el nombre del workspace | `npm install <paquete> --workspace @comparador/x` |
 | Avisos de CRLF en Windows | Saltos de línea de Windows | `.gitattributes` ya fuerza LF |
@@ -476,14 +517,14 @@ Todos ocurrieron al construir el proyecto. Los del código ya están corregidos;
 
 ## 12. Lista final de verificación
 
-- [ ] `npm test`: 52 pruebas pasan · `npm run validar:esquema`: 37 ✔
+- [ ] `npm test`: 142 pruebas pasan · `npm run validar:esquema`: 49 ✔
 - [ ] `.env` creado por el wizard. `git status` no lo muestra
 - [ ] Secretos de GitHub: `DATABASE_URL` (y `VERCEL_AUTOMATION_BYPASS_SECRET` para k6)
 - [ ] Supabase: "Automatically expose new tables" desmarcado y "automatic RLS" activado
 - [ ] Workflows **CI** y **Migraciones Supabase** en verde tras el primer push
 - [ ] 3 trabajos en `cron.job`
-- [ ] Seed cargado: 5 tiendas activas, 4 `sin_permiso`, 6 categorías
-- [ ] Primera ingesta completa: las 5 tiendas en `ok`, unas 47.000 ofertas
+- [ ] Seed cargado: 24 tiendas activas, 1 `sin_permiso`, 2 `pausada`, 6 categorías
+- [ ] Primera ingesta: cada tienda probada sola con `limite_paginas: 2`; luego la completa, con las tiendas en `ok` (las leídas por sitemap llegan a su volumen completo tras varias corridas) y más de 100.000 ofertas
 - [ ] Vercel: Root Directory `apps/web`, 2 variables Config sin comillas, despliegue `Ready`
 - [ ] La web responde 200 en `/`, `/tiendas`, `/buscar`, `/api/buscar`; 400 y 404 en los casos inválidos; `/ir` da 302 con `utm_source`
 - [ ] Los commits salen con el email de la cuenta dueña de Vercel (no hay despliegues "Blocked")

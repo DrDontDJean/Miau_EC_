@@ -5,7 +5,9 @@ import type { TiendaIngesta } from '../src/tipos.ts';
 export const fixture = <T>(nombre: string): T =>
   JSON.parse(readFileSync(new URL(`./fixtures/${nombre}`, import.meta.url), 'utf8')) as T;
 
-export type Respuesta = { status?: number; json?: unknown; texto?: string; cabeceras?: Record<string, string | undefined> };
+export type Respuesta = {
+  status?: number; json?: unknown; texto?: string; bytes?: Uint8Array; cabeceras?: Record<string, string | undefined>;
+};
 
 export function fetchFalso(responder: (url: URL) => Respuesta | undefined) {
   const peticiones: { url: string; agente: string | null }[] = [];
@@ -13,7 +15,7 @@ export function fetchFalso(responder: (url: URL) => Respuesta | undefined) {
     const url = new URL(String(entrada));
     peticiones.push({ url: url.toString(), agente: new Headers(init?.headers).get('user-agent') });
     const r = responder(url) ?? { status: 404, texto: 'no encontrado' };
-    const cuerpo = r.json !== undefined ? JSON.stringify(r.json) : (r.texto ?? '');
+    const cuerpo = (r.bytes as unknown as BodyInit | undefined) ?? (r.json !== undefined ? JSON.stringify(r.json) : (r.texto ?? ''));
     const cabeceras = Object.fromEntries(Object.entries(r.cabeceras ?? {}).filter((e): e is [string, string] => e[1] !== undefined));
     return new Response(cuerpo, { status: r.status ?? 200, headers: cabeceras });
   }) as typeof fetch;

@@ -16,14 +16,14 @@ DecideAquí reúne los catálogos públicos de tiendas online ecuatorianas, agru
 Solo agrupa ofertas que son realmente el mismo producto (por EAN o código de modelo) y muestra el precio que la tienda publica, sin patrocinios. Es un comparador honesto: dice cuándo se actualizaron los precios y pide, una sola vez y sin insistir, confirmar el precio en la tienda.
 
 ## Operating Context
-- Un worker lee el catálogo de cada tienda una vez al día (06:17 UTC); los precios no son en vivo.
+- Un worker lee el catálogo de cada tienda una vez al día (06:17 UTC); los precios no son en vivo. Las tiendas que se leen por sitemap (una página por producto) se revisan por tandas: el precio de una oferta puede tener algunos días, y la web muestra cuándo se actualizó.
 - Precio publicado por la tienda.
 - Superficies actuales: inicio, `/buscar`, `/p/[id]` con historial de precios, `/tiendas`, `/privacidad`, `/api/buscar` e `/ir/[id]`.
 - Vocabulario del dominio en `GLOSSARY.md` (tienda, oferta, producto, precio desde, salto de precio, corrida, cuarentena).
 
 ## Capabilities and Constraints
 - Next.js 16 (App Router, Cache Components) con Tailwind 4 y Supabase; despliegue en Vercel con Root Directory `apps/web`.
-- Tiendas activas: Comandato, Novicompu, Kywi, Pycca (VTEX) y Computron (WooCommerce). Otras quedan `sin_permiso` por su robots.txt.
+- Tiendas activas: 24, leídas por API pública (VTEX, WooCommerce, Shopify, Magento, Frecuento) o, si su API está prohibida en robots.txt, por sitemap (ver README y ADR 0009). Las que prohíben todo el sitio o bloquean el acceso automático esperan un feed.
 - Limitaciones conocidas: la búsqueda también devuelve accesorios; el código de modelo no sirve para ferretería ni hogar; Mercado Libre Ecuador no está incluido.
 - Usar el vocabulario de GLOSSARY.md en la interfaz y evitar los términos que marca como "Avoid". Ante el comprador se dice "actualizado" (no "leído") y "Disponible / Agotado" (no "stock").
 

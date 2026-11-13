@@ -9,7 +9,7 @@ Comercio online ecuatoriano cuyas ofertas mostramos. Tiene un estado: activa, pa
 _Avoid_: comercio, merchant, shop
 
 **Fuente**:
-Forma en que obtenemos el catálogo de una tienda: su catálogo público VTEX, su API de tienda WooCommerce o un feed acordado con la tienda.
+Forma en que obtenemos el catálogo de una tienda: su catálogo público (VTEX, WooCommerce, Shopify o Magento), la API que usa su propia web, las páginas de producto que publica con su sitemap y sus datos estructurados, o un feed acordado con la tienda.
 _Avoid_: scraper, conector, integración
 
 **Feed**:
@@ -59,6 +59,10 @@ _Avoid_: snapshots, log de precios
 **Corrida**:
 Una lectura completa del catálogo de una tienda, de principio a fin, con su resultado.
 _Avoid_: job, crawl, sync, ejecución
+
+**Agotada**:
+Oferta que la tienda publica sin stock y sin precio. No es un fallo: se muestra como "Agotado" con su último precio conocido y no cuenta para el precio desde. Si nunca se vio con precio, no se publica.
+_Avoid_: sin precio, descontinuada, rota
 
 **Cuarentena**:
 Lugar donde quedan las ofertas que fallan una regla bloqueante. No se publican.
