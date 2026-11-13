@@ -174,6 +174,29 @@ await prohibido(`select public.recalcular_productos(array[]::uuid[])`, 'anon no 
 await prohibido(`select ingesta.cargar_lote(1, '[]'::jsonb)`, 'anon no puede cargar lotes de ingesta');
 await db.exec(`reset role`);
 
+// Accesorios: "televisor 55" no encabeza con soportes y cables aunque cuesten menos, pero quien busca "soporte
+// televisor 55" los ve primero. Nunca se ocultan.
+const cacc = (await uno(`select ingesta.abrir_corrida('ekustore') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cacc, JSON.stringify([
+  oferta('S1', 'Soporte para Televisor 55 pulgadas fijo de pared', 15, { dominio: 'ekustore.com' }),
+  oferta('S2', 'Cable HDMI para televisor 55 pulgadas 2 metros', 6, { dominio: 'ekustore.com' }),
+  oferta('S3', 'Televisor 55 pulgadas Smart con soporte de pared incluido', 500, { dominio: 'ekustore.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cacc]);
+const marcas = await q(`select left(titulo, 8) t, es_accesorio a from public.producto where titulo ~ '^(Soporte|Cable|Televisor 55 pul)' order by 1`);
+ok(JSON.stringify(marcas.map(m => [m.t, m.a])) === '[["Cable HD",true],["Soporte ",true],["Televiso",false]]',
+  `es_accesorio: cable y soporte sí, televisor con soporte incluido no (${JSON.stringify(marcas.map(m => [m.t, m.a]))})`);
+await db.exec(`set role anon`);
+const sinPedirlos = await q(`select titulo from public.buscar_productos('televisor 55', 'precio_asc', 24)`);
+const idxTv = sinPedirlos.map((r, i) => (/^Televisor/.test(r.titulo) ? i : -1)).filter(i => i >= 0);
+const idxAcc = sinPedirlos.map((r, i) => (/^(Soporte|Cable)/.test(r.titulo) ? i : -1)).filter(i => i >= 0);
+ok(idxTv.length >= 2 && idxAcc.length === 2 && Math.max(...idxTv) < Math.min(...idxAcc),
+  `"televisor 55" por precio: los televisores van antes que el soporte y el cable, que cuestan menos (${sinPedirlos.map(r => r.titulo.slice(0, 12)).join(' | ')})`);
+const pidiendoloSoporte = await q(`select titulo from public.buscar_productos('soporte televisor 55', 'precio_asc', 24)`);
+ok(pidiendoloSoporte[0].titulo.startsWith('Soporte') && pidiendoloSoporte.length === 2,
+  `"soporte televisor 55": el soporte va primero y no se penaliza (${pidiendoloSoporte.map(r => r.titulo.slice(0, 14)).join(' | ')})`);
+await db.exec(`reset role`);
+
 // Frescura: llamarla dos veces seguidas deja una sola incidencia por tienda desactualizada, y una tienda que
 // vuelve a tener una corrida correcta abre un episodio nuevo si se vuelve a atrasar.
 const fresca1 = (await uno(`select calidad.revisar_frescura() n`)).n;
