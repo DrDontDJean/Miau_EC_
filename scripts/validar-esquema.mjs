@@ -174,6 +174,18 @@ await prohibido(`select public.recalcular_productos(array[]::uuid[])`, 'anon no 
 await prohibido(`select ingesta.cargar_lote(1, '[]'::jsonb)`, 'anon no puede cargar lotes de ingesta');
 await db.exec(`reset role`);
 
+// Frescura: llamarla dos veces seguidas deja una sola incidencia por tienda desactualizada, y una tienda que
+// vuelve a tener una corrida correcta abre un episodio nuevo si se vuelve a atrasar.
+const fresca1 = (await uno(`select calidad.revisar_frescura() n`)).n;
+const fresca2 = (await uno(`select calidad.revisar_frescura() n`)).n;
+const porTienda = await q(`select tienda_id, count(*)::int n from calidad.incidencia where regla_id = 'tienda_desactualizada' group by 1 order by 1`);
+ok(fresca1 > 0 && fresca2 === 0 && porTienda.every(t => t.n === 1),
+  `revisar_frescura dos veces: ${fresca1} y luego ${fresca2} incidencias nuevas (una por tienda)`);
+await q(`update calidad.incidencia set creado_en = now() - interval '3 days' where regla_id = 'tienda_desactualizada' and tienda_id = 'pycca'`);
+await q(`update public.tienda set ultima_corrida_ok = now() - interval '2 days' where id = 'pycca'`);
+const fresca3 = (await uno(`select calidad.revisar_frescura() n`)).n;
+ok(fresca3 === 1, `una tienda con una corrida correcta posterior al último aviso, que se vuelve a atrasar, recibe un aviso nuevo (${fresca3})`);
+
 // ROLAP.
 await db.exec(`select analitica.refrescar()`);
 const comp = await q(`select tienda_id, productos_compartidos, veces_mas_barata, pct_mas_barata from analitica.competitividad_tienda order by 1`);
