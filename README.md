@@ -46,11 +46,11 @@ El `.env` lo crea `bash scripts/wizard-configuracion.sh` (GitHub, Supabase y Ver
 
 ## Tiendas
 
-23 tiendas activas, según cómo se lee cada una (ADR 0009):
+24 tiendas activas, según cómo se lee cada una (ADR 0009):
 
 | Fuente | Tiendas |
 |---|---|
-| API VTEX | Comandato, Novicompu, Kywi, Pycca y Marcimex |
+| API VTEX | Comandato, Novicompu, Kywi, Pycca, Marcimex y SuperPaco |
 | API WooCommerce | Computron |
 | API Shopify | Colineal, EkuStore, NewStore y Randall Tech |
 | API Magento (GraphQL) | La Ganga y Pintulac |

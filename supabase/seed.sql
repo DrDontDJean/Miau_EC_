@@ -16,6 +16,7 @@ insert into public.tienda (id, nombre, origen, plataforma, estado, motivo_estado
   ('kywi',      'Kywi',                 'https://www.kywi.com.ec',         'vtex',        'activa',      null, null, null, null),
   ('pycca',     'Pycca',                'https://www.pycca.com',           'vtex',        'activa',      null, null, null, null),
   ('marcimex',  'Marcimex',             'https://www.marcimex.com',        'vtex',        'activa',      null, null, null, null),
+  ('superpaco', 'SuperPaco',            'https://www.superpaco.com',       'vtex',        'activa',      null, null, null, null),
   ('computron', 'Computron',            'https://www.computron.com.ec',    'woocommerce', 'activa',      null, null, null, null),
   -- API pública: Shopify
   ('colineal',  'Colineal',             'https://colineal.com',            'shopify',     'activa',      null, null, null, null),

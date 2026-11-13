@@ -45,7 +45,7 @@ fuente nueva, **sitemap**, que llega a las tiendas cuya API no se puede leer.
 
 ## Consecuencias
 
-- DecideAquí compara 23 tiendas en lugar de 5, y más de 100.000 ofertas.
+- DecideAquí compara 24 tiendas en lugar de 5, y más de 100.000 ofertas.
 - Las tiendas sitemap tienen precios con algunos días de atraso. Es un costo de leer sin API; el feed lo resuelve.
 - El workflow de ingesta pasa de 60 a 90 minutos de tope y gasta unos 1.800 minutos de GitHub Actions al mes con el
   presupuesto completo en todas las tiendas sitemap. Un repositorio privado se queda en el límite gratuito de 2.000;
