@@ -32,3 +32,4 @@ export function fuenteCon(tienda: TiendaIngesta, http: Http, contexto: ContextoF
     default: throw new Error(`Plataforma sin fuente: ${tienda.plataforma}`);
   }
 }
+export { clasificarPendientes, type ResumenClasificacion } from './clasificar.ts';

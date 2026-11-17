@@ -5,6 +5,7 @@ import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { clasificarPendientes } from '../packages/ingesta/src/clasificar.ts';
 
 const RAIZ = process.argv[2] ?? fileURLToPath(new URL("..", import.meta.url));
 const db = new PGlite({ extensions: { pg_trgm } });
@@ -290,6 +291,53 @@ ok(sNada.length === 0 && sUna.length === 0, 'sin sugerencias para algo que no ex
 const quizas = async (t) => (await uno(`select public.quizas_buscaba($1) s`, [t])).s;
 const qRefri = await quizas('refrijeradoraz'), qNada = await quizas('xyzqwe');
 ok(qRefri.includes('refrigeradora') && qRefri.length <= 3 && qNada.length === 0, `"quizás buscaba": refrigeradora para una errata, nada para xyzqwe (${qRefri})`);
+
+// Categorías y filtros (migración 2500), con la clasificación de la ingesta (dominio: categoriaDe y atributosDe).
+await db.exec(`reset role`);
+const cfil = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cfil, JSON.stringify([
+  oferta('L1', 'Laptop HP Ryzen 5 16GB 512GB 15.6" Filtro', 500, { dominio: 'randall-tech.com' }),
+  oferta('L2', 'Laptop Asus Intel Core i5 8GB 256GB 14" Filtro', 400, { dominio: 'randall-tech.com' }),
+  oferta('L3', 'Laptop Dell Intel Core i7 16GB 1TB RTX 4060 16" Filtro', 1500, { dominio: 'randall-tech.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cfil]);
+const ejecutarPg = async (sql, params = []) => (await db.query(sql, params)).rows;
+const clas = await clasificarPendientes(ejecutarPg);
+const sinClasificar = (await uno(`select count(*)::int n from public.producto where atributos is null`)).n;
+ok(clas.revisados > 0 && clas.conCategoria >= 8 && sinClasificar === 0,
+  `clasificación de la ingesta: ${clas.revisados} productos, ${clas.conCategoria} con categoría, ninguno pendiente`);
+await db.exec(`set role anon`);
+const cat = async (texto, extra) => (await uno(`select public.buscar_catalogo($1, ${extra}) r`, [texto])).r;
+const filtroDe = (r) => r.productos.map(p => p.titulo).filter(t => t.endsWith('Filtro')).map(t => t.split(' ')[1]);
+const navega = await cat('', `p_categoria => 'laptops'`);
+const tNav = navega.productos.map(p => codigoDe[p.titulo] ?? p.titulo.split(' ')[1]);
+ok(navega.total >= 4 && tNav.includes('G08') && !tNav.includes('G09') && !tNav.includes('G19'),
+  `recorrer la categoría laptops sin texto: laptops sí, mochila y memoria RAM no (${tNav})`);
+const intel = await cat('', `p_categoria => 'laptops', p_filtros => '{"procesador": ["intel"]}'`);
+const intel16 = await cat('', `p_categoria => 'laptops', p_filtros => '{"procesador": ["intel"], "ram": ["16"]}'`);
+ok(JSON.stringify(filtroDe(intel).sort()) === '["Asus","Dell"]' && JSON.stringify(filtroDe(intel16)) === '["Dell"]',
+  `filtros por atributo: procesador Intel (${filtroDe(intel)}), Intel y 16 GB (${filtroDe(intel16)})`);
+const procesadores = Object.fromEntries((intel.facetas.atributos.procesador ?? []).map(x => [x.valor, x.n]));
+const rams = Object.fromEntries((intel.facetas.atributos.ram ?? []).map(x => [x.valor, x.n]));
+ok(procesadores.amd >= 1 && procesadores.intel >= 3 && rams['16'] === 1 && rams['8'] === 1 && !('amd' in rams),
+  `conteos por atributo: el filtro propio no se aplica a sí mismo, los demás sí (procesador ${JSON.stringify(procesadores)}, ram ${JSON.stringify(rams)})`);
+const noIndicado = await cat('', `p_categoria => 'laptops', p_filtros => '{"ram": ["no-indicado"]}'`);
+ok(noIndicado.productos.some(p => codigoDe[p.titulo] === 'G08') && filtroDe(noIndicado).length === 0,
+  'el valor "no-indicado" elige los productos sin ese dato');
+const baratas = await cat('', `p_categoria => 'laptops', p_precio_max => 450`);
+ok(baratas.productos.every(p => Number(p.precio_desde) <= 450) && filtroDe(baratas).includes('Asus') && !filtroDe(baratas).includes('Dell')
+  && Number(navega.facetas.precio.min) <= 400 && Number(navega.facetas.precio.max) >= 1500,
+  `filtro de precio hasta 450 y rango de precios en las facetas (${JSON.stringify(navega.facetas.precio)})`);
+const conTexto = await cat('laptop', `p_categoria => null`);
+const catLaptop = conTexto.facetas.categorias.find(c => c.slug === 'laptops');
+ok(catLaptop && catLaptop.n >= 4 && conTexto.facetas.categorias[0].slug === 'laptops',
+  `sin categoría elegida, las facetas cuentan por categoría (${JSON.stringify(conTexto.facetas.categorias)})`);
+const desconocida = await cat('', `p_categoria => 'no-existe'`);
+ok(desconocida.total === 0 && (await cat('', `p_categoria => null`)).total === 0, 'sin texto ni categoría válida no trae nada');
+const sLap = await sug('lap'), sTv = await sug('tv');
+ok(sLap[0]?.tipo === 'categoria' && sLap[0]?.slug === 'laptops' && sTv.some(x => x.slug === 'televisores') && sLap.length <= 8,
+  `sugerencias con categoría: "lap" → ${sLap[0]?.texto}, "tv" → televisores`);
+await db.exec(`reset role`);
 await db.exec(`reset role`);
 
 // La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.
