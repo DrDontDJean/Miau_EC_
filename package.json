@@ -15,7 +15,9 @@
     "k6:humo": "k6 run tests/carga/humo.js",
     "k6:carga": "k6 run tests/carga/carga.js",
     "k6:estres": "k6 run tests/carga/estres.js",
-    "k6:pico": "k6 run tests/carga/pico.js"
+    "k6:pico": "k6 run tests/carga/pico.js",
+    "revisar:rutas": "node scripts/revisar-rutas.mjs",
+    "sondeo:busqueda": "node scripts/sondeo-busqueda.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.7",

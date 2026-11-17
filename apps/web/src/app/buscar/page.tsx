@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { buscarCacheado, quizasCacheado } from '@/lib/datos';
 import { POR_PAGINA, TOPE_RESULTADOS, leerPagina } from '@/lib/catalogo';
@@ -98,6 +99,9 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
     if (f.pagina > 1) p.set('pagina', String(f.pagina));
     return `/buscar?${p}`;
   };
+  // Una página que no existe (por ejemplo pagina=999 con 33 páginas) lleva a la última que sí existe. Dentro de
+  // <Suspense> la respuesta ya empezó, así que Next lo hace con una redirección en el navegador (también sin JavaScript).
+  if (total > 0 && pagina > paginas) redirect(ruta({ pagina: paginas }));
   const hayFiltros = filtros.stock || filtros.varias || filtros.tienda !== '';
   const cantidad = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
   // Con más de 2.000 coincidencias solo se muestran las mejores: se dice, en vez de dar un total que no es.
