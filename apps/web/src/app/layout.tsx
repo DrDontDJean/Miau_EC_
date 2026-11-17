@@ -17,7 +17,9 @@ export const metadata: Metadata = {
 
 /** Franja de hechos verificables (sin envíos ni reseñas: solo lo que DecideAquí puede comprobar). */
 async function FranjaHechos({ claseFondo }: { claseFondo: string }) {
-  const tiendas = await tiendasActivas();
+  // Está en el layout: si la base no responde, la franja usa su texto genérico en vez de tumbar todas las páginas
+  // (error.tsx no cubre el layout que lo contiene).
+  const tiendas = await tiendasActivas().catch((e: unknown) => { console.error('franja de hechos', e); return []; });
   const ultima = tiendas.map(t => t.ultima_corrida_ok).filter((f): f is string => f !== null).sort().at(-1);
   const hechos = [
     { texto: ultima ? `Precios actualizados el ${diaCorto(ultima)}, ${horaCorta(ultima)}` : 'Precios actualizados cada día', d: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0' },

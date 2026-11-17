@@ -241,6 +241,7 @@ const GOLD = {
   G07: 'Protector De Voltaje P/Tv Y Refrigerador Oro', G08: 'Laptop HP 15 Intel Core i5 Oro', G09: 'Mochila P-Laptop Clasica 14plg Oro',
   G10: 'Control de Televisor Samsung universal Oro', G11: 'Televisor LG 55 pulgadas 4K Oro', G12: 'Carcasa Samsung Galaxy A34 Oro',
   G13: 'Desodorante para zapatos 100 ml Oro', G14: 'Zapatos deportivos Nike Revolution Oro', G15: 'Cafetera Imaco 12 tazas Oro',
+  G16: 'Parlante Portátil JBL Go 4 Oro', G17: 'Teléfono inalámbrico Panasonic KX Oro', G18: 'Nevera portátil Coleman 30 L Oro', G19: 'Memoria RAM DDR4 8GB Kingston Laptop Oro',
 };
 const cgold = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
 await q(`select ingesta.cargar_lote($1, $2)`, [cgold, JSON.stringify(
@@ -251,7 +252,7 @@ await db.exec(`set role anon`);
 const busca = async (texto, extra = '') => (await uno(`select public.buscar_catalogo($1 ${extra}) r`, [texto])).r;
 const orosDe = (r) => r.productos.map(p => codigoDe[p.titulo]).filter(Boolean);
 const g = {};
-for (const t of ['celular', 'celulares', 'refrigeradora', 'nevera', 'laptop', 'televisor', 'samsung galaxy', 'zapatos', 'cafeteraa', 'xyzqwe', 'tv 55', 'mochila laptop'])
+for (const t of ['celular', 'celulares', 'refrigeradora', 'nevera', 'laptop', 'televisor', 'samsung galaxy', 'zapatos', 'cafeteraa', 'xyzqwe', 'tv 55', 'mochila laptop', 'portatil'])
   g[t] = orosDe(await busca(t));
 const antes = (l, a, b) => l.includes(a) && l.includes(b) && l.indexOf(a) < l.indexOf(b);
 ok(g.celular.includes('G01') && g.celular.includes('G04') && !g.celular.includes('G02') && !g.celular.includes('G03'),
@@ -260,7 +261,10 @@ ok(JSON.stringify([...g.celulares].sort()) === JSON.stringify([...g.celular].sor
 ok(g.refrigeradora[0] !== 'G07' && antes(g.refrigeradora, 'G05', 'G07') && antes(g.refrigeradora, 'G06', 'G07'),
   `"refrigeradora": refrigeradores primero, el protector de voltaje después (${g.refrigeradora})`);
 ok(g.nevera.includes('G05') && g.nevera.includes('G06'), `"nevera" encuentra refrigeradoras (${g.nevera})`);
-ok(antes(g.laptop, 'G08', 'G09'), `"laptop": la laptop antes que la mochila (${g.laptop})`);
+ok(!g.laptop.includes('G16') && !g.celular.includes('G17') && !g.refrigeradora.includes('G18'),
+  `sinónimos de un solo sentido: "laptop" no trae parlantes portátiles, "celular" no trae teléfonos fijos, "refrigeradora" no trae neveras de playa (${g.laptop} | ${g.celular} | ${g.refrigeradora})`);
+ok(g.portatil.includes('G08'), `"portátil" sí encuentra laptops (${g.portatil})`);
+ok(antes(g.laptop, 'G08', 'G09') && antes(g.laptop, 'G08', 'G19'), `"laptop": la laptop antes que la mochila y que la memoria RAM (${g.laptop})`);
 ok(antes(g.televisor, 'G11', 'G10'), `"televisor": el televisor antes que el control (${g.televisor})`);
 ok(antes(g['samsung galaxy'], 'G01', 'G12'), `"samsung galaxy": el celular antes que la carcasa (${g['samsung galaxy']})`);
 ok(antes(g.zapatos, 'G14', 'G13'), `"zapatos": los zapatos antes que el desodorante (${g.zapatos})`);
@@ -272,6 +276,20 @@ ok(nada.total === 0 && nada.productos.length === 0 && nada.facetas.total === 0, 
 const una = await busca('celular', `, 'relevancia', 1, 1`);
 ok(una.productos.length === 1 && una.total >= 2 && una.facetas.total >= una.total && Array.isArray(una.facetas.tiendas) && una.limitado === false,
   `buscar_catalogo devuelve página, total y facetas en una llamada (${JSON.stringify({ total: una.total, facetas: una.facetas.total })})`);
+// Sugerencias (migración 2400): marcas por prefijo y productos con los mismos términos de la búsqueda.
+await db.exec(`reset role`);
+await q(`update public.producto set marca = 'Samsung' where titulo in ('Celular Samsung Galaxy A15 128GB Oro', 'Carcasa Samsung Galaxy A34 Oro')`);
+await db.exec(`set role anon`);
+const sug = async (t) => (await uno(`select public.sugerir_busqueda($1) s`, [t])).s;
+const sSams = await sug('sams'), sCel = await sug('celular'), sNada = await sug('xyzq'), sUna = await sug('a');
+ok(sSams.some(x => x.tipo === 'marca' && x.texto === 'Samsung'), `sugerencias de "sams": la marca Samsung (${JSON.stringify(sSams.map(x => x.texto))})`);
+const tCel = sCel.filter(x => x.tipo === 'producto').map(x => codigoDe[x.texto]).filter(Boolean);
+ok(tCel.includes('G01') && !tCel.includes('G02') && !tCel.includes('G03') && sCel.length <= 8 && sCel.every(x => x.tipo !== 'producto' || x.id),
+  `sugerencias de "celular": celulares con su id, sin celulosa ni células, 8 como máximo (${tCel})`);
+ok(sNada.length === 0 && sUna.length === 0, 'sin sugerencias para algo que no existe ni para una sola letra');
+const quizas = async (t) => (await uno(`select public.quizas_buscaba($1) s`, [t])).s;
+const qRefri = await quizas('refrijeradoraz'), qNada = await quizas('xyzqwe');
+ok(qRefri.includes('refrigeradora') && qRefri.length <= 3 && qNada.length === 0, `"quizás buscaba": refrigeradora para una errata, nada para xyzqwe (${qRefri})`);
 await db.exec(`reset role`);
 
 // La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.

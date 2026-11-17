@@ -54,6 +54,10 @@ export type OpcionesBusqueda = { pagina?: number; soloDisponibles?: boolean; sol
 export type Facetas = { total: number; disponibles: number; varias: number; tiendas: { id: string; nombre: string; n: number }[] };
 /** limitado: la búsqueda tiene más de TOPE_RESULTADOS coincidencias y solo se muestran las mejores. */
 export type ResultadoBusqueda = { productos: Producto[]; total: number; limitado: boolean; facetas: Facetas; pagina: number; porPagina: number };
+/** Sugerencia del buscador: una marca (lleva a su búsqueda) o un producto (lleva a su ficha). */
+export type Sugerencia = { tipo: 'marca' | 'producto'; texto: string; href: string; desde?: number };
+type FilaSugerencia = { tipo: string; texto: string; id?: string; precio_desde?: number | string | null };
+
 /** Número de página válido: entero entre 1 y MAX_PAGINA; cualquier otra cosa es la primera. */
 export const leerPagina = (v: string | null | undefined): number => {
   const n = Number(v);
@@ -113,6 +117,27 @@ export function crearCatalogo(cliente: ClienteSupabase) {
         },
         pagina, porPagina: POR_PAGINA,
       };
+    },
+
+    /** Hasta 8 sugerencias mientras se escribe (migración 2400). */
+    async sugerir(q: string): Promise<Sugerencia[]> {
+      const { data, error } = await cliente.rpc('sugerir_busqueda', { p_q: q });
+      if (error) throw errorDeBase('No se pudieron cargar sugerencias.', `sugerir_busqueda: ${error.message}`);
+      return ((data as FilaSugerencia[] | null) ?? []).flatMap((s): Sugerencia[] => {
+        if (s.tipo === 'marca') return [{ tipo: 'marca', texto: s.texto, href: `/buscar?q=${encodeURIComponent(s.texto)}` }];
+        if (s.tipo === 'producto' && s.id) {
+          const desde = s.precio_desde == null ? undefined : Number(s.precio_desde);
+          return [{ tipo: 'producto', texto: s.texto, href: `/p/${s.id}`, ...(desde === undefined ? {} : { desde }) }];
+        }
+        return [];
+      });
+    },
+
+    /** Hasta 3 términos parecidos que sí existen, para una búsqueda sin resultados. */
+    async quizasBuscaba(q: string): Promise<string[]> {
+      const { data, error } = await cliente.rpc('quizas_buscaba', { p_q: q });
+      if (error) throw errorDeBase('La búsqueda no respondió.', `quizas_buscaba: ${error.message}`);
+      return Array.isArray(data) ? data.filter((t): t is string => typeof t === 'string') : [];
     },
 
     /** Registra la salida y devuelve la URL de la tienda, o null si la oferta no está activa. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_PAGINA, crearCatalogo, type ClienteSupabase } from '../src/lib/catalogo';
-import { crearBuscarGET, crearIrGET } from '../src/lib/rutas';
+import { crearBuscarGET, crearIrGET, crearSugerenciasGET } from '../src/lib/rutas';
 
 // Un producto tal como viene dentro de public.buscar_catalogo (migración 2300).
 const filaTv = {
@@ -172,5 +172,45 @@ describe('fallos de la base', () => {
   it('una respuesta vacía de la base es un fallo, no "sin resultados"', async () => {
     const { cliente } = clienteFalso({ buscar_catalogo: { data: null, error: null } });
     await expect(crearCatalogo(cliente).buscar('cafeteraa')).rejects.toThrow();
+  });
+});
+
+describe('GET /api/sugerencias', () => {
+  const filas = [
+    { tipo: 'marca', texto: 'Samsung' },
+    { tipo: 'producto', texto: 'Celular Samsung Galaxy A15', id: '6f1c2a54-0000-4000-8000-000000000009', precio_desde: '199.9' },
+  ];
+
+  it('menos de 2 caracteres → lista vacía, sin consultar la base', async () => {
+    const { cliente, llamadas } = clienteFalso({});
+    const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=s'));
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ sugerencias: [] });
+    expect(llamadas).toEqual([]);
+  });
+
+  it('cada sugerencia lleva adónde ir: la marca a su búsqueda, el producto a su ficha', async () => {
+    const { cliente, llamadas } = clienteFalso({ sugerir_busqueda: { data: filas, error: null } });
+    const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=sams'));
+    expect(r.status).toBe(200);
+    expect(r.headers.get('cache-control')).toMatch(/max-age/);
+    expect(llamadas).toEqual([{ fn: 'sugerir_busqueda', args: { p_q: 'sams' } }]);
+    expect((await r.json()).sugerencias).toEqual([
+      { tipo: 'marca', texto: 'Samsung', href: '/buscar?q=Samsung' },
+      { tipo: 'producto', texto: 'Celular Samsung Galaxy A15', href: '/p/6f1c2a54-0000-4000-8000-000000000009', desde: 199.9 },
+    ]);
+  });
+
+  it('si la base falla responde 503 con JSON', async () => {
+    const { cliente } = clienteFalso({ sugerir_busqueda: { data: null, error: { message: 'timeout' } } });
+    const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=sams'));
+    expect(r.status).toBe(503);
+    expect(await r.json()).toEqual({ error: 'No pudimos cargar sugerencias.' });
+  });
+
+  it('"quizás buscaba" devuelve los términos de la base', async () => {
+    const { cliente, llamadas } = clienteFalso({ quizas_buscaba: { data: ['refrigeradora'], error: null } });
+    expect(await crearCatalogo(cliente).quizasBuscaba('refrijeradoraz')).toEqual(['refrigeradora']);
+    expect(llamadas[0]).toEqual({ fn: 'quizas_buscaba', args: { p_q: 'refrijeradoraz' } });
   });
 });

@@ -23,13 +23,15 @@
 --    facetas_busqueda) pasa a usar la columna.
 -- 2) public.singular(palabra) y public.sinonimos(palabra): plural a singular por reglas simples del español y los
 --    sinónimos del catálogo (nevera, refri → refrigeradora; tv, tele → televisor; notebook, portátil → laptop;
---    smartphone, teléfono → celular).
+--    smartphone, teléfono → celular). Nevera, tele, portátil y teléfono son de un solo sentido: "laptop" no trae
+--    parlantes portátiles ni "celular" teléfonos fijos.
 -- 3) public.terminos_busqueda(q): por cada palabra, una tsquery (la palabra, sus sinónimos y, desde 4 letras, su
 --    prefijo) y un patrón que el título debe cumplir: alguna palabra del título empieza por la palabra buscada o un
 --    sinónimo. El patrón es lo que deja fuera a celulosa: comparte raíz con celular, pero no empieza por "celular".
 -- 4) public.buscar_catalogo(...) devuelve en un solo jsonb los productos de la página, el total y los conteos del
 --    lateral (facetas). Decide una sola vez si hay coincidencias exactas; si no, va por trigramas sobre titulo_norm.
---    Ordena por rango y se queda con los 2.000 mejores antes de filtrar, contar y paginar ("limitado" lo indica).
+--    Ordena por rango y se queda con los 2.000 mejores antes de filtrar, contar y paginar ("limitado" lo indica). En
+--    relevancia van primero los títulos que nombran lo buscado entre sus tres primeras palabras.
 -- 5) Accesorios: la lista de la migración 1700 se amplía (protector de voltaje o de pantalla, control de televisor,
 --    carcasa, estuche, limpiador de pantallas, la abreviatura "p/" por "para", y más aparatos tras "para": impresoras,
 --    zapatos, consolas, ipad...). Mochila, maletín, bolso y rack solo cuentan si el título nombra un aparato o una medida
@@ -39,7 +41,7 @@
 --
 -- Al aplicarla se reescribe la tabla producto (dos columnas guardadas): conviene que no coincida con la ingesta.
 
--- 0) Accesorios ────────────────────────────────────────────────────────────────────────────────────────────────────
+-- 5) Accesorios (van primero: la reescritura de la tabla usa la función nueva) ────────────────────────────────────────────────────────────────────────────────────────────────────
 create or replace function public.patron_accesorio() returns text
 language sql immutable parallel safe set search_path = ''
 as $$ select '(soporte|soportes|control remoto|control universal|control de (tv|televisor|televisores)|control para|mando|cable|cables|adaptador|adaptadores|funda|fundas|cargador|cargadores|repuesto|repuestos|mica|micas|vidrio templado|pedestal|protector(es)? (de )?(voltaje|pantalla|tension|sobretension)|protector(es)? para|carcasa|carcasas|case para|estuche|estuches|limpiador de (pantalla|pantallas))' $$;
@@ -113,24 +115,31 @@ as $$
   end
 $$;
 
--- Grupos de sinónimos del catálogo, en singular y normalizados. Devuelve el grupo de la palabra (ella primero) o solo
--- la palabra.
+-- Sinónimos del catálogo, en singular y normalizados. Cada grupo tiene términos de ida y vuelta (fuertes: buscar uno
+-- encuentra los demás) y términos de un solo sentido (débiles: llevan al grupo, pero el grupo no los busca). Así
+-- "portátil" encuentra laptops, pero "laptop" no trae parlantes portátiles; "nevera" encuentra refrigeradoras, pero
+-- "refrigeradora" no trae neveras de playa; "teléfono" encuentra celulares, pero "celular" no trae teléfonos fijos.
+-- Devuelve la palabra primero y luego los fuertes de su grupo, o solo la palabra.
 create or replace function public.sinonimos(w text) returns text[]
 language sql immutable parallel safe strict set search_path = ''
 as $$
-  with grupos(g) as (values
-    (array['refrigeradora', 'refrigerador', 'nevera', 'refri', 'frigorifico']),
-    (array['televisor', 'tv', 'tele', 'television']),
-    (array['laptop', 'notebook', 'portatil']),
-    (array['celular', 'smartphone', 'telefono']))
-  select coalesce((select array[w] || array(select x from unnest(g) x where x <> w) from grupos where w = any(g) limit 1), array[w])
+  with grupos(fuertes, debiles) as (values
+    (array['refrigeradora', 'refrigerador'], array['nevera', 'refri', 'frigorifico']),
+    (array['televisor', 'tv', 'television'], array['tele']),
+    (array['laptop', 'notebook'],            array['portatil']),
+    (array['celular', 'smartphone'],         array['telefono']))
+  select coalesce(
+    (select array[w] || array(select x from unnest(fuertes) x where x <> w)
+       from grupos where w = any(fuertes) or w = any(debiles) limit 1),
+    array[w])
 $$;
 
 -- 3) Términos de la búsqueda ───────────────────────────────────────────────────────────────────────────────────────
 -- consulta: Y de cada palabra; cada palabra es O de ella, sus sinónimos y su prefijo. patrones: uno por palabra, que el
 -- texto del producto debe cumplir (todas). larga: la palabra más larga, para el camino de trigramas. Las palabras vacías
--- ("de", "para") no cuentan. Si no queda ninguna palabra, consulta es null.
-create or replace function public.terminos_busqueda(p_q text, out consulta tsquery, out patrones text[], out larga text, out palabras text[])
+-- ("de", "para") no cuentan. Si no queda ninguna palabra, consulta es null. inicio: la primera palabra buscada entre
+-- las tres primeras del título; sirve para ordenar ("Laptop HP…" antes que "Memoria RAM … laptop").
+create or replace function public.terminos_busqueda(p_q text, out consulta tsquery, out patrones text[], out larga text, out palabras text[], out inicio text)
 language plpgsql stable set search_path = ''
 as $$
 declare
@@ -156,6 +165,7 @@ begin
     continue when t is null;
     consulta := case when consulta is null then t else consulta && t end;
     patrones := patrones || ('(' || array_to_string(r, '|') || ')');
+    inicio := coalesce(inicio, '^([^ ]+ ){0,2}(' || array_to_string(r, '|') || ')');
   end loop;
   larga := (select x from unnest(palabras) x where length(x) >= 3 order by length(x) desc limit 1);
 end $$;
@@ -211,7 +221,8 @@ begin
       limit v_tope + 1
     ),
     base as materialized (
-      select p.id, p.titulo, p.marca, p.imagen_url, p.precio_desde, p.num_tiendas, p.es_accesorio, c.r
+      select p.id, p.titulo, p.marca, p.imagen_url, p.precio_desde, p.num_tiendas, p.es_accesorio, c.r,
+             coalesce(v_exacta and p.titulo_norm ~ v.inicio, false) as al_inicio
         from (select * from candidatos order by r desc, id limit v_tope) c
         join public.producto p on p.id = c.id
     ),
@@ -228,7 +239,7 @@ begin
                  case when v_penaliza and b.es_accesorio then 1 else 0 end,
                  case when p_orden = 'precio_asc'  then b.precio_desde end asc nulls last,
                  case when p_orden = 'precio_desc' then b.precio_desde end desc nulls last,
-                 (b.num_tiendas > 1) desc, b.r desc, b.precio_desde, b.id) as n
+                 b.al_inicio desc, (b.num_tiendas > 1) desc, b.r desc, b.precio_desde, b.id) as n
         from base b
        where (not p_solo_varias or b.num_tiendas > 1)
          and (not p_solo_disponibles or exists (select 1 from ofertas_base o where o.producto_id = b.id and o.disponible))

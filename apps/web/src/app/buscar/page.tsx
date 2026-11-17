@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { buscarCacheado } from '@/lib/datos';
+import { buscarCacheado, quizasCacheado } from '@/lib/datos';
 import { POR_PAGINA, TOPE_RESULTADOS, leerPagina } from '@/lib/catalogo';
 import { leerOrden } from '@/lib/rutas';
 import { Paginacion } from '@/components/paginacion';
@@ -56,12 +56,28 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
   });
 
   if (facetas.total === 0) {
+    // Sin coincidencias de verdad: se ofrecen términos parecidos que sí existen, nunca productos que no coinciden.
+    const quizas = await quizasCacheado(q);
     return (
       <section>
         <h1 className="text-2xl font-extrabold tracking-tight">Sin resultados para <q>{q}</q></h1>
         <p className="mt-2 max-w-[60ch] text-suave">
           Ninguna tienda incluida lo tiene con ese nombre. Pruebe con menos palabras, la marca o el modelo.
         </p>
+        {quizas.length > 0 && (
+          <div className="mt-6">
+            <p className="font-semibold">Quizás buscaba</p>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {quizas.map(t => (
+                <li key={t}>
+                  <Link href={rutaBusqueda(t)} className="flex min-h-11 items-center rounded-lg border border-borde-control px-4 font-semibold transition-colors hover:bg-seccion">
+                    {t}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <SalidasRapidas />
       </section>
     );
