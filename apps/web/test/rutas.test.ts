@@ -119,10 +119,10 @@ describe('paginación de la búsqueda', () => {
     expect(cuerpo.pagina).toBe(1);
   });
 
-  it('una página enorme se recorta a la última que la base puede entregar (2.000 resultados como máximo)', async () => {
+  it('una página enorme se recorta a la última que la base puede entregar (1.000 resultados como máximo)', async () => {
     const { cuerpo, args } = await llamar('http://localhost/api/buscar?q=laptop&pagina=999999');
     expect(cuerpo.pagina).toBe(MAX_PAGINA);
-    expect(MAX_PAGINA).toBe(Math.ceil(2000 / 24));
+    expect(MAX_PAGINA).toBe(Math.ceil(1000 / 24));
     expect(Number(args!.p_pagina)).toBe(MAX_PAGINA);
   });
 

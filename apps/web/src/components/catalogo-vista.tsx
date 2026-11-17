@@ -163,7 +163,7 @@ export async function VistaCatalogo({ base, cat, sp }: { base: string; cat: Cate
   const hayFiltros = comunes.stock || comunes.varias || comunes.tienda !== '' || precioMin !== null || precioMax !== null || Object.keys(filtros).length > 0;
   const sinFiltros: Partial<EstadoCatalogo> = { stock: false, varias: false, tienda: '', filtros: {}, precioMin: null, precioMax: null };
   const cantidad = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
-  // Con más de 2.000 coincidencias solo se muestran las mejores: se dice, en vez de dar un total que no es.
+  // Con más de 1.000 coincidencias solo se muestran las mejores: se dice, en vez de dar un total que no es.
   const totalSinFiltros = limitado ? `más de ${TOPE_RESULTADOS.toLocaleString('es-EC')} productos` : cantidad(facetas.total);
   const resumen = [
     hayFiltros && total < facetas.total ? `${total} de ${totalSinFiltros}` : limitado ? totalSinFiltros : cantidad(total),
