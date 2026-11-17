@@ -10,6 +10,12 @@
 --    (disponibles, por tienda) y los filtros de disponibles y tienda se leen del índice, sin visitar la tabla oferta.
 -- 2) buscar_catalogo se queda con los 1.000 mejores candidatos (antes 2.000): la mitad de páginas en las búsquedas con
 --    muchos resultados ("celular", "mouse"). La web dice "más de 1.000" cuando corresponde. Misma firma y permisos.
+--
+-- pg_trgm se carga antes de crear la función: su "set pg_trgm.word_similarity_threshold" solo se acepta si la extensión
+-- ya está cargada en la sesión. Si no, Supabase lo trata como un parámetro desconocido y responde "permission denied to
+-- set parameter" (las migraciones 2300 y 2500 lo cargaban sin querer al crear índices de trigramas antes).
+select extensions.similarity('a', 'a');
+
 create index if not exists oferta_producto_cubre_idx
   on public.oferta (producto_id) include (tienda_id, disponible)
   where activa;
