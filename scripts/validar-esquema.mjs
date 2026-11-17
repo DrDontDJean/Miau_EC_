@@ -181,6 +181,10 @@ const gin = await q(`select c.relname, c.reloptions from pg_index i join pg_clas
                      where i.indrelid = 'public.producto'::regclass and a.amname = 'gin' order by 1`);
 ok(gin.length === 3 && gin.every(g => (g.reloptions ?? []).includes('fastupdate=off')),
   `índices GIN de producto sin lista pendiente (fastupdate=off): ${gin.map(g => g.relname).join(', ')}`);
+const cubre = await q(`select pg_get_indexdef(indexrelid) def from pg_index where indexrelid = 'public.oferta_producto_cubre_idx'::regclass`);
+const tope = await q(`select prosrc ~ 'v_tope +constant int := 1000' as mil from pg_proc where proname = 'buscar_catalogo'`);
+ok(cubre.length === 1 && cubre[0].def.includes('INCLUDE (tienda_id, disponible)') && tope[0]?.mil,
+  `búsqueda con menos lecturas: índice de ofertas que cubre las facetas y tope de 1.000 candidatos (${JSON.stringify({ def: cubre[0]?.def, tope })})`);
 await db.exec(`reset role`);
 
 // Accesorios: "televisor 55" no encabeza con soportes y cables aunque cuesten menos, pero quien busca "soporte

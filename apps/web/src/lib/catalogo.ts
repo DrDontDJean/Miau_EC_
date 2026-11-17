@@ -50,9 +50,9 @@ type RespuestaBusqueda = { total: number | string; limitado: boolean; productos:
 
 /** Productos por página de resultados. */
 export const POR_PAGINA = 24;
-/** La búsqueda se queda con los mejores 2.000 resultados (migración 2300). */
-export const TOPE_RESULTADOS = 2000;
-/** Última página que se puede pedir: 84 de 24. */
+/** La búsqueda se queda con los mejores 1.000 resultados (migración 2700). */
+export const TOPE_RESULTADOS = 1000;
+/** Última página que se puede pedir: 42 de 24. */
 export const MAX_PAGINA = Math.ceil(TOPE_RESULTADOS / POR_PAGINA);
 
 export type OpcionesBusqueda = {
