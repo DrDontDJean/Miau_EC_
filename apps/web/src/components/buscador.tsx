@@ -115,7 +115,7 @@ function FormularioConSugerencias({ q }: { q: string }) {
 /** Pestañas de las categorías. `activa` es la ruta de la categoría en curso; sin ella ninguna queda marcada. */
 export function ListaPestanas({ activa = '' }: { activa?: string }) {
   return (
-    <nav aria-label="Categorías" className="border-t border-white/15">
+    <nav aria-label="Categorías de productos" className="border-t border-white/15">
       <ul className="sin-barra mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 sm:justify-center sm:px-4">
         {RAPIDAS.map(r => {
           const actual = r.href === activa;

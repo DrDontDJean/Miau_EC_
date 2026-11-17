@@ -72,7 +72,8 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
               </p>
               <p className="mt-3 max-w-[52ch] text-sm leading-relaxed">
-                Compare precios de tiendas online de Ecuador.              </p>
+                Compare precios de tiendas online de Ecuador.
+              </p>
               <p className="mt-2 max-w-[52ch] text-sm leading-relaxed">Ninguna tienda paga por aparecer primero.</p>
             </div>
             <nav aria-label="Categorías">
@@ -90,6 +91,18 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 <li><Link href="/privacidad" className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">Privacidad</Link></li>
               </ul>
             </nav>
+          </div>
+          {/* Créditos del equipo. El grupo va sin enlace: no hay una URL confirmada. */}
+          <div className="border-t border-white/15">
+            <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <p>Desarrollado por <strong className="font-semibold">Ariel Andi</strong> y <strong className="font-semibold">Jean Cardoso</strong></p>
+              <p className="flex items-center gap-2">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white p-1">
+                  <img src="/bidata.png" alt="" width={24} height={24} className="size-6" />
+                </span>
+                <span>Grupo de investigación <strong className="font-semibold">BiData</strong></span>
+              </p>
+            </div>
           </div>
         </footer>
       </body>
