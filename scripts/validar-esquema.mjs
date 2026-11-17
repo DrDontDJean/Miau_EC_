@@ -176,6 +176,11 @@ await prohibido(`select ingesta.cargar_lote(1, '[]'::jsonb)`, 'anon no puede car
 const definers = await q(`select proname, prosecdef from pg_proc where proname in ('buscar_catalogo', 'buscar_productos', 'facetas_busqueda', 'candidatos_busqueda') order by 1`);
 ok(definers.length === 4 && definers.every(f => f.prosecdef),
   'las funciones de búsqueda son security definer: con RLS, los índices de texto y de trigramas no se podrían usar');
+await db.exec(`reset role`); // pg_index de producto solo lo lee su dueño
+const gin = await q(`select c.relname, c.reloptions from pg_index i join pg_class c on c.oid = i.indexrelid join pg_am a on a.oid = c.relam
+                     where i.indrelid = 'public.producto'::regclass and a.amname = 'gin' order by 1`);
+ok(gin.length === 3 && gin.every(g => (g.reloptions ?? []).includes('fastupdate=off')),
+  `índices GIN de producto sin lista pendiente (fastupdate=off): ${gin.map(g => g.relname).join(', ')}`);
 await db.exec(`reset role`);
 
 // Accesorios: "televisor 55" no encabeza con soportes y cables aunque cuesten menos, pero quien busca "soporte
