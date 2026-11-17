@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { buscarCacheado, facetasCacheadas } from '@/lib/datos';
-import { POR_PAGINA, leerPagina } from '@/lib/catalogo';
+import { buscarCacheado } from '@/lib/datos';
+import { POR_PAGINA, TOPE_RESULTADOS, leerPagina } from '@/lib/catalogo';
 import { leerOrden } from '@/lib/rutas';
 import { Paginacion } from '@/components/paginacion';
 import { EsqueletoRejilla, RejillaProductos, tarjetaDeProducto } from '@/components/ofertas';
@@ -49,7 +49,11 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
     );
   }
 
-  const facetas = await facetasCacheadas(q);
+  // Una sola llamada a la base: la página, el total con filtros y los conteos del lateral (sin filtros).
+  const filtros = { stock: texto(sp.stock) === '1', varias: texto(sp.varias) === '1', tienda: texto(sp.tienda).slice(0, 40) };
+  const { productos, total, limitado, facetas } = await buscarCacheado(q, orden, {
+    pagina, soloDisponibles: filtros.stock, soloVarias: filtros.varias, tienda: filtros.tienda,
+  });
 
   if (facetas.total === 0) {
     return (
@@ -65,12 +69,6 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
 
   // Los filtros se aplican en la base antes de paginar; el lateral cuenta cuántos productos cumple cada uno.
   const tiendas = facetas.tiendas.map(t => [t.id, t.nombre] as const);
-  const filtros = { stock: texto(sp.stock) === '1', varias: texto(sp.varias) === '1', tienda: texto(sp.tienda) };
-  if (!tiendas.some(([id]) => id === filtros.tienda)) filtros.tienda = '';
-
-  const { productos, total } = await buscarCacheado(q, orden, {
-    pagina, soloDisponibles: filtros.stock, soloVarias: filtros.varias, tienda: filtros.tienda,
-  });
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
   // Cambiar el orden o un filtro vuelve a la primera página; los enlaces de página conservan todo lo demás.
@@ -86,8 +84,11 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
   };
   const hayFiltros = filtros.stock || filtros.varias || filtros.tienda !== '';
   const cantidad = (n: number) => `${n} ${n === 1 ? 'producto' : 'productos'}`;
+  // Con más de 2.000 coincidencias solo se muestran las mejores: se dice, en vez de dar un total que no es.
+  const totalSinFiltros = limitado ? `más de ${TOPE_RESULTADOS.toLocaleString('es-EC')} productos` : cantidad(facetas.total);
   const resumen = [
-    hayFiltros && total < facetas.total ? `${total} de ${cantidad(facetas.total)}` : cantidad(total),
+    hayFiltros && total < facetas.total ? `${total} de ${totalSinFiltros}` : limitado ? totalSinFiltros : cantidad(total),
+    limitado && 'se muestran los más relevantes',
     paginas > 1 && `página ${pagina} de ${paginas}`,
   ].filter(Boolean).join(' · ');
   // Cuántos de los resultados cumple cada filtro, para mostrarlo junto a él.
@@ -214,7 +215,7 @@ async function Resultados({ searchParams }: { searchParams: PageProps<'/buscar'>
               ) : (
                 <>
                   <p className="font-semibold">Ningún resultado cumple esos filtros.</p>
-                  <Link href={ruta({ stock: false, varias: false, tienda: '' })} className="mt-2 inline-flex min-h-11 items-center font-semibold text-enlace underline">Quitar filtros y ver los {facetas.total}</Link>
+                  <Link href={ruta({ stock: false, varias: false, tienda: '' })} className="mt-2 inline-flex min-h-11 items-center font-semibold text-enlace underline">Quitar filtros y ver todos</Link>
                 </>
               )}
             </section>

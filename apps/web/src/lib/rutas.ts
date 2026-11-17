@@ -11,8 +11,8 @@ export function crearBuscarGET(buscar: (q: string, orden: Orden, opciones: Opcio
     if (q.length < 2) return Response.json({ error: 'Escribe al menos 2 caracteres.' }, { status: 400 });
     const orden = leerOrden(url.searchParams.get('orden'));
     try {
-      const { productos, total, pagina, porPagina } = await buscar(q, orden, { pagina: leerPagina(url.searchParams.get('pagina')) });
-      return Response.json({ consulta: q, orden, pagina, porPagina, total, productos });
+      const { productos, total, limitado, pagina, porPagina } = await buscar(q, orden, { pagina: leerPagina(url.searchParams.get('pagina')) });
+      return Response.json({ consulta: q, orden, pagina, porPagina, total, limitado, productos });
     } catch (e) {
       // El detalle queda en el log del servidor; el cliente recibe un 503 con JSON, nunca un 500 sin cuerpo.
       console.error('GET /api/buscar', e instanceof Error ? (e.cause ?? e) : e);

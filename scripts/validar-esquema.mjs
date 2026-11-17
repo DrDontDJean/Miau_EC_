@@ -172,6 +172,9 @@ await prohibido(`insert into public.tienda (id, nombre, origen, plataforma) valu
 await prohibido(`update public.oferta set precio = 1`, 'anon no puede cambiar precios');
 await prohibido(`select public.recalcular_productos(array[]::uuid[])`, 'anon no puede llamar funciones internas (recalcular_productos)');
 await prohibido(`select ingesta.cargar_lote(1, '[]'::jsonb)`, 'anon no puede cargar lotes de ingesta');
+const definers = await q(`select proname, prosecdef from pg_proc where proname in ('buscar_catalogo', 'buscar_productos', 'facetas_busqueda', 'candidatos_busqueda') order by 1`);
+ok(definers.length === 4 && definers.every(f => f.prosecdef),
+  'las funciones de búsqueda son security definer: con RLS, los índices de texto y de trigramas no se podrían usar');
 await db.exec(`reset role`);
 
 // Accesorios: "televisor 55" no encabeza con soportes y cables aunque cuesten menos, pero quien busca "soporte
@@ -230,6 +233,46 @@ const esperados = ['Celular Oppo Reno 11 5G Ent2200', 'Literal &nbsp; y &noexist
 ok(JSON.stringify(ent.map(r => r.titulo)) === JSON.stringify(esperados) && ent[0].marca === 'Marca & Co',
   `migración 2200: títulos y marca de producto sin entidades, sin doble decodificación (${JSON.stringify(ent)})`);
 ok(JSON.stringify(entOf) === JSON.stringify([esperados[0], esperados[2], esperados[1]]), `migración 2200: títulos de oferta limpios (${JSON.stringify(entOf)})`);
+
+// Búsqueda en una sola consulta (migración 2300): pruebas doradas de relevancia con los casos reales del diagnóstico.
+const GOLD = {
+  G01: 'Celular Samsung Galaxy A15 128GB Oro', G02: 'Esponja de celulosa para cocina Oro', G03: 'Tratamiento Capilar Células Madre Oro',
+  G04: 'Celulares Xiaomi Redmi 13 Oro', G05: 'Refrigerador Mabe 300 litros Oro', G06: 'Refrigeradora LG Inverter 420 L Oro',
+  G07: 'Protector De Voltaje P/Tv Y Refrigerador Oro', G08: 'Laptop HP 15 Intel Core i5 Oro', G09: 'Mochila P-Laptop Clasica 14plg Oro',
+  G10: 'Control de Televisor Samsung universal Oro', G11: 'Televisor LG 55 pulgadas 4K Oro', G12: 'Carcasa Samsung Galaxy A34 Oro',
+  G13: 'Desodorante para zapatos 100 ml Oro', G14: 'Zapatos deportivos Nike Revolution Oro', G15: 'Cafetera Imaco 12 tazas Oro',
+};
+const cgold = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cgold, JSON.stringify(
+  Object.entries(GOLD).map(([sku, t], i) => oferta(sku, t, 100 + i, { dominio: 'randall-tech.com' })))]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cgold]);
+const codigoDe = Object.fromEntries(Object.entries(GOLD).map(([k, t]) => [t, k]));
+await db.exec(`set role anon`);
+const busca = async (texto, extra = '') => (await uno(`select public.buscar_catalogo($1 ${extra}) r`, [texto])).r;
+const orosDe = (r) => r.productos.map(p => codigoDe[p.titulo]).filter(Boolean);
+const g = {};
+for (const t of ['celular', 'celulares', 'refrigeradora', 'nevera', 'laptop', 'televisor', 'samsung galaxy', 'zapatos', 'cafeteraa', 'xyzqwe', 'tv 55', 'mochila laptop'])
+  g[t] = orosDe(await busca(t));
+const antes = (l, a, b) => l.includes(a) && l.includes(b) && l.indexOf(a) < l.indexOf(b);
+ok(g.celular.includes('G01') && g.celular.includes('G04') && !g.celular.includes('G02') && !g.celular.includes('G03'),
+  `"celular" encuentra celulares y no celulosa ni células (${g.celular})`);
+ok(JSON.stringify([...g.celulares].sort()) === JSON.stringify([...g.celular].sort()), `"celulares" da lo mismo que "celular" (${g.celulares})`);
+ok(g.refrigeradora[0] !== 'G07' && antes(g.refrigeradora, 'G05', 'G07') && antes(g.refrigeradora, 'G06', 'G07'),
+  `"refrigeradora": refrigeradores primero, el protector de voltaje después (${g.refrigeradora})`);
+ok(g.nevera.includes('G05') && g.nevera.includes('G06'), `"nevera" encuentra refrigeradoras (${g.nevera})`);
+ok(antes(g.laptop, 'G08', 'G09'), `"laptop": la laptop antes que la mochila (${g.laptop})`);
+ok(antes(g.televisor, 'G11', 'G10'), `"televisor": el televisor antes que el control (${g.televisor})`);
+ok(antes(g['samsung galaxy'], 'G01', 'G12'), `"samsung galaxy": el celular antes que la carcasa (${g['samsung galaxy']})`);
+ok(antes(g.zapatos, 'G14', 'G13'), `"zapatos": los zapatos antes que el desodorante (${g.zapatos})`);
+ok(g.cafeteraa.includes('G15'), `"cafeteraa" (mal escrita) encuentra la cafetera (${g.cafeteraa})`);
+ok(g['tv 55'].includes('G11'), `"tv 55" encuentra el televisor de 55 (${g['tv 55']})`);
+ok(g['mochila laptop'][0] === 'G09', `"mochila laptop": quien pide el accesorio lo ve primero (${g['mochila laptop']})`);
+const nada = await busca('xyzqwe');
+ok(nada.total === 0 && nada.productos.length === 0 && nada.facetas.total === 0, 'una búsqueda que no existe no trae nada');
+const una = await busca('celular', `, 'relevancia', 1, 1`);
+ok(una.productos.length === 1 && una.total >= 2 && una.facetas.total >= una.total && Array.isArray(una.facetas.tiendas) && una.limitado === false,
+  `buscar_catalogo devuelve página, total y facetas en una llamada (${JSON.stringify({ total: una.total, facetas: una.facetas.total })})`);
+await db.exec(`reset role`);
 
 // La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.
 const idxDestacados = await uno(`select indexdef from pg_indexes where indexname = 'producto_destacados_idx'`);
