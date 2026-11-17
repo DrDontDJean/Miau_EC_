@@ -96,25 +96,26 @@ for (const ruta of ['/', '/tiendas', '/privacidad']) for (const e of await visit
 // 3) Cinco búsquedas y las cinco categorías, con sus enlaces de orden, filtros y páginas (un nivel).
 const raices = [...BUSQUEDAS.map(q => `/buscar?q=${encodeURIComponent(q)}`), ...CATEGORIAS.map(c => `/categoria/${c}`)];
 const deLaRaiz = (e, raiz) => e.startsWith(raiz.split('?')[0] + '?') && (raiz.includes('?') ? e.startsWith(raiz) : true);
+// Un listado (búsqueda o categoría) con orden, filtro o página: su lista de enlaces de catálogo crece con cada
+// combinación de filtros, así que de un listado de segundo nivel solo se siguen las fichas y las páginas fijas.
+const esListado = (e) => e.startsWith('/buscar?') || e.startsWith('/categoria/');
 for (const ruta of raices) {
   for (const e of await visitar(ruta, 'búsquedas y categorías')) {
-    if (deLaRaiz(e, ruta)) for (const e2 of await visitar(e, ruta)) pendientes.push([e2, e]);
-    else pendientes.push([e, ruta]);
+    if (deLaRaiz(e, ruta)) {
+      for (const e2 of await visitar(e, ruta)) if (!esListado(e2)) pendientes.push([e2, e]);
+    } else pendientes.push([e, ruta]);
   }
 }
 
-// 4) Lo pendiente: fichas de producto (hasta FICHAS) y cualquier otra ruta interna no visitada, sin abrir búsquedas nuevas.
+// 4) Lo pendiente: fichas de producto (hasta FICHAS) y cualquier otra ruta interna no visitada. Los listados que
+// quedan (pestañas, "quizás buscaba", "ver solo") se comprueban sin recorrer sus enlaces.
 let fichas = 0;
 while (pendientes.length) {
   const [ruta, desde] = pendientes.shift();
   if (visitadas.has(ruta)) continue;
   if (ruta.startsWith('/p/')) { if (fichas >= FICHAS) continue; fichas++; }
-  else if ((ruta.startsWith('/buscar?') || ruta.startsWith('/categoria/')) && !raices.some(r => ruta === r || deLaRaiz(ruta, r))) {
-    // Búsquedas que enlazan otras páginas (pestañas, "quizás buscaba"): se comprueba que respondan, sin recorrerlas.
-    await visitar(ruta, desde);
-    continue;
-  }
-  for (const e of await visitar(ruta, desde)) if (!visitadas.has(e)) pendientes.push([e, ruta]);
+  else if (esListado(ruta)) { await visitar(ruta, desde); continue; }
+  for (const e of await visitar(ruta, desde)) if (!visitadas.has(e) && !esListado(e)) pendientes.push([e, ruta]);
 }
 
 const salidas = [...visitadas.values()].filter(v => v === 'no se sigue').length;
