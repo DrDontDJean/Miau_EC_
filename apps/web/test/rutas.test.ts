@@ -137,3 +137,33 @@ describe('paginación de la búsqueda', () => {
     expect(await catalogo.facetas('laptop')).toEqual({ total: 30, disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: 12 }] });
   });
 });
+
+describe('fallos de la base', () => {
+  const caida = { data: null, error: { message: 'canceling statement due to statement timeout' } };
+
+  it('GET /api/buscar responde 503 con JSON y un mensaje sin datos técnicos', async () => {
+    const { cliente } = clienteFalso({ buscar_productos: caida });
+    const GET = crearBuscarGET(crearCatalogo(cliente).buscar);
+    const r = await GET(new Request('http://localhost/api/buscar?q=laptop'));
+    expect(r.status).toBe(503);
+    expect(r.headers.get('cache-control')).toBe('no-store');
+    const cuerpo = await r.json();
+    expect(cuerpo).toEqual({ error: 'No pudimos completar la búsqueda.' });
+  });
+
+  it('el mensaje del error no nombra funciones ni tablas; el detalle va en cause', async () => {
+    const { cliente } = clienteFalso({ buscar_productos: caida, facetas_busqueda: caida, registrar_salida: caida });
+    const catalogo = crearCatalogo(cliente);
+    for (const intento of [() => catalogo.buscar('laptop'), () => catalogo.facetas('laptop'), () => catalogo.registrarSalida(1, null, 'x', false)]) {
+      const e = await intento().then(() => null, (x: unknown) => x as Error);
+      expect(e).toBeInstanceOf(Error);
+      expect(e!.message).not.toMatch(/buscar_productos|facetas_busqueda|registrar_salida|statement|timeout/);
+      expect(String((e!.cause as Error).message)).toContain('statement timeout');
+    }
+  });
+
+  it('una respuesta vacía de facetas es un fallo, no "sin resultados"', async () => {
+    const { cliente } = clienteFalso({ facetas_busqueda: { data: null, error: null } });
+    await expect(crearCatalogo(cliente).facetas('cafeteraa')).rejects.toThrow();
+  });
+});

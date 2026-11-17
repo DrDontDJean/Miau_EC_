@@ -59,6 +59,11 @@ export const leerPagina = (v: string | null | undefined): number => {
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
 
+/** Error que puede ver cualquiera: el detalle técnico (función, texto de Postgres) va en cause, nunca en message. */
+export function errorDeBase(mensaje: string, detalle: string): Error {
+  return new Error(mensaje, { cause: new Error(detalle) });
+}
+
 export function aProducto(f: FilaProducto): Producto {
   return {
     id: f.id,
@@ -90,7 +95,7 @@ export function crearCatalogo(cliente: ClienteSupabase) {
         p_solo_disponibles: opciones.soloDisponibles === true, p_solo_varias: opciones.soloVarias === true,
         p_tienda: opciones.tienda || null,
       });
-      if (error) throw new Error(`buscar_productos: ${error.message}`);
+      if (error) throw errorDeBase('La búsqueda no respondió.', `buscar_productos: ${error.message}`);
       const filas = (data as FilaProducto[] | null) ?? [];
       return { productos: filas.map(aProducto), total: Number(filas[0]?.total ?? 0), pagina, porPagina: POR_PAGINA };
     },
@@ -98,8 +103,10 @@ export function crearCatalogo(cliente: ClienteSupabase) {
     /** Cuántos productos tiene la búsqueda en total, disponibles, en varias tiendas y por tienda (sin filtros). */
     async facetas(q: string): Promise<Facetas> {
       const { data, error } = await cliente.rpc('facetas_busqueda', { p_q: q });
-      if (error) throw new Error(`facetas_busqueda: ${error.message}`);
-      const f = (data ?? {}) as Partial<Facetas>;
+      if (error) throw errorDeBase('La búsqueda no respondió.', `facetas_busqueda: ${error.message}`);
+      // Sin datos y sin error no es "sin resultados": es una respuesta rota, y así se trata.
+      if (data === null || typeof data !== 'object') throw errorDeBase('La búsqueda no respondió.', 'facetas_busqueda: respuesta vacía');
+      const f = data as Partial<Facetas>;
       return {
         total: Number(f.total ?? 0), disponibles: Number(f.disponibles ?? 0), varias: Number(f.varias ?? 0),
         tiendas: (f.tiendas ?? []).map(t => ({ id: t.id, nombre: t.nombre, n: Number(t.n) })),
@@ -111,7 +118,7 @@ export function crearCatalogo(cliente: ClienteSupabase) {
       const { data, error } = await cliente.rpc('registrar_salida', {
         p_oferta_id: ofertaId, p_posicion: posicion, p_sesion: sesion, p_es_prueba: esPrueba,
       });
-      if (error) throw new Error(`registrar_salida: ${error.message}`);
+      if (error) throw errorDeBase('No se pudo abrir la tienda.', `registrar_salida: ${error.message}`);
       return typeof data === 'string' ? data : null;
     },
   };
