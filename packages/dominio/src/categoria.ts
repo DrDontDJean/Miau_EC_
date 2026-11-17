@@ -21,15 +21,15 @@ export function normalizarTitulo(titulo: string): string {
     .trim();
 }
 
-/** Palabra principal → categoría. */
-const NUCLEOS: Record<string, SlugCategoria> = {
+/** Palabra principal → categoría. Es un Map: un objeto común heredaría "constructor" o "toString" como si fueran palabras. */
+const NUCLEOS = new Map<string, SlugCategoria>(Object.entries({
   laptop: 'laptops', laptops: 'laptops', notebook: 'laptops', macbook: 'laptops', chromebook: 'laptops', ultrabook: 'laptops',
   televisor: 'televisores', televisores: 'televisores', television: 'televisores', tv: 'televisores', smarttv: 'televisores',
   celular: 'celulares', celulares: 'celulares', smartphone: 'celulares', iphone: 'celulares',
   refrigerador: 'refrigeradoras', refrigeradora: 'refrigeradoras', refrigeradoras: 'refrigeradoras', refrigeradores: 'refrigeradoras',
   minibar: 'refrigeradoras', frigobar: 'refrigeradoras', nevera: 'refrigeradoras',
   lavadora: 'lavadoras', lavadoras: 'lavadoras', lavasecadora: 'lavadoras',
-};
+} satisfies Record<string, SlugCategoria>));
 
 /** Sustantivos que, si van antes de la palabra principal, dicen que el producto es otra cosa. */
 const OTRA_COSA = new Set([
@@ -81,7 +81,7 @@ export function categoriaDe({ titulo, categoriaTienda }: { titulo: string; categ
   for (let i = 0; i < Math.min(3, palabras.length); i++) {
     const w = palabras[i]!;
     if (OTRA_COSA.has(w)) break; // antes de la palabra principal apareció otra cosa: no es de la categoría
-    const c = NUCLEOS[w];
+    const c = NUCLEOS.get(w);
     if (c) {
       if (w === 'tv' && /^tv (box|stick)/.test(palabras.slice(i).join(' '))) return null;
       if (w === 'nevera' && /\b(portatil|coleman|cooler|playa)\b/.test(n)) return null;

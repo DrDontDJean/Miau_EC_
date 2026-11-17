@@ -15,10 +15,18 @@ export async function clasificarPendientes(ejecutar: Ejecutar, { lote = 5000, ma
     const filas = await ejecutar(
       'select id::text as id, titulo from public.producto where atributos is null order by id limit $1', [lote]) as { id: string; titulo: string }[];
     if (!filas.length) break;
+    // Un título que rompa las reglas deja ese producto sin categoría ({}), sin detener la clasificación del resto.
+    let fallidos = 0;
     const cambios = filas.map(f => {
-      const categoria = categoriaDe({ titulo: f.titulo });
-      return { id: f.id, categoria, atributos: categoria ? atributosDe(categoria, f.titulo) : {} };
+      try {
+        const categoria = categoriaDe({ titulo: f.titulo });
+        return { id: f.id, categoria, atributos: categoria ? atributosDe(categoria, f.titulo) : {} };
+      } catch {
+        fallidos++;
+        return { id: f.id, categoria: null, atributos: {} };
+      }
     });
+    if (fallidos) console.error(`Clasificación: ${fallidos} producto(s) no se pudieron clasificar y quedan sin categoría`);
     // Como texto JSON: un arreglo de JavaScript, postgres.js lo enviaría como arreglo de Postgres.
     const [fila] = await ejecutar('select ingesta.aplicar_clasificacion($1::text::jsonb) as n', [JSON.stringify(cambios)]);
     r.revisados += filas.length;

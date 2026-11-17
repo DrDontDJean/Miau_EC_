@@ -82,6 +82,12 @@ describe('categoriaDe: casos', () => {
     expect(categoriaDe({ titulo })).toBeNull();
   });
 
+  it('las palabras que coinciden con propiedades de JavaScript no son categorías ("constructor", "toString")', () => {
+    for (const titulo of ['Constructor de bloques magnéticos 64 piezas', 'toString hasOwnProperty valueOf', '__proto__ prototype']) {
+      expect(categoriaDe({ titulo })).toBeNull();
+    }
+  });
+
   it('la categoría que publica la tienda decide cuando el título no alcanza', () => {
     expect(categoriaDe({ titulo: 'Redmi 13 128GB Negro', categoriaTienda: 'Tecnología/Celulares' })).toBe('celulares');
     expect(categoriaDe({ titulo: 'Mochila P-Laptop 14plg', categoriaTienda: 'Computación/Laptops' })).toBeNull();
