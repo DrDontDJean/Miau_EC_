@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useId, useRef, useState } from 'react';
 import type { Sugerencia } from '@/lib/catalogo';
-import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
+import { RAPIDAS } from '@/lib/rapidas';
 
 const dolares = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' });
 
@@ -102,7 +102,7 @@ function FormularioConSugerencias({ q }: { q: string }) {
           >
             <span className="min-w-0 flex-1 truncate">{s.texto}</span>
             <span className="shrink-0 text-sm text-[#5f6070]">
-              {s.tipo === 'marca' ? 'Marca' : s.desde !== undefined ? `desde ${dolares.format(s.desde)}` : 'Producto'}
+              {s.tipo === 'categoria' ? 'Categoría' : s.tipo === 'marca' ? 'Marca' : s.desde !== undefined ? `desde ${dolares.format(s.desde)}` : 'Producto'}
             </span>
           </li>
         ))}
@@ -112,17 +112,17 @@ function FormularioConSugerencias({ q }: { q: string }) {
   );
 }
 
-/** Pestañas de búsquedas rápidas. `activa` es la búsqueda en curso; sin ella ninguna queda marcada. */
+/** Pestañas de las categorías. `activa` es la ruta de la categoría en curso; sin ella ninguna queda marcada. */
 export function ListaPestanas({ activa = '' }: { activa?: string }) {
   return (
-    <nav aria-label="Búsquedas rápidas" className="border-t border-white/15">
+    <nav aria-label="Categorías" className="border-t border-white/15">
       <ul className="sin-barra mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 sm:justify-center sm:px-4">
         {RAPIDAS.map(r => {
-          const actual = r.q === activa;
+          const actual = r.href === activa;
           return (
             <li key={r.q} className="shrink-0">
               <Link
-                href={rutaBusqueda(r.q)} aria-current={actual ? 'page' : undefined}
+                href={r.href} aria-current={actual ? 'page' : undefined}
                 className={`flex h-11 items-center border-b-[3px] px-3 text-sm font-semibold tracking-[0.08em] uppercase transition-colors ${actual ? 'border-en-cabecera text-en-cabecera' : 'border-transparent text-en-cabecera-suave hover:border-white/40 hover:text-en-cabecera'}`}
               >
                 {r.etiqueta}
@@ -135,17 +135,15 @@ export function ListaPestanas({ activa = '' }: { activa?: string }) {
   );
 }
 
-/** Marca la pestaña que coincide con la búsqueda de la URL. Va dentro de <Suspense>. */
+/** Marca la pestaña de la categoría en curso. */
 function PestanasActivas() {
-  const enBuscar = usePathname() === '/buscar';
-  const q = (useSearchParams().get('q') ?? '').trim().toLowerCase();
-  return <ListaPestanas activa={enBuscar ? q : ''} />;
+  return <ListaPestanas activa={usePathname()} />;
 }
 
-/** Pestañas de la cabecera. En la portada y en /buscar no van: allí las categorías están en el banner. */
+/** Pestañas de la cabecera. En la portada, en /buscar y en las categorías no van: allí las categorías están en el banner. */
 export function Pestanas() {
   const ruta = usePathname();
-  if (ruta === '/' || ruta === '/buscar') return null;
+  if (ruta === '/' || ruta === '/buscar' || ruta.startsWith('/categoria/')) return null;
   return (
     <Suspense fallback={<ListaPestanas />}>
       <PestanasActivas />

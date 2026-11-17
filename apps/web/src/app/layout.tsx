@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { Buscador, FormularioBusqueda, Pestanas } from '@/components/buscador';
 import { tiendasActivas } from '@/lib/datos';
 import { diaCorto, horaCorta } from '@/lib/fechas';
-import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
+import { RAPIDAS } from '@/lib/rapidas';
 import './globals.css';
 
 const fuente = Hanken_Grotesk({ variable: '--fuente', subsets: ['latin'] });
@@ -79,7 +79,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
               <h2 className="font-semibold">Categorías</h2>
               <ul className="mt-2 text-sm">
                 {RAPIDAS.map(r => (
-                  <li key={r.q}><Link href={rutaBusqueda(r.q)} className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">{r.etiqueta}</Link></li>
+                  <li key={r.q}><Link href={r.href} className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">{r.etiqueta}</Link></li>
                 ))}
               </ul>
             </nav>

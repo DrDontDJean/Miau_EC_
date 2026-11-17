@@ -39,7 +39,12 @@ type FilaProducto = {
   id: string; titulo: string; marca: string | null; imagen_url: string | null;
   precio_desde: number | string | null; num_tiendas: number; ofertas: FilaOferta[] | null;
 };
-type FilaFacetas = { total?: number | string; disponibles?: number | string; varias?: number | string; tiendas?: { id: string; nombre: string; n: number | string }[] };
+type FilaFacetas = {
+  total?: number | string; disponibles?: number | string; varias?: number | string; tiendas?: { id: string; nombre: string; n: number | string }[];
+  precio?: { min: number | string | null; max: number | string | null } | null;
+  categorias?: { slug: string; nombre: string; n: number | string }[];
+  atributos?: Record<string, { valor: string; n: number | string }[]>;
+};
 /** Lo que devuelve public.buscar_catalogo: la página, el total con filtros y las facetas, en una sola llamada. */
 type RespuestaBusqueda = { total: number | string; limitado: boolean; productos: FilaProducto[] | null; facetas: FilaFacetas | null };
 
@@ -50,13 +55,28 @@ export const TOPE_RESULTADOS = 2000;
 /** Última página que se puede pedir: 84 de 24. */
 export const MAX_PAGINA = Math.ceil(TOPE_RESULTADOS / POR_PAGINA);
 
-export type OpcionesBusqueda = { pagina?: number; soloDisponibles?: boolean; soloVarias?: boolean; tienda?: string };
-export type Facetas = { total: number; disponibles: number; varias: number; tiendas: { id: string; nombre: string; n: number }[] };
+export type OpcionesBusqueda = {
+  pagina?: number; soloDisponibles?: boolean; soloVarias?: boolean; tienda?: string;
+  /** Slug de la categoría (migración 2500). */
+  categoria?: string;
+  /** Filtros por atributo de la categoría: {"ram": ["16", "32"]}. */
+  filtros?: Record<string, string[]>;
+  precioMin?: number | null; precioMax?: number | null;
+};
+export type Facetas = {
+  total: number; disponibles: number; varias: number; tiendas: { id: string; nombre: string; n: number }[];
+  /** Rango de precios de los resultados (sin filtros). */
+  precio: { min: number; max: number } | null;
+  /** Sin categoría elegida: cuántos resultados hay de cada categoría. */
+  categorias: { slug: string; nombre: string; n: number }[];
+  /** Con categoría: cuántos productos tiene cada valor de cada atributo, con los demás filtros aplicados. */
+  atributos: Record<string, { valor: string; n: number }[]>;
+};
 /** limitado: la búsqueda tiene más de TOPE_RESULTADOS coincidencias y solo se muestran las mejores. */
 export type ResultadoBusqueda = { productos: Producto[]; total: number; limitado: boolean; facetas: Facetas; pagina: number; porPagina: number };
 /** Sugerencia del buscador: una marca (lleva a su búsqueda) o un producto (lleva a su ficha). */
-export type Sugerencia = { tipo: 'marca' | 'producto'; texto: string; href: string; desde?: number };
-type FilaSugerencia = { tipo: string; texto: string; id?: string; precio_desde?: number | string | null };
+export type Sugerencia = { tipo: 'categoria' | 'marca' | 'producto'; texto: string; href: string; desde?: number };
+type FilaSugerencia = { tipo: string; texto: string; id?: string; slug?: string; precio_desde?: number | string | null };
 
 /** Número de página válido: entero entre 1 y MAX_PAGINA; cualquier otra cosa es la primera. */
 export const leerPagina = (v: string | null | undefined): number => {
@@ -101,6 +121,9 @@ export function crearCatalogo(cliente: ClienteSupabase) {
         p_q: q, p_orden: orden, p_pagina: pagina, p_por_pagina: POR_PAGINA,
         p_solo_disponibles: opciones.soloDisponibles === true, p_solo_varias: opciones.soloVarias === true,
         p_tienda: opciones.tienda || null,
+        p_categoria: opciones.categoria || null,
+        p_filtros: opciones.filtros && Object.keys(opciones.filtros).length ? opciones.filtros : null,
+        p_precio_min: opciones.precioMin ?? null, p_precio_max: opciones.precioMax ?? null,
       });
       if (error) throw errorDeBase('La búsqueda no respondió.', `buscar_catalogo: ${error.message}`);
       // Sin datos y sin error no es "sin resultados": es una respuesta rota, y así se trata.
@@ -114,6 +137,9 @@ export function crearCatalogo(cliente: ClienteSupabase) {
         facetas: {
           total: Number(f.total ?? 0), disponibles: Number(f.disponibles ?? 0), varias: Number(f.varias ?? 0),
           tiendas: (f.tiendas ?? []).map(t => ({ id: t.id, nombre: t.nombre, n: Number(t.n) })),
+          precio: f.precio && f.precio.min !== null && f.precio.max !== null ? { min: Number(f.precio.min), max: Number(f.precio.max) } : null,
+          categorias: (f.categorias ?? []).map(x => ({ slug: x.slug, nombre: x.nombre, n: Number(x.n) })),
+          atributos: Object.fromEntries(Object.entries(f.atributos ?? {}).map(([k, vs]) => [k, vs.map(x => ({ valor: x.valor, n: Number(x.n) }))])),
         },
         pagina, porPagina: POR_PAGINA,
       };
@@ -124,6 +150,7 @@ export function crearCatalogo(cliente: ClienteSupabase) {
       const { data, error } = await cliente.rpc('sugerir_busqueda', { p_q: q });
       if (error) throw errorDeBase('No se pudieron cargar sugerencias.', `sugerir_busqueda: ${error.message}`);
       return ((data as FilaSugerencia[] | null) ?? []).flatMap((s): Sugerencia[] => {
+        if (s.tipo === 'categoria' && s.slug && /^[a-z0-9-]+$/.test(s.slug)) return [{ tipo: 'categoria', texto: s.texto, href: `/categoria/${s.slug}` }];
         if (s.tipo === 'marca') return [{ tipo: 'marca', texto: s.texto, href: `/buscar?q=${encodeURIComponent(s.texto)}` }];
         if (s.tipo === 'producto' && s.id) {
           const desde = s.precio_desde == null ? undefined : Number(s.precio_desde);

@@ -46,6 +46,7 @@ The system cannot find the path specified.
 ✔ migración 20261106002200_titulos_todas_las_entidades.sql
 ✔ migración 20261106002300_busqueda_estable.sql
 ✔ migración 20261106002400_sugerencias_busqueda.sql
+✔ migración 20261106002500_categorias_y_filtros.sql
 ✔ seed.sql
 ✔ seed recargado sin duplicar: 24 activas, 1 sin permiso y 3 pausadas ({"activa":24,"pausada":3,"sin_permiso":1})
 ✔ 12 tiendas sitemap con patrón de producto válido (inválidos: ninguno)
@@ -107,6 +108,15 @@ The system cannot find the path specified.
 ✔ sugerencias de "celular": celulares con su id, sin celulosa ni células, 8 como máximo (G01,G04)
 ✔ sin sugerencias para algo que no existe ni para una sola letra
 ✔ "quizás buscaba": refrigeradora para una errata, nada para xyzqwe (refrigeradora)
+✔ clasificación de la ingesta: 34 productos, 14 con categoría, ninguno pendiente
+✔ recorrer la categoría laptops sin texto: laptops sí, mochila y memoria RAM no (G08,Asus,HP,Dell)
+✔ filtros por atributo: procesador Intel (Asus,Dell), Intel y 16 GB (Dell)
+✔ conteos por atributo: el filtro propio no se aplica a sí mismo, los demás sí (procesador {"intel":3,"amd":1}, ram {"8":1,"16":1,"no-indicado":1})
+✔ el valor "no-indicado" elige los productos sin ese dato
+✔ filtro de precio hasta 450 y rango de precios en las facetas ({"max":1500,"min":107})
+✔ sin categoría elegida, las facetas cuentan por categoría ([{"n":4,"slug":"laptops","nombre":"Laptops"}])
+✔ sin texto ni categoría válida no trae nada
+✔ sugerencias con categoría: "lap" → Laptops, "tv" → televisores
 ✔ índice parcial de productos destacados: btree (num_tiendas DESC, precio_desde) WHERE (num_tiendas > 1)
 ✔ paginar: 12 + 12 + 6 productos, el total es 30 en cada fila y una página fuera de rango viene vacía (12,12,6,0)
 ✔ las páginas por precio no repiten ni pierden productos: 20 con precio de menor a mayor a través de las páginas y los 10 agotados al final
@@ -120,7 +130,7 @@ The system cannot find the path specified.
 ✔ revisar_operacion: 0 antes, 1 y luego 0 avisos (una tienda con dos corridas malas seguidas, una vez)
 ✔ base pequeña: sin aviso base_grande
 ✔ competitividad_tienda: [{"tienda_id":"comandato","productos_compartidos":2,"veces_mas_barata":2,"pct_mas_barata":"100.0"},{"tienda_id":"novicompu","productos_compartidos":2,"veces_mas_barata":0,"pct_mas_barata":"0.0"}]
-✔ precio_semanal: [{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"comandato","ofertas":3,"precio_mediano":"45.13"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"ekustore","ofertas":3,"precio_mediano":"15.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"newstore","ofertas":30,"precio_mediano":"24.50"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"novicompu","ofertas":2,"precio_mediano":"640.41"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"randall","ofertas":25,"precio_mediano":"110.00"}]
+✔ precio_semanal: [{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"comandato","ofertas":1,"precio_mediano":"12.50"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"comandato","ofertas":1,"precio_mediano":"45.13"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"comandato","ofertas":1,"precio_mediano":"650.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"ekustore","ofertas":2,"precio_mediano":"10.50"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"ekustore","ofertas":1,"precio_mediano":"500.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"newstore","ofertas":30,"precio_mediano":"24.50"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"novicompu","ofertas":1,"precio_mediano":"591.82"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"novicompu","ofertas":1,"precio_mediano":"689.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"randall","ofertas":17,"precio_mediano":"112.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"randall","ofertas":4,"precio_mediano":"450.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"randall","ofertas":2,"precio_mediano":"104.50"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"randall","ofertas":2,"precio_mediano":"155.00"},{"semana":"2026-11-16T00:00:00.000Z","tienda_id":"randall","ofertas":3,"precio_mediano":"103.00"}]
 ✔ salida_diaria: [{"fecha":"2026-11-17T00:00:00.000Z","tienda_id":"novicompu","salidas":1}]
 
 Resumen de calidad por corrida:
@@ -142,5 +152,6 @@ Resumen de calidad por corrida:
 │ 12      │ 14         │ 'randall'   │ 'ok'       │ 3      │ 3       │ 0             │ 0            │ '{}'                     │
 │ 13      │ 15         │ 'randall'   │ 'ok'       │ 3      │ 3       │ 0             │ 0            │ '{}'                     │
 │ 14      │ 16         │ 'randall'   │ 'ok'       │ 19     │ 19      │ 0             │ 3            │ '{}'                     │
-│ 15      │ 17         │ 'newstore'  │ 'ok'       │ 30     │ 30      │ 0             │ 0            │ '{}'                     │
+│ 15      │ 17         │ 'randall'   │ 'parcial'  │ 3      │ 3       │ 0             │ 0            │ '{"caida_de_volumen":1}' │
+│ 16      │ 18         │ 'newstore'  │ 'ok'       │ 30     │ 30      │ 0             │ 0            │ '{}'                     │
 └─────────┴────────────┴─────────────┴────────────┴────────┴─────────┴───────────────┴──────────────┴──────────────────────────┘

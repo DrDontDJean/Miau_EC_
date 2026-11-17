@@ -87,6 +87,7 @@ describe('GET /api/buscar', () => {
     expect(llamadas).toEqual([{ fn: 'buscar_catalogo', args: {
       p_q: 'televisor samsung', p_orden: 'precio_asc', p_pagina: 1, p_por_pagina: 24,
       p_solo_disponibles: false, p_solo_varias: false, p_tienda: null,
+      p_categoria: null, p_filtros: null, p_precio_min: null, p_precio_max: null,
     } }]);
     const cuerpo = await r.json();
     expect(cuerpo).toMatchObject({ consulta: 'televisor samsung', pagina: 1, porPagina: 24, total: 1, limitado: false });
@@ -131,6 +132,7 @@ describe('paginación de la búsqueda', () => {
     expect(llamadas[0]!.args).toEqual({
       p_q: 'laptop', p_orden: 'precio_desc', p_pagina: 2, p_por_pagina: 24,
       p_solo_disponibles: true, p_solo_varias: true, p_tienda: 'kywi',
+      p_categoria: null, p_filtros: null, p_precio_min: null, p_precio_max: null,
     });
   });
 
@@ -141,7 +143,7 @@ describe('paginación de la búsqueda', () => {
     expect(llamadas).toHaveLength(1);
     expect(r.total).toBe(0);
     expect(r.limitado).toBe(true);
-    expect(r.facetas).toEqual({ total: 30, disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: 12 }] });
+    expect(r.facetas).toEqual({ total: 30, disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: 12 }], precio: null, categorias: [], atributos: {} });
   });
 });
 
@@ -175,8 +177,21 @@ describe('fallos de la base', () => {
   });
 });
 
+describe('categoría, filtros y precio', () => {
+  it('viajan a la base y vuelven las facetas de la categoría', async () => {
+    const facetas = { total: 3, disponibles: 3, varias: 0, tiendas: [], precio: { min: '199.9', max: '899' },
+      categorias: [], atributos: { ram: [{ valor: '16', n: '2' }, { valor: 'no-indicado', n: 1 }] } };
+    const { cliente, llamadas } = clienteFalso({ buscar_catalogo: { data: { ...respuesta([], 3), facetas }, error: null } });
+    const r = await crearCatalogo(cliente).buscar('', 'relevancia', { categoria: 'laptops', filtros: { ram: ['16'] }, precioMax: 900 });
+    expect(llamadas[0]!.args).toMatchObject({ p_q: '', p_categoria: 'laptops', p_filtros: { ram: ['16'] }, p_precio_min: null, p_precio_max: 900 });
+    expect(r.facetas.precio).toEqual({ min: 199.9, max: 899 });
+    expect(r.facetas.atributos).toEqual({ ram: [{ valor: '16', n: 2 }, { valor: 'no-indicado', n: 1 }] });
+  });
+});
+
 describe('GET /api/sugerencias', () => {
   const filas = [
+    { tipo: 'categoria', texto: 'Celulares', slug: 'celulares' },
     { tipo: 'marca', texto: 'Samsung' },
     { tipo: 'producto', texto: 'Celular Samsung Galaxy A15', id: '6f1c2a54-0000-4000-8000-000000000009', precio_desde: '199.9' },
   ];
@@ -189,13 +204,14 @@ describe('GET /api/sugerencias', () => {
     expect(llamadas).toEqual([]);
   });
 
-  it('cada sugerencia lleva adónde ir: la marca a su búsqueda, el producto a su ficha', async () => {
+  it('cada sugerencia lleva adónde ir: la categoría a su página, la marca a su búsqueda, el producto a su ficha', async () => {
     const { cliente, llamadas } = clienteFalso({ sugerir_busqueda: { data: filas, error: null } });
     const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=sams'));
     expect(r.status).toBe(200);
     expect(r.headers.get('cache-control')).toMatch(/max-age/);
     expect(llamadas).toEqual([{ fn: 'sugerir_busqueda', args: { p_q: 'sams' } }]);
     expect((await r.json()).sugerencias).toEqual([
+      { tipo: 'categoria', texto: 'Celulares', href: '/categoria/celulares' },
       { tipo: 'marca', texto: 'Samsung', href: '/buscar?q=Samsung' },
       { tipo: 'producto', texto: 'Celular Samsung Galaxy A15', href: '/p/6f1c2a54-0000-4000-8000-000000000009', desde: 199.9 },
     ]);

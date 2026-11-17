@@ -5,7 +5,7 @@
 //   node scripts/revisar-rutas.mjs https://miau-ec.vercel.app --espera 1000
 // Para una vista previa protegida de Vercel, la variable VERCEL_BYPASS con el secreto de bypass.
 //
-// Recorre: portada, tiendas, privacidad, las categorías y 5 búsquedas con sus enlaces de orden, filtro y página, y hasta
+// Recorre: portada, tiendas, privacidad, las 5 categorías y 5 búsquedas con sus enlaces de orden, filtro y página, y hasta
 // N fichas de producto (50 por defecto) con lo que enlazan. Además comprueba tres respuestas esperadas (400 y 404).
 // Falla ante: cualquier 5xx; un enlace interno que lleva a "no encontrado" (404, o la página de no encontrado servida
 // en streaming con 200); un enlace a /ir/ que no sea /ir/<número>[?pos=<número>]. Nunca sigue /ir/: registraría
@@ -18,6 +18,7 @@ const BASE = (args[0] ?? '').replace(/\/$/, '');
 if (!/^https?:\/\//.test(BASE)) { console.error('Uso: node scripts/revisar-rutas.mjs <url base> [--fichas 50] [--espera 300]'); process.exit(2); }
 
 const BUSQUEDAS = ['laptop', 'televisor', 'celular', 'refrigeradora', 'lavadora'];
+const CATEGORIAS = ['laptops', 'televisores', 'celulares', 'refrigeradoras', 'lavadoras'];
 const cabeceras = { 'user-agent': 'DecideAqui-revisor-de-rutas', ...(process.env.VERCEL_BYPASS ? { 'x-vercel-protection-bypass': process.env.VERCEL_BYPASS } : {}) };
 const espera = (ms) => new Promise(r => setTimeout(r, ms));
 const errores = [];
@@ -73,7 +74,7 @@ async function visitar(ruta, desde) {
 }
 
 // 1) Respuestas esperadas que no son 200.
-for (const [ruta, esperado] of [['/api/buscar?q=a', 400], ['/p/no-es-uuid', 404], ['/no-existe', 404]]) {
+for (const [ruta, esperado] of [['/api/buscar?q=a', 400], ['/p/no-es-uuid', 404], ['/no-existe', 404], ['/categoria/no-existe', 404]]) {
   const r = await pedir(ruta);
   const ok = r.estado === esperado || (esperado === 404 && r.noEncontrada);
   visitadas.set(ruta, r.estado);
@@ -92,11 +93,12 @@ for (const [ruta, esperado] of [['/api/buscar?q=a', 400], ['/p/no-es-uuid', 404]
 const pendientes = [];
 for (const ruta of ['/', '/tiendas', '/privacidad']) for (const e of await visitar(ruta, 'inicio')) pendientes.push([e, ruta]);
 
-// 3) Cinco búsquedas, con sus enlaces de orden, filtros y páginas (un nivel).
-for (const q of BUSQUEDAS) {
-  const ruta = `/buscar?q=${encodeURIComponent(q)}`;
-  for (const e of await visitar(ruta, 'búsquedas')) {
-    if (e.startsWith('/buscar?')) for (const e2 of await visitar(e, ruta)) pendientes.push([e2, e]);
+// 3) Cinco búsquedas y las cinco categorías, con sus enlaces de orden, filtros y páginas (un nivel).
+const raices = [...BUSQUEDAS.map(q => `/buscar?q=${encodeURIComponent(q)}`), ...CATEGORIAS.map(c => `/categoria/${c}`)];
+const deLaRaiz = (e, raiz) => e.startsWith(raiz.split('?')[0] + '?') && (raiz.includes('?') ? e.startsWith(raiz) : true);
+for (const ruta of raices) {
+  for (const e of await visitar(ruta, 'búsquedas y categorías')) {
+    if (deLaRaiz(e, ruta)) for (const e2 of await visitar(e, ruta)) pendientes.push([e2, e]);
     else pendientes.push([e, ruta]);
   }
 }
@@ -107,7 +109,7 @@ while (pendientes.length) {
   const [ruta, desde] = pendientes.shift();
   if (visitadas.has(ruta)) continue;
   if (ruta.startsWith('/p/')) { if (fichas >= FICHAS) continue; fichas++; }
-  else if (ruta.startsWith('/buscar?') && !BUSQUEDAS.some(q => ruta.startsWith(`/buscar?q=${encodeURIComponent(q)}`))) {
+  else if ((ruta.startsWith('/buscar?') || ruta.startsWith('/categoria/')) && !raices.some(r => ruta === r || deLaRaiz(ruta, r))) {
     // Búsquedas que enlazan otras páginas (pestañas, "quizás buscaba"): se comprueba que respondan, sin recorrerlas.
     await visitar(ruta, desde);
     continue;
