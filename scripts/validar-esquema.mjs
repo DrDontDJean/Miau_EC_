@@ -5,6 +5,7 @@ import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { clasificarPendientes } from '../packages/ingesta/src/clasificar.ts';
 
 const RAIZ = process.argv[2] ?? fileURLToPath(new URL("..", import.meta.url));
 const db = new PGlite({ extensions: { pg_trgm } });
@@ -172,6 +173,9 @@ await prohibido(`insert into public.tienda (id, nombre, origen, plataforma) valu
 await prohibido(`update public.oferta set precio = 1`, 'anon no puede cambiar precios');
 await prohibido(`select public.recalcular_productos(array[]::uuid[])`, 'anon no puede llamar funciones internas (recalcular_productos)');
 await prohibido(`select ingesta.cargar_lote(1, '[]'::jsonb)`, 'anon no puede cargar lotes de ingesta');
+const definers = await q(`select proname, prosecdef from pg_proc where proname in ('buscar_catalogo', 'buscar_productos', 'facetas_busqueda', 'candidatos_busqueda') order by 1`);
+ok(definers.length === 4 && definers.every(f => f.prosecdef),
+  'las funciones de búsqueda son security definer: con RLS, los índices de texto y de trigramas no se podrían usar');
 await db.exec(`reset role`);
 
 // Accesorios: "televisor 55" no encabeza con soportes y cables aunque cuesten menos, pero quien busca "soporte
@@ -213,6 +217,128 @@ ok(JSON.stringify(limpios) === JSON.stringify([`Literal &quot; sin doble decodif
   `títulos de producto sin entidades HTML, sin decodificar dos veces (${JSON.stringify(limpios)})`);
 ok(enOfertas[0] === `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion` && enOfertas[1] === 'Monitor Plano 24" ya limpio Edicion' && enOfertas[2] === 'Literal &quot; sin doble decodificacion Edicion',
   'los títulos de oferta también quedan limpios');
+
+// Migración 2200: todas las entidades, nombradas y numéricas, en una sola pasada (sin decodificar dos veces), y la marca.
+const cent = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cent, JSON.stringify([
+  oferta('N1', 'Celular Oppo &nbsp; Reno 11 5G Ent2200', 300, { dominio: 'randall-tech.com' }),
+  oferta('N2', 'Televisor 55&#8243; Ba&ntilde;o &#xF1;and&#xFA; Ent2200', 200, { dominio: 'randall-tech.com' }),
+  oferta('N3', 'Literal &amp;nbsp; y &noexiste; y &#0; Ent2200', 100, { dominio: 'randall-tech.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cent]);
+await q(`update public.producto set marca = 'Marca &amp; Co' where titulo like 'Celular Oppo%Ent2200'`);
+await db.exec(readFileSync(join(dir, readdirSync(dir).find(f => f.includes('titulos_todas_las_entidades'))), 'utf8'));
+const ent = (await q(`select titulo, marca from public.producto where titulo like '%Ent2200' order by titulo`));
+const entOf = (await q(`select titulo from public.oferta where sku_tienda in ('N1','N2','N3') order by sku_tienda`)).map(r => r.titulo);
+const esperados = ['Celular Oppo Reno 11 5G Ent2200', 'Literal &nbsp; y &noexiste; y &#0; Ent2200', 'Televisor 55″ Baño ñandú Ent2200'];
+ok(JSON.stringify(ent.map(r => r.titulo)) === JSON.stringify(esperados) && ent[0].marca === 'Marca & Co',
+  `migración 2200: títulos y marca de producto sin entidades, sin doble decodificación (${JSON.stringify(ent)})`);
+ok(JSON.stringify(entOf) === JSON.stringify([esperados[0], esperados[2], esperados[1]]), `migración 2200: títulos de oferta limpios (${JSON.stringify(entOf)})`);
+
+// Búsqueda en una sola consulta (migración 2300): pruebas doradas de relevancia con los casos reales del diagnóstico.
+const GOLD = {
+  G01: 'Celular Samsung Galaxy A15 128GB Oro', G02: 'Esponja de celulosa para cocina Oro', G03: 'Tratamiento Capilar Células Madre Oro',
+  G04: 'Celulares Xiaomi Redmi 13 Oro', G05: 'Refrigerador Mabe 300 litros Oro', G06: 'Refrigeradora LG Inverter 420 L Oro',
+  G07: 'Protector De Voltaje P/Tv Y Refrigerador Oro', G08: 'Laptop HP 15 Intel Core i5 Oro', G09: 'Mochila P-Laptop Clasica 14plg Oro',
+  G10: 'Control de Televisor Samsung universal Oro', G11: 'Televisor LG 55 pulgadas 4K Oro', G12: 'Carcasa Samsung Galaxy A34 Oro',
+  G13: 'Desodorante para zapatos 100 ml Oro', G14: 'Zapatos deportivos Nike Revolution Oro', G15: 'Cafetera Imaco 12 tazas Oro',
+  G16: 'Parlante Portátil JBL Go 4 Oro', G17: 'Teléfono inalámbrico Panasonic KX Oro', G18: 'Nevera portátil Coleman 30 L Oro', G19: 'Memoria RAM DDR4 8GB Kingston Laptop Oro',
+};
+const cgold = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cgold, JSON.stringify(
+  Object.entries(GOLD).map(([sku, t], i) => oferta(sku, t, 100 + i, { dominio: 'randall-tech.com' })))]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cgold]);
+const codigoDe = Object.fromEntries(Object.entries(GOLD).map(([k, t]) => [t, k]));
+await db.exec(`set role anon`);
+const busca = async (texto, extra = '') => (await uno(`select public.buscar_catalogo($1 ${extra}) r`, [texto])).r;
+const orosDe = (r) => r.productos.map(p => codigoDe[p.titulo]).filter(Boolean);
+const g = {};
+for (const t of ['celular', 'celulares', 'refrigeradora', 'nevera', 'laptop', 'televisor', 'samsung galaxy', 'zapatos', 'cafeteraa', 'xyzqwe', 'tv 55', 'mochila laptop', 'portatil'])
+  g[t] = orosDe(await busca(t));
+const antes = (l, a, b) => l.includes(a) && l.includes(b) && l.indexOf(a) < l.indexOf(b);
+ok(g.celular.includes('G01') && g.celular.includes('G04') && !g.celular.includes('G02') && !g.celular.includes('G03'),
+  `"celular" encuentra celulares y no celulosa ni células (${g.celular})`);
+ok(JSON.stringify([...g.celulares].sort()) === JSON.stringify([...g.celular].sort()), `"celulares" da lo mismo que "celular" (${g.celulares})`);
+ok(g.refrigeradora[0] !== 'G07' && antes(g.refrigeradora, 'G05', 'G07') && antes(g.refrigeradora, 'G06', 'G07'),
+  `"refrigeradora": refrigeradores primero, el protector de voltaje después (${g.refrigeradora})`);
+ok(g.nevera.includes('G05') && g.nevera.includes('G06'), `"nevera" encuentra refrigeradoras (${g.nevera})`);
+ok(!g.laptop.includes('G16') && !g.celular.includes('G17') && !g.refrigeradora.includes('G18'),
+  `sinónimos de un solo sentido: "laptop" no trae parlantes portátiles, "celular" no trae teléfonos fijos, "refrigeradora" no trae neveras de playa (${g.laptop} | ${g.celular} | ${g.refrigeradora})`);
+ok(g.portatil.includes('G08'), `"portátil" sí encuentra laptops (${g.portatil})`);
+ok(antes(g.laptop, 'G08', 'G09') && antes(g.laptop, 'G08', 'G19'), `"laptop": la laptop antes que la mochila y que la memoria RAM (${g.laptop})`);
+ok(antes(g.televisor, 'G11', 'G10'), `"televisor": el televisor antes que el control (${g.televisor})`);
+ok(antes(g['samsung galaxy'], 'G01', 'G12'), `"samsung galaxy": el celular antes que la carcasa (${g['samsung galaxy']})`);
+ok(antes(g.zapatos, 'G14', 'G13'), `"zapatos": los zapatos antes que el desodorante (${g.zapatos})`);
+ok(g.cafeteraa.includes('G15'), `"cafeteraa" (mal escrita) encuentra la cafetera (${g.cafeteraa})`);
+ok(g['tv 55'].includes('G11'), `"tv 55" encuentra el televisor de 55 (${g['tv 55']})`);
+ok(g['mochila laptop'][0] === 'G09', `"mochila laptop": quien pide el accesorio lo ve primero (${g['mochila laptop']})`);
+const nada = await busca('xyzqwe');
+ok(nada.total === 0 && nada.productos.length === 0 && nada.facetas.total === 0, 'una búsqueda que no existe no trae nada');
+const una = await busca('celular', `, 'relevancia', 1, 1`);
+ok(una.productos.length === 1 && una.total >= 2 && una.facetas.total >= una.total && Array.isArray(una.facetas.tiendas) && una.limitado === false,
+  `buscar_catalogo devuelve página, total y facetas en una llamada (${JSON.stringify({ total: una.total, facetas: una.facetas.total })})`);
+// Sugerencias (migración 2400): marcas por prefijo y productos con los mismos términos de la búsqueda.
+await db.exec(`reset role`);
+await q(`update public.producto set marca = 'Samsung' where titulo in ('Celular Samsung Galaxy A15 128GB Oro', 'Carcasa Samsung Galaxy A34 Oro')`);
+await db.exec(`set role anon`);
+const sug = async (t) => (await uno(`select public.sugerir_busqueda($1) s`, [t])).s;
+const sSams = await sug('sams'), sCel = await sug('celular'), sNada = await sug('xyzq'), sUna = await sug('a');
+ok(sSams.some(x => x.tipo === 'marca' && x.texto === 'Samsung'), `sugerencias de "sams": la marca Samsung (${JSON.stringify(sSams.map(x => x.texto))})`);
+const tCel = sCel.filter(x => x.tipo === 'producto').map(x => codigoDe[x.texto]).filter(Boolean);
+ok(tCel.includes('G01') && !tCel.includes('G02') && !tCel.includes('G03') && sCel.length <= 8 && sCel.every(x => x.tipo !== 'producto' || x.id),
+  `sugerencias de "celular": celulares con su id, sin celulosa ni células, 8 como máximo (${tCel})`);
+ok(sNada.length === 0 && sUna.length === 0, 'sin sugerencias para algo que no existe ni para una sola letra');
+const quizas = async (t) => (await uno(`select public.quizas_buscaba($1) s`, [t])).s;
+const qRefri = await quizas('refrijeradoraz'), qNada = await quizas('xyzqwe');
+ok(qRefri.includes('refrigeradora') && qRefri.length <= 3 && qNada.length === 0, `"quizás buscaba": refrigeradora para una errata, nada para xyzqwe (${qRefri})`);
+
+// Categorías y filtros (migración 2500), con la clasificación de la ingesta (dominio: categoriaDe y atributosDe).
+await db.exec(`reset role`);
+const cfil = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cfil, JSON.stringify([
+  oferta('L1', 'Laptop HP Ryzen 5 16GB 512GB 15.6" Filtro', 500, { dominio: 'randall-tech.com' }),
+  oferta('L2', 'Laptop Asus Intel Core i5 8GB 256GB 14" Filtro', 400, { dominio: 'randall-tech.com' }),
+  oferta('L3', 'Laptop Dell Intel Core i7 16GB 1TB RTX 4060 16" Filtro', 1500, { dominio: 'randall-tech.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cfil]);
+const ejecutarPg = async (sql, params = []) => (await db.query(sql, params)).rows;
+const clas = await clasificarPendientes(ejecutarPg);
+const sinClasificar = (await uno(`select count(*)::int n from public.producto where atributos is null`)).n;
+ok(clas.revisados > 0 && clas.conCategoria >= 8 && sinClasificar === 0,
+  `clasificación de la ingesta: ${clas.revisados} productos, ${clas.conCategoria} con categoría, ninguno pendiente`);
+await db.exec(`set role anon`);
+const cat = async (texto, extra) => (await uno(`select public.buscar_catalogo($1, ${extra}) r`, [texto])).r;
+const filtroDe = (r) => r.productos.map(p => p.titulo).filter(t => t.endsWith('Filtro')).map(t => t.split(' ')[1]);
+const navega = await cat('', `p_categoria => 'laptops'`);
+const tNav = navega.productos.map(p => codigoDe[p.titulo] ?? p.titulo.split(' ')[1]);
+ok(navega.total >= 4 && tNav.includes('G08') && !tNav.includes('G09') && !tNav.includes('G19'),
+  `recorrer la categoría laptops sin texto: laptops sí, mochila y memoria RAM no (${tNav})`);
+const intel = await cat('', `p_categoria => 'laptops', p_filtros => '{"procesador": ["intel"]}'`);
+const intel16 = await cat('', `p_categoria => 'laptops', p_filtros => '{"procesador": ["intel"], "ram": ["16"]}'`);
+ok(JSON.stringify(filtroDe(intel).sort()) === '["Asus","Dell"]' && JSON.stringify(filtroDe(intel16)) === '["Dell"]',
+  `filtros por atributo: procesador Intel (${filtroDe(intel)}), Intel y 16 GB (${filtroDe(intel16)})`);
+const procesadores = Object.fromEntries((intel.facetas.atributos.procesador ?? []).map(x => [x.valor, x.n]));
+const rams = Object.fromEntries((intel.facetas.atributos.ram ?? []).map(x => [x.valor, x.n]));
+ok(procesadores.amd >= 1 && procesadores.intel >= 3 && rams['16'] === 1 && rams['8'] === 1 && !('amd' in rams),
+  `conteos por atributo: el filtro propio no se aplica a sí mismo, los demás sí (procesador ${JSON.stringify(procesadores)}, ram ${JSON.stringify(rams)})`);
+const noIndicado = await cat('', `p_categoria => 'laptops', p_filtros => '{"ram": ["no-indicado"]}'`);
+ok(noIndicado.productos.some(p => codigoDe[p.titulo] === 'G08') && filtroDe(noIndicado).length === 0,
+  'el valor "no-indicado" elige los productos sin ese dato');
+const baratas = await cat('', `p_categoria => 'laptops', p_precio_max => 450`);
+ok(baratas.productos.every(p => Number(p.precio_desde) <= 450) && filtroDe(baratas).includes('Asus') && !filtroDe(baratas).includes('Dell')
+  && Number(navega.facetas.precio.min) <= 400 && Number(navega.facetas.precio.max) >= 1500,
+  `filtro de precio hasta 450 y rango de precios en las facetas (${JSON.stringify(navega.facetas.precio)})`);
+const conTexto = await cat('laptop', `p_categoria => null`);
+const catLaptop = conTexto.facetas.categorias.find(c => c.slug === 'laptops');
+ok(catLaptop && catLaptop.n >= 4 && conTexto.facetas.categorias[0].slug === 'laptops',
+  `sin categoría elegida, las facetas cuentan por categoría (${JSON.stringify(conTexto.facetas.categorias)})`);
+const desconocida = await cat('', `p_categoria => 'no-existe'`);
+ok(desconocida.total === 0 && (await cat('', `p_categoria => null`)).total === 0, 'sin texto ni categoría válida no trae nada');
+const sLap = await sug('lap'), sTv = await sug('tv');
+ok(sLap[0]?.tipo === 'categoria' && sLap[0]?.slug === 'laptops' && sTv.some(x => x.slug === 'televisores') && sLap.length <= 8,
+  `sugerencias con categoría: "lap" → ${sLap[0]?.texto}, "tv" → televisores`);
+await db.exec(`reset role`);
+await db.exec(`reset role`);
 
 // La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.
 const idxDestacados = await uno(`select indexdef from pg_indexes where indexname = 'producto_destacados_idx'`);

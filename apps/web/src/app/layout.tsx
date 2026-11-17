@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { Buscador, FormularioBusqueda, Pestanas } from '@/components/buscador';
 import { tiendasActivas } from '@/lib/datos';
 import { diaCorto, horaCorta } from '@/lib/fechas';
-import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
+import { RAPIDAS } from '@/lib/rapidas';
 import './globals.css';
 
 const fuente = Hanken_Grotesk({ variable: '--fuente', subsets: ['latin'] });
@@ -17,7 +17,9 @@ export const metadata: Metadata = {
 
 /** Franja de hechos verificables (sin envíos ni reseñas: solo lo que DecideAquí puede comprobar). */
 async function FranjaHechos({ claseFondo }: { claseFondo: string }) {
-  const tiendas = await tiendasActivas();
+  // Está en el layout: si la base no responde, la franja usa su texto genérico en vez de tumbar todas las páginas
+  // (error.tsx no cubre el layout que lo contiene).
+  const tiendas = await tiendasActivas().catch((e: unknown) => { console.error('franja de hechos', e); return []; });
   const ultima = tiendas.map(t => t.ultima_corrida_ok).filter((f): f is string => f !== null).sort().at(-1);
   const hechos = [
     { texto: ultima ? `Precios actualizados el ${diaCorto(ultima)}, ${horaCorta(ultima)}` : 'Precios actualizados cada día', d: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0' },
@@ -70,14 +72,15 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
               </p>
               <p className="mt-3 max-w-[52ch] text-sm leading-relaxed">
-                Compare precios de tiendas online de Ecuador.              </p>
+                Compare precios de tiendas online de Ecuador.
+              </p>
               <p className="mt-2 max-w-[52ch] text-sm leading-relaxed">Ninguna tienda paga por aparecer primero.</p>
             </div>
             <nav aria-label="Categorías">
               <h2 className="font-semibold">Categorías</h2>
               <ul className="mt-2 text-sm">
                 {RAPIDAS.map(r => (
-                  <li key={r.q}><Link href={rutaBusqueda(r.q)} className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">{r.etiqueta}</Link></li>
+                  <li key={r.q}><Link href={r.href} className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">{r.etiqueta}</Link></li>
                 ))}
               </ul>
             </nav>
@@ -88,6 +91,18 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 <li><Link href="/privacidad" className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">Privacidad</Link></li>
               </ul>
             </nav>
+          </div>
+          {/* Créditos del equipo. El grupo va sin enlace: no hay una URL confirmada. */}
+          <div className="border-t border-white/15">
+            <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <p>Desarrollado por <strong className="font-semibold">Ariel Andi</strong> y <strong className="font-semibold">Jean Cardoso</strong></p>
+              <p className="flex items-center gap-2">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white p-1">
+                  <img src="/bidata.png" alt="" width={24} height={24} className="size-6" />
+                </span>
+                <span>Grupo de investigación <strong className="font-semibold">BiData</strong></span>
+              </p>
+            </div>
           </div>
         </footer>
       </body>

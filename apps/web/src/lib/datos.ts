@@ -1,21 +1,28 @@
 // Lecturas con caché (Cache Components). Los precios cambian como mucho una vez al día (una corrida),
 // así que unos minutos de caché no esconden nada y ahorran consultas a Supabase.
 import { cacheLife } from 'next/cache';
-import { crearCatalogo, type Facetas, type Orden, type OpcionesBusqueda, type Producto, type ResultadoBusqueda } from './catalogo';
+import { crearCatalogo, errorDeBase, type Sugerencia, type Orden, type OpcionesBusqueda, type Producto, type ResultadoBusqueda } from './catalogo';
 import { clienteSupabase } from './supabase';
 
 // Los argumentos son parte de la clave de la caché: cada página y cada combinación de filtros tiene la suya.
+// Una sola llamada a la base trae la página, el total y los conteos del lateral (migración 2300).
 export async function buscarCacheado(q: string, orden: Orden, opciones: OpcionesBusqueda = {}): Promise<ResultadoBusqueda> {
   'use cache';
   cacheLife('minutes');
   return crearCatalogo(clienteSupabase()).buscar(q, orden, opciones);
 }
 
-/** Los conteos del lateral de filtros dependen solo del texto buscado: se calculan una vez para todas las páginas. */
-export async function facetasCacheadas(q: string): Promise<Facetas> {
+export async function sugerenciasCacheadas(q: string): Promise<Sugerencia[]> {
   'use cache';
   cacheLife('minutes');
-  return crearCatalogo(clienteSupabase()).facetas(q);
+  return crearCatalogo(clienteSupabase()).sugerir(q);
+}
+
+/** Solo se pide cuando una búsqueda no tiene resultados. */
+export async function quizasCacheado(q: string): Promise<string[]> {
+  'use cache';
+  cacheLife('minutes');
+  return crearCatalogo(clienteSupabase()).quizasBuscaba(q);
 }
 
 export type Tienda = { id: string; nombre: string; origen: string; plataforma: string; ultima_corrida_ok: string | null };
@@ -25,7 +32,7 @@ export async function tiendasActivas(): Promise<Tienda[]> {
   cacheLife('minutes');
   const { data, error } = await clienteSupabase()
     .from('tienda').select('id, nombre, origen, plataforma, ultima_corrida_ok').order('nombre');
-  if (error) throw new Error(`tiendas: ${error.message}`);
+  if (error) throw errorDeBase('No se pudo leer la lista de tiendas.', `tiendas: ${error.message}`);
   return data ?? [];
 }
 
@@ -38,7 +45,7 @@ export async function productosDestacados(limite = 8): Promise<ProductoResumen[]
   const { data, error } = await clienteSupabase()
     .from('producto').select('id, titulo, marca, imagen_url, precio_desde, num_tiendas')
     .gt('num_tiendas', 1).order('num_tiendas', { ascending: false }).order('precio_desde').limit(limite);
-  if (error) throw new Error(`destacados: ${error.message}`);
+  if (error) throw errorDeBase('No se pudieron leer los productos destacados.', `destacados: ${error.message}`);
   return (data ?? []).map(p => ({ ...p, precio_desde: p.precio_desde === null ? null : Number(p.precio_desde) }));
 }
 
@@ -54,7 +61,7 @@ export async function fichaProducto(id: string): Promise<FichaProducto | null> {
     .from('producto')
     .select('id, titulo, marca, imagen_url, precio_desde, num_tiendas, oferta(id, titulo, precio, precio_lista, disponible, visto_ultima_vez, tienda(id, nombre))')
     .eq('id', id).maybeSingle();
-  if (error) throw new Error(`producto: ${error.message}`);
+  if (error) throw errorDeBase('No se pudo leer el producto.', `producto: ${error.message}`);
   if (!p) return null;
   type FilaOferta = { id: number; titulo: string; precio: number; precio_lista: number | null; disponible: boolean; visto_ultima_vez: string; tienda: { id: string; nombre: string } | null };
   const ofertas = ((p.oferta ?? []) as unknown as FilaOferta[])
@@ -72,6 +79,6 @@ export async function fichaProducto(id: string): Promise<FichaProducto | null> {
   const { data: h, error: eh } = await db
     .from('precio_historial').select('oferta_id, valido_desde, valido_hasta, precio')
     .in('oferta_id', producto.ofertas.map(o => o.id)).order('valido_desde');
-  if (eh) throw new Error(`historial: ${eh.message}`);
+  if (eh) throw errorDeBase('No se pudo leer el historial de precios.', `historial: ${eh.message}`);
   return { producto, historial: (h ?? []).map(x => ({ ...x, precio: Number(x.precio) })), generadaEn: Date.now() };
 }

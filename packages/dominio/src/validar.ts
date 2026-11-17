@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { decodificarEntidades } from './texto.ts';
 import { claveDeProducto } from './clave-producto.ts';
 
 export type Tienda = { id: string; nombre: string; origen: string };
@@ -47,6 +48,8 @@ export type Validacion =
   | { tipo: 'agotada'; sku_tienda: string };
 
 const limpiar = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
+/** Título y marca: además, sin entidades HTML (todas las fuentes pasan por aquí). */
+const texto = (s: string | null | undefined) => limpiar(decodificarEntidades(s ?? ''));
 
 function perteneceATienda(url: string, origen: string): boolean {
   try {
@@ -58,7 +61,7 @@ function perteneceATienda(url: string, origen: string): boolean {
 }
 
 export function validar(c: OfertaCruda, tienda: Tienda): Validacion {
-  const titulo = limpiar(c.titulo);
+  const titulo = texto(c.titulo);
   const sku = limpiar(c.sku_tienda);
   const reglas: ReglaBloqueante[] = [];
   if (typeof c.precio !== 'number' || !(c.precio > 0 && c.precio < 100000)) reglas.push('precio_invalido');
@@ -102,7 +105,7 @@ export function validar(c: OfertaCruda, tienda: Tienda): Validacion {
     disponible: c.disponible !== false,
     ean,
     modelo,
-    marca: limpiar(c.marca) || null,
+    marca: texto(c.marca) || null,
   };
   const huella = createHash('sha256').update(JSON.stringify(sinHuella)).digest('hex');
   return { tipo: 'valida', oferta: { ...sinHuella, huella }, advertencias };

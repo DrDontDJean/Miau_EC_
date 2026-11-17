@@ -4,7 +4,7 @@
 //   LIMITE_PAGINAS   cortar tras N páginas por tienda y cerrar como 'parcial' (pruebas)
 import postgres from 'postgres';
 import {
-  almacenPostgres, crearHttp, ejecutarCorrida, fuenteCon, origenDeRobots, type ResumenCorrida, type TiendaIngesta,
+  almacenPostgres, clasificarPendientes, crearHttp, ejecutarCorrida, fuenteCon, origenDeRobots, type ResumenCorrida, type TiendaIngesta,
 } from './index.ts';
 
 const url = process.env.DATABASE_URL;
@@ -16,7 +16,8 @@ const tiendaFiltro = process.env.TIENDA?.trim() || null;
 const limitePaginas = process.env.LIMITE_PAGINAS ? Number(process.env.LIMITE_PAGINAS) : undefined;
 
 const sql = postgres(url, { ssl: 'require', max: 6, prepare: false, onnotice: () => {} });
-const almacen = almacenPostgres((q, p = []) => sql.unsafe(q, p as never[]) as unknown as Promise<Record<string, unknown>[]>);
+const ejecutar = (q: string, p: unknown[] = []) => sql.unsafe(q, p as never[]) as unknown as Promise<Record<string, unknown>[]>;
+const almacen = almacenPostgres(ejecutar);
 
 try {
   const tiendas = (await sql.unsafe(
@@ -65,6 +66,13 @@ try {
     return r;
   }));
 
+  // Categoría y atributos de los productos nuevos (la primera vez, de todo el catálogo). Un fallo aquí no tumba la corrida.
+  try {
+    const c = await clasificarPendientes(ejecutar);
+    console.log(`Clasificación: ${c.revisados} productos revisados · ${c.conCategoria} con categoría · ${c.actualizados} actualizados`);
+  } catch (e) {
+    console.error('Clasificación:', e instanceof Error ? e.message : e);
+  }
   console.log(`Terminado en ${Math.round((Date.now() - inicio) / 1000)} s.`);
   process.exitCode = resultados.some(r => r.estado === 'fallida') ? 1 : 0;
 } catch (e) {
