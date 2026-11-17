@@ -214,6 +214,23 @@ ok(JSON.stringify(limpios) === JSON.stringify([`Literal &quot; sin doble decodif
 ok(enOfertas[0] === `Monitor Curvo 27" Tom & Jerry 'Pro' Edicion` && enOfertas[1] === 'Monitor Plano 24" ya limpio Edicion' && enOfertas[2] === 'Literal &quot; sin doble decodificacion Edicion',
   'los títulos de oferta también quedan limpios');
 
+// Migración 2200: todas las entidades, nombradas y numéricas, en una sola pasada (sin decodificar dos veces), y la marca.
+const cent = (await uno(`select ingesta.abrir_corrida('randall') id`)).id;
+await q(`select ingesta.cargar_lote($1, $2)`, [cent, JSON.stringify([
+  oferta('N1', 'Celular Oppo &nbsp; Reno 11 5G Ent2200', 300, { dominio: 'randall-tech.com' }),
+  oferta('N2', 'Televisor 55&#8243; Ba&ntilde;o &#xF1;and&#xFA; Ent2200', 200, { dominio: 'randall-tech.com' }),
+  oferta('N3', 'Literal &amp;nbsp; y &noexiste; y &#0; Ent2200', 100, { dominio: 'randall-tech.com' }),
+])]);
+await q(`select ingesta.cerrar_corrida($1, 'ok')`, [cent]);
+await q(`update public.producto set marca = 'Marca &amp; Co' where titulo like 'Celular Oppo%Ent2200'`);
+await db.exec(readFileSync(join(dir, readdirSync(dir).find(f => f.includes('titulos_todas_las_entidades'))), 'utf8'));
+const ent = (await q(`select titulo, marca from public.producto where titulo like '%Ent2200' order by titulo`));
+const entOf = (await q(`select titulo from public.oferta where sku_tienda in ('N1','N2','N3') order by sku_tienda`)).map(r => r.titulo);
+const esperados = ['Celular Oppo Reno 11 5G Ent2200', 'Literal &nbsp; y &noexiste; y &#0; Ent2200', 'Televisor 55″ Baño ñandú Ent2200'];
+ok(JSON.stringify(ent.map(r => r.titulo)) === JSON.stringify(esperados) && ent[0].marca === 'Marca & Co',
+  `migración 2200: títulos y marca de producto sin entidades, sin doble decodificación (${JSON.stringify(ent)})`);
+ok(JSON.stringify(entOf) === JSON.stringify([esperados[0], esperados[2], esperados[1]]), `migración 2200: títulos de oferta limpios (${JSON.stringify(entOf)})`);
+
 // La portada pide los productos de más tiendas: sin este índice recorre toda la tabla y el rol anon corta a los 3 s.
 const idxDestacados = await uno(`select indexdef from pg_indexes where indexname = 'producto_destacados_idx'`);
 ok(idxDestacados && /\(num_tiendas DESC, precio_desde\)/.test(idxDestacados.indexdef) && /num_tiendas > 1/.test(idxDestacados.indexdef),

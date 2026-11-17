@@ -1,7 +1,7 @@
 // Fuente WooCommerce: Store API pública (/wp-json/wc/store/v1/products).
 // Los precios vienen como texto en la unidad menor de la moneda (centavos).
 import { z } from 'zod';
-import type { OfertaCruda } from '@comparador/dominio';
+import { decodificarEntidades, type OfertaCruda } from '@comparador/dominio';
 import type { Http } from '../http.ts';
 import type { Fuente, TiendaIngesta } from '../tipos.ts';
 
@@ -23,11 +23,7 @@ const Producto = z.object({
   brands: z.array(z.object({ name: z.string() })).nullish(),
 });
 
-const ENTIDADES: Record<string, string> = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' ' };
-export const decodificarHtml = (s: string) => s
-  .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
-  .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
-  .replace(/&([a-z]+);/gi, (m, n: string) => ENTIDADES[n.toLowerCase()] ?? m);
+export const decodificarHtml = decodificarEntidades;
 
 function aOferta(p: z.infer<typeof Producto>): OfertaCruda {
   const div = 10 ** p.prices.currency_minor_unit;

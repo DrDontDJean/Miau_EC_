@@ -103,3 +103,13 @@ describe('validar', () => {
     expect(r.tipo === 'cuarentena' && r.reglas.sort()).toEqual(['moneda_no_usd', 'precio_invalido', 'titulo_vacio']);
   });
 });
+
+describe('validar: texto de las tiendas', () => {
+  it('quita las entidades HTML del título y de la marca, de cualquier fuente', () => {
+    const r = validar({ ...tv, titulo: 'Celular Oppo&nbsp; Reno 11 5G 256&#8243;', marca: 'Marca &amp; Co' }, comandato);
+    expect(r.tipo).toBe('valida');
+    if (r.tipo !== 'valida') return;
+    expect(r.oferta.titulo).toBe('Celular Oppo Reno 11 5G 256″');
+    expect(r.oferta.marca).toBe('Marca & Co');
+  });
+});
