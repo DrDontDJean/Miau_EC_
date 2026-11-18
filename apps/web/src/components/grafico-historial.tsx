@@ -42,7 +42,7 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
   const max = Math.max(...precios) * (plano ? 1.1 : 1.03);
   const marcas = plano ? [precios[0]!] : [min, (min + max) / 2, max];
   const etiqueta = (p: number) => precio(max < 20 ? p : Math.round(p));
-  // Lienzo estrecho: se lee sin desplazarse en un teléfono. Las etiquetas viven en la leyenda, no en el SVG.
+  // Lienzo de 480 × 230 que se encoge con la tarjeta. Los nombres de tienda van en la leyenda (a la derecha desde 1024 px), no dentro del SVG.
   const [an, al, izq, der, abajo] = [480, 230, 82, 14, 30];
   const x = (ms: number) => izq + ((ms - inicio) / (ahora - inicio || 1)) * (an - izq - der);
   const y = (p: number) => 10 + (1 - (p - min) / (max - min || 1)) * (al - abajo - 10);
