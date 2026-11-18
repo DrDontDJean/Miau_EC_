@@ -59,7 +59,7 @@ function PestanasActivas() {
 /** Pestañas de la cabecera. En la portada y en /buscar no van: allí las categorías están en el banner. */
 export function Pestanas() {
   const ruta = usePathname();
-  if (ruta === '/' || ruta === '/buscar') return null;
+  if (ruta === '/' || ruta === '/buscar' || ruta.startsWith('/admin')) return null;
   return (
     <Suspense fallback={<ListaPestanas />}>
       <PestanasActivas />

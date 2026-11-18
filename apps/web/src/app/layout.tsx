@@ -53,10 +53,19 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 <Suspense fallback={<FormularioBusqueda />}><Buscador /></Suspense>
               </div>
             </div>
-            <Link href="/tiendas" className="hidden min-h-11 items-center gap-2 font-semibold hover:underline md:flex">
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l2-5h14l2 5M4 9v11h16V9M3 9h18M9 20v-6h6v6" /></svg>
-              Tiendas
-            </Link>
+            <nav aria-label="Accesos" className="flex items-center gap-x-6">
+              <Link href="/tiendas" className="hidden min-h-11 items-center gap-2 font-semibold hover:underline md:flex">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l2-5h14l2 5M4 9v11h16V9M3 9h18M9 20v-6h6v6" /></svg>
+                Tiendas
+              </Link>
+              <Link href="/admin" className="group flex min-h-11 items-center gap-2.5">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 shrink-0 fill-none stroke-current" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 12a4 4 0 1 0 0-8a4 4 0 0 0 0 8M4 21a8 8 0 0 1 16 0" /></svg>
+                <span className="flex flex-col leading-tight">
+                  <span className="text-xs text-en-cabecera-suave">Administradores</span>
+                  <span className="text-sm font-semibold group-hover:underline">Iniciar sesión</span>
+                </span>
+              </Link>
+            </nav>
           </div>
           <Pestanas />
         </header>
