@@ -3,12 +3,9 @@ import type { Oferta } from '@/lib/catalogo';
 import { diaCorto } from '@/lib/fechas';
 import { precio } from './ofertas';
 
-// El color repite paleta; el trazo es lo que distingue cada tienda.
-const TRAZOS = ['', '8 5', '2 4', '12 4 2 4', '1 5'];
-
 type Cambio = { tienda: string; de: number; a: number; cuando: string };
 
-/** Escalones de precio por tienda (SCD2: cada periodo es un tramo horizontal). */
+/** Escalones de precio por tienda (SCD2: cada periodo es un tramo horizontal), con un área suave bajo cada línea. */
 export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }: { historial: Periodo[]; ofertas: Oferta[]; ahora: number; desde: number | null }) {
   const titulo = <h2 className="text-xl font-bold">Historial de precios</h2>;
   if (!historial.length) {
@@ -53,42 +50,60 @@ export function GraficoHistorial({ historial, ofertas, ahora, desde: precioHoy }
   const series = ofertas.map((o, i) => {
     const tramos = historial.filter(h => h.oferta_id === o.id);
     const d = tramos.map((h, j) => `${j === 0 ? 'M' : 'L'}${x(t(h.valido_desde))},${y(h.precio)} L${x(t(h.valido_hasta))},${y(h.precio)}`).join(' ');
-    return { o, d, ultimo: tramos.at(-1), color: `var(--serie-${(i % 5) + 1})`, trazo: TRAZOS[i % TRAZOS.length]! };
+    return { o, d, ultimo: tramos.at(-1), color: `var(--serie-${(i % 6) + 1})` };
   }).filter(s => s.d && s.ultimo);
 
   return (
     <section className="historial-precios">
       {titulo}
-      <figure className="mt-4">
-        <svg viewBox={`0 0 ${an} ${al}`} className="w-full" role="img" aria-label={`Historial de precios por tienda. ${resumen}`}>
-          {marcas.map(p => (
-            <g key={p}>
-              <line x1={izq} x2={an - der} y1={y(p)} y2={y(p)} stroke="var(--borde)" />
-              <text x={izq - 6} y={y(p) + 4} textAnchor="end" className="eje" fill="var(--suave)">{etiqueta(p)}</text>
-            </g>
-          ))}
-          <text x={izq} y={al - 6} className="eje" fill="var(--suave)">{diaCorto(inicio)}</text>
-          <text x={an - der} y={al - 6} className="eje" fill="var(--suave)" textAnchor="end">hoy</text>
-          {series.map(s => (
-            <path key={s.o.id} d={s.d} fill="none" stroke={s.color} strokeWidth="3.5" strokeLinejoin="round" strokeDasharray={s.trazo} />
-          ))}
-        </svg>
-        <figcaption className="mt-3">
-          <span className="sr-only">Precio de hoy por tienda:</span>
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {series.map(s => (
-              <li key={s.o.id} className="flex items-center gap-2">
-                <svg viewBox="0 0 28 6" aria-hidden="true" className="h-1.5 w-7 shrink-0">
-                  <line x1="0" x2="28" y1="3" y2="3" stroke={s.color} strokeWidth="3" strokeDasharray={s.trazo} />
-                </svg>
-                <span className="font-semibold">{s.o.tienda}</span>
-                <span className="tabular-nums text-suave">{precio(s.o.precio)}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-sm text-suave">Solo se guarda un tramo nuevo cuando el precio o la disponibilidad cambian.</p>
-        </figcaption>
-      </figure>
+      {(() => {
+        const ty = plano ? marcas : [0, 1 / 3, 2 / 3, 1].map(f => min + (max - min) * f);
+        const dias = Math.round((ahora - inicio) / 86_400_000);
+        const tx = dias >= 2 ? [0, 1 / 3, 2 / 3, 1].map(f => inicio + (ahora - inicio) * f) : [inicio, ahora];
+        const base = al - abajo;
+        const atras = [...series].sort((a, b) => b.ultimo!.precio - a.ultimo!.precio);
+        const leyenda = [...series].sort((a, b) => a.ultimo!.precio - b.ultimo!.precio);
+        return (
+          <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_15rem] lg:items-start">
+            <figure>
+              <svg viewBox={`0 0 ${an} ${al}`} className="block w-full" role="img" aria-label={`Historial de precios por tienda. ${resumen}`}>
+                {ty.map(p => (
+                  <g key={p}>
+                    <line x1={izq} x2={an - der} y1={y(p)} y2={y(p)} stroke="var(--borde)" />
+                    <text x={izq - 6} y={y(p) + 4} textAnchor="end" className="eje" fill="var(--suave)">{etiqueta(p)}</text>
+                  </g>
+                ))}
+                <line x1={izq} x2={an - der} y1={base} y2={base} stroke="var(--borde-control)" />
+                {tx.map((ms, i) => (
+                  <text key={ms} x={x(ms)} y={al - 6} className="eje" fill="var(--suave)" textAnchor={i === 0 ? 'start' : i === tx.length - 1 ? 'end' : 'middle'}>
+                    {i === tx.length - 1 ? 'hoy' : diaCorto(ms)}
+                  </text>
+                ))}
+                {atras.map(s => {
+                  const desde = Math.min(...historial.filter(h => h.oferta_id === s.o.id).map(h => t(h.valido_desde)));
+                  return (
+                    <g key={s.o.id}>
+                      <path d={`${s.d} L${x(ahora)},${base} L${x(desde)},${base} Z`} fill={s.color} fillOpacity="0.14" stroke="none" />
+                      <path d={s.d} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" />
+                    </g>
+                  );
+                })}
+              </svg>
+            </figure>
+            <ul className="flex flex-col gap-2.5 lg:pt-2">
+              <li className="sr-only">Precio de hoy por tienda:</li>
+              {leyenda.map(s => (
+                <li key={s.o.id} className="flex items-center gap-2.5">
+                  <span aria-hidden="true" className="size-3 shrink-0 rounded-sm" style={{ background: s.color }} />
+                  <span className="min-w-0 flex-1 truncate font-semibold">{s.o.tienda}</span>
+                  <span className="tabular-nums text-suave">{precio(s.ultimo!.precio)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
+      <p className="mt-4 text-sm text-suave">Solo se guarda un tramo nuevo cuando el precio o la disponibilidad cambian.</p>
       {cambios.length > 0 && <ListaCambios cambios={cambios.slice(0, 6)} />}
     </section>
   );

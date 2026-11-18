@@ -26,8 +26,11 @@ colors:
   resalte: "#e7f6fa"
   foco: "#1f1f33"
   serie-1: "#346a8f"
-  serie-2: "#7a5b4e"
-  serie-3: "#36364f"
+  serie-2: "#0e87a8"
+  serie-3: "#a0735c"
+  serie-4: "#5a5a78"
+  serie-5: "#2f8a7a"
+  serie-6: "#b07a2e"
 typography:
   display:
     fontFamily: "Hanken Grotesk, system-ui, sans-serif"
@@ -266,12 +269,12 @@ Fondo gris neutro, paneles blancos, azul acero para la casa y la acción, cian c
 | `--enlace` | #8ccbe6 | sobre superficie 7.85:1 |
 | `--resalte` | #1f3a4a | texto 9.83:1 |
 | `--foco` | #13a9cf | |
-| `--serie-1/2/3` | #13a9cf / #cfb8aa / #efe8e3 | |
+| `--serie-1` a `--serie-6` | #7fb2d4 / #13a9cf / #cfb8aa / #b9bac6 / #4fb3a0 / #d9a45a | 4,9:1 o más sobre superficie |
 
 La cabecera, el pie, `--cian`, `--en-cian`, `--accion` y `--en-accion` no cambian entre temas. Las imágenes de producto viven siempre en un pozo blanco literal (`bg-white`), porque las fotos de tienda vienen recortadas sobre blanco.
 
 ### Series del historial
-`--serie-1` a `--serie-5` repiten acero, marrón y grafito (en oscuro: cian, arena y crema). Lo que distingue cada tienda es el trazo (continuo, `8 5`, `2 4`, `12 4 2 4`, `1 5`), no el color.
+`--serie-1` a `--serie-6` son seis colores de la paleta: acero #346a8f, cian oscuro #0e87a8, arena oscura #a0735c, grafito claro #5a5a78, verde #2f8a7a y ocre #b07a2e (3,7:1 o más sobre blanco; versión propia en oscuro). Las líneas son siempre continuas. Cada tienda se nombra con su cuadro de color y su precio en la leyenda, así que el color nunca es la única pista.
 
 ### Named Rules
 **The Tinta Profunda Rule.** Todo lo que va sobre cian lleva `--en-cian` (#1F1F33). Nunca blanco, en ningún tema.
@@ -373,9 +376,10 @@ Píldoras `--seccion` en 0.875rem 600: "3 tiendas", "Disponible" / "Agotado".
 Icono SVG de trazo (check o aspa) más texto "Disponible" / "Agotado", 0.875rem 600; disponible en `--texto` y agotado en `--suave`.
 
 ### Historial de precios
-- Tramos escalonados por tienda con trazo de 2.5 px, color `--serie-n` y patrón de rayas propio; rejilla en `--borde` y ejes en `--suave`.
-- Leyenda fuera del SVG: muestra de trazo, nombre de tienda, precio sobre cian y "actualizado …" sobre `--seccion`.
-- Con menos de 7 días no se dibuja: se dice desde cuándo se registra y se listan los cambios. Sin historial: una frase en `--suave`.
+- Gráfico de áreas suaves: tramos escalonados por tienda con línea continua de 2 px y relleno del mismo color al 14 % bajo ella (se dibuja primero la tienda más cara, para que las más baratas queden encima). No se apilan: cada tienda es su propio precio.
+- Rejilla horizontal en `--borde`, línea base en `--borde-control`, ejes en `--suave` y varias marcas de fecha (hasta cuatro) terminadas en "hoy".
+- Leyenda a la derecha desde 1024 px y debajo en pantallas menores: cuadro de color, nombre y precio actual, de la tienda más barata a la más cara.
+- Se dibuja siempre que haya historial, también con un solo día; un precio que no cambió muestra una sola referencia en el eje. Sin historial: una frase en `--suave`. Bajo el gráfico, la nota de que solo se guarda un tramo nuevo cuando cambia el precio o la disponibilidad.
 
 ### Pie
 Fondo acero (igual que la cabecera), texto blanco, logotipo repetido, dos frases breves en registro formal y listas "Categorías" e "Información" (Tiendas, Privacidad); foco en blanco.
@@ -392,7 +396,7 @@ Fondo acero (igual que la cabecera), texto blanco, logotipo repetido, dos frases
 - **Do** dejar un único botón sólido por decisión: el de la mejor oferta.
 - **Do** escribir en registro formal (usted), con frases cortas y sin explicar lo obvio.
 - **Do** decir "actualizado" (nunca "leído" ni "lectura") y "Disponible / Agotado" (nunca "stock"); la fecha va una vez, en el recuadro de precio, y en una fila solo si está atrasada.
-- **Do** expresar disponibilidad, filtro activo y serie del gráfico con icono, marca o trazo además del color.
+- **Do** expresar disponibilidad y filtro activo con icono o marca además del color, y nombrar cada serie del gráfico en la leyenda.
 - **Do** dar 44 px de alto a todo lo que se pulsa y mantener visible el foco de 2 px.
 
 ### Don't:
@@ -402,5 +406,5 @@ Fondo acero (igual que la cabecera), texto blanco, logotipo repetido, dos frases
 - **Don't** repetir el aviso de confirmar el precio: va una sola vez, bajo las ofertas.
 - **Don't** añadir botones, etiquetas sobre la imagen ni sombras a la tarjeta de producto.
 - **Don't** repetir en la página los hechos que ya dice la franja de la cabecera.
-- **Don't** dibujar el historial con menos de 7 días de datos.
+- **Don't** apilar las áreas del historial: sumar precios de tiendas distintas no significa nada.
 - **Don't** introducir una segunda familia tipográfica.

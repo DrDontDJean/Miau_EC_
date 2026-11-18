@@ -28,12 +28,13 @@
   --en-cabecera-suave: #dde7ee;
   /* Fondo de la oferta más barata: cian al 10 % sobre blanco, opaco para no mezclarse con el fondo. */
   --resalte: #e7f6fa;
-  /* Series del historial: solo la paleta fijada; el trazo (continuo, rayas, puntos) distingue lo que el color no. */
+  /* Series del historial: seis colores de la paleta con 3,5:1 o más sobre blanco; el nombre y el precio van siempre en la leyenda. */
   --serie-1: #346a8f;
-  --serie-2: #7a5b4e;
-  --serie-3: #36364f;
-  --serie-4: #346a8f;
-  --serie-5: #7a5b4e;
+  --serie-2: #0e87a8;
+  --serie-3: #a0735c;
+  --serie-4: #5a5a78;
+  --serie-5: #2f8a7a;
+  --serie-6: #b07a2e;
   color-scheme: light;
 }
 
@@ -53,11 +54,12 @@
     --pie: #346a8f;
     --foco: #13a9cf;
     --resalte: #1f3a4a;
-    --serie-1: #13a9cf;
-    --serie-2: #cfb8aa;
-    --serie-3: #efe8e3;
-    --serie-4: #13a9cf;
-    --serie-5: #cfb8aa;
+    --serie-1: #7fb2d4;
+    --serie-2: #13a9cf;
+    --serie-3: #cfb8aa;
+    --serie-4: #b9bac6;
+    --serie-5: #4fb3a0;
+    --serie-6: #d9a45a;
     color-scheme: dark;
   }
 }

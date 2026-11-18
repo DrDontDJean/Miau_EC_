@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-12T04:31:35.270Z",
+  "generatedAt": "2026-11-18T15:57:27.335Z",
   "title": "Design System: DecideAquí",
   "extensions": {
     "colorMeta": {
@@ -374,9 +374,9 @@
       },
       "serie-1": {
         "role": "neutral",
-        "displayName": "Serie 1",
+        "displayName": "Serie 1 (Acero)",
         "canonical": "#346a8f",
-        "dark": "#13a9cf",
+        "dark": "#7fb2d4",
         "tonalRamp": [
           "#001325",
           "#072c43",
@@ -390,34 +390,82 @@
       },
       "serie-2": {
         "role": "neutral",
-        "displayName": "Serie 2",
-        "canonical": "#7a5b4e",
-        "dark": "#cfb8aa",
+        "displayName": "Serie 2 (Cian oscuro)",
+        "canonical": "#0e87a8",
+        "dark": "#13a9cf",
         "tonalRamp": [
-          "#1c0e08",
-          "#37241c",
-          "#543c32",
-          "#795c4f",
-          "#9d7e72",
-          "#c0a499",
-          "#e3cbc1",
-          "#feeae1"
+          "#001625",
+          "#002f43",
+          "#004b64",
+          "#006f8d",
+          "#3493b1",
+          "#6cb7d2",
+          "#9fdcf3",
+          "#c4f8ff"
         ]
       },
       "serie-3": {
         "role": "neutral",
-        "displayName": "Serie 3",
-        "canonical": "#36364f",
-        "dark": "#efe8e3",
+        "displayName": "Serie 3 (Arena oscura)",
+        "canonical": "#a0735c",
+        "dark": "#cfb8aa",
         "tonalRamp": [
-          "#10101d",
-          "#272738",
-          "#404055",
-          "#60607a",
-          "#83839e",
-          "#a8a8c0",
-          "#cecfe4",
-          "#ecedff"
+          "#1f0b03",
+          "#3b2114",
+          "#5a3928",
+          "#815843",
+          "#a57b66",
+          "#c7a18e",
+          "#eac9b9",
+          "#ffe8d9"
+        ]
+      },
+      "serie-4": {
+        "role": "neutral",
+        "displayName": "Serie 4 (Grafito claro)",
+        "canonical": "#5a5a78",
+        "dark": "#b9bac6",
+        "tonalRamp": [
+          "#10101e",
+          "#272739",
+          "#404057",
+          "#60607d",
+          "#8383a1",
+          "#a7a8c3",
+          "#cecfe6",
+          "#ececff"
+        ]
+      },
+      "serie-5": {
+        "role": "neutral",
+        "displayName": "Serie 5 (Verde)",
+        "canonical": "#2f8a7a",
+        "dark": "#4fb3a0",
+        "tonalRamp": [
+          "#001812",
+          "#003229",
+          "#004f43",
+          "#197364",
+          "#479687",
+          "#78baac",
+          "#a8ded2",
+          "#ccfaef"
+        ]
+      },
+      "serie-6": {
+        "role": "neutral",
+        "displayName": "Serie 6 (Ocre)",
+        "canonical": "#b07a2e",
+        "dark": "#d9a45a",
+        "tonalRamp": [
+          "#230a00",
+          "#402000",
+          "#603800",
+          "#885702",
+          "#ad7b38",
+          "#cea26b",
+          "#f0ca9c",
+          "#ffe8c1"
         ]
       }
     },
@@ -644,7 +692,7 @@
       "Do dejar un único botón sólido por decisión.",
       "Do escribir en registro formal (usted), breve y sin explicar lo obvio.",
       "Do decir \"actualizado\" y \"Disponible / Agotado\"; la fecha va una vez, en el recuadro de precio.",
-      "Do expresar estado con icono, marca o trazo además del color.",
+      "Do expresar estado con icono o marca además del color, y nombrar cada serie del gráfico en la leyenda.",
       "Do dar 44 px a todo lo que se pulsa y mantener visible el foco."
     ],
     "donts": [
@@ -654,7 +702,7 @@
       "Don't repetir el aviso de confirmar el precio.",
       "Don't añadir botones, etiquetas sobre la imagen ni sombras a la tarjeta.",
       "Don't repetir en la página los hechos de la franja de la cabecera.",
-      "Don't dibujar el historial con menos de 7 días.",
+      "Don't apilar las áreas del historial: sumar precios de tiendas distintas no significa nada.",
       "Don't introducir una segunda familia tipográfica."
     ]
   }
