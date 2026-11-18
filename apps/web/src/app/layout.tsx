@@ -45,9 +45,14 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <header className="en-cabecera top-0 z-10 bg-cabecera text-en-cabecera sm:sticky">
           <FranjaHechos claseFondo="bg-cabecera-fuerte text-en-cabecera-suave" />
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3">
-            <Link href="/" className="flex h-11 items-center text-2xl font-extrabold tracking-tight whitespace-nowrap">
-              Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="flex h-11 items-center text-2xl font-extrabold tracking-tight whitespace-nowrap">
+                Decide<span className="ml-0.5 rounded-md bg-cian px-1.5 text-en-cian">Aquí</span>
+              </Link>
+              {/* Logo de Bi-DATA en blanco: el gris y el cian originales no se leen sobre el acero. */}
+              <span aria-hidden="true" className="hidden h-7 w-px bg-white/30 md:block" />
+              <img src="/marca/bidata.png" alt="Bi-DATA" width={1280} height={332} className="hidden h-7 w-auto brightness-0 invert md:block" />
+            </div>
             <div className="flex min-w-0 flex-1 basis-64 justify-center">
               <div className="flex w-full max-w-2xl">
                 <Suspense fallback={<FormularioBusqueda />}><Buscador /></Suspense>
@@ -97,6 +102,19 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 <li><Link href="/privacidad" className="flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-8">Privacidad</Link></li>
               </ul>
             </nav>
+          </div>
+          <div className="border-t border-white/20">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-6 text-sm">
+              {/* El logo tiene texto gris y cian: sobre el acero no se lee, por eso va en una placa blanca. */}
+              <span className="rounded-lg bg-white px-3 py-2">
+                <img src="/marca/bidata.png" alt="Bi-DATA, inteligencia de negocios y ciencia de datos" width={1280} height={332} className="h-8 w-auto" />
+              </span>
+              <p className="leading-relaxed">
+                Desarrollado por <strong>Ariel Andi</strong> y <strong>Jean Cardoso</strong>
+                <span aria-hidden="true" className="px-2 text-en-cabecera-suave">·</span>
+                <span className="whitespace-nowrap">Grupo de investigación <strong>BiData</strong></span>
+              </p>
+            </div>
           </div>
         </footer>
       </body>
