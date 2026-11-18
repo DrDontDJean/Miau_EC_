@@ -177,6 +177,12 @@ const definers = await q(`select proname, prosecdef from pg_proc where proname i
 ok(definers.length === 4 && definers.every(f => f.prosecdef),
   'las funciones de búsqueda son security definer: con RLS, los índices de texto y de trigramas no se podrían usar');
 await db.exec(`reset role`); // pg_index de producto solo lo lee su dueño
+const [rp] = await q(`select id, actualizado_en from public.producto where num_tiendas > 0 order by id limit 1`);
+await q(`select pg_sleep(0.01)`);
+await q(`select public.recalcular_productos(array[$1]::uuid[])`, [rp.id]);
+const [rp2] = await q(`select actualizado_en from public.producto where id = $1`, [rp.id]);
+ok(String(rp2.actualizado_en) === String(rp.actualizado_en),
+  'recalcular_productos no reescribe un producto cuyo precio desde y tiendas siguen iguales (la ingesta se cortaba por tiempo)');
 const gin = await q(`select c.relname, c.reloptions from pg_index i join pg_class c on c.oid = i.indexrelid join pg_am a on a.oid = c.relam
                      where i.indrelid = 'public.producto'::regclass and a.amname = 'gin' order by 1`);
 ok(gin.length === 3 && gin.every(g => (g.reloptions ?? []).includes('fastupdate=off')),
