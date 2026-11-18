@@ -9,7 +9,7 @@
 // visitadas hace más tiempo. El precio de una oferta puede tener, por tanto, algunos días.
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
-import type { OfertaCruda } from '@comparador/dominio';
+import { decodificarEntidades, type OfertaCruda } from '@comparador/dominio';
 import type { Http } from '../http.ts';
 import { permitido } from '../robots.ts';
 import type { ContextoFuente, Fuente, TiendaIngesta } from '../tipos.ts';
@@ -28,11 +28,7 @@ const MAX_SIN_DATOS = 0.2;
 
 export type EntradaSitemap = { loc: string; lastmod: string | null };
 
-const ENTIDADES: Record<string, string> = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' ' };
-export const decodificar = (s: string) => s
-  .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
-  .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
-  .replace(/&([a-z]+);/gi, (m, n: string) => ENTIDADES[n.toLowerCase()] ?? m);
+export const decodificar = decodificarEntidades;
 
 const etiqueta = (bloque: string, nombre: string) => {
   const m = new RegExp(`<${nombre}>\\s*(?:<!\\[CDATA\\[)?\\s*([\\s\\S]*?)\\s*(?:\\]\\]>)?\\s*</${nombre}>`, 'i').exec(bloque);

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { productosDestacados, tiendasActivas } from '@/lib/datos';
 import { RejillaProductos } from '@/components/ofertas';
-import { RAPIDAS, rutaBusqueda } from '@/lib/rapidas';
+import { RAPIDAS } from '@/lib/rapidas';
 
 /** "A, B y C". */
 const lista = (nombres: string[]) => new Intl.ListFormat('es', { type: 'conjunction' }).format(nombres);
@@ -20,7 +20,7 @@ export default async function Inicio() {
             <li><span aria-current="page" className="inline-flex min-h-11 items-center rounded-full bg-white px-4 font-semibold text-[#1f1f33]">Todo</span></li>
             {RAPIDAS.map(r => (
               <li key={r.q}>
-                <Link href={rutaBusqueda(r.q)} className="inline-flex min-h-11 items-center rounded-full border border-white/60 px-4 font-semibold transition-colors hover:bg-white/10">{r.etiqueta}</Link>
+                <Link href={r.href} className="inline-flex min-h-11 items-center rounded-full border border-white/60 px-4 font-semibold transition-colors hover:bg-white/10">{r.etiqueta}</Link>
               </li>
             ))}
           </ul>

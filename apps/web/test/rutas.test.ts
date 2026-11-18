@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_PAGINA, crearCatalogo, type ClienteSupabase } from '../src/lib/catalogo';
-import { crearBuscarGET, crearIrGET } from '../src/lib/rutas';
+import { crearBuscarGET, crearIrGET, crearSugerenciasGET } from '../src/lib/rutas';
 
-// Una fila tal como la devuelve public.buscar_productos (migración 0400).
+// Un producto tal como viene dentro de public.buscar_catalogo (migración 2300).
 const filaTv = {
   id: '6f1c2a54-0000-4000-8000-000000000001',
   titulo: 'Televisor 55" 4K UHD Tizen UN55U8000FPCZE Samsung',
@@ -19,6 +19,12 @@ const filaTv = {
       precio_lista: null, disponible: true, visto_ultima_vez: '2026-11-06T13:40:00Z' },
   ],
 };
+
+/** Lo que devuelve public.buscar_catalogo (migración 2300): un jsonb con página, total y facetas. */
+const respuesta = (productos: unknown[], total: number) => ({
+  total, limitado: false, productos,
+  facetas: { total, disponibles: total, varias: 0, tiendas: [] },
+});
 
 function clienteFalso(respuestas: Record<string, { data: unknown; error: { message: string } | null }>) {
   const llamadas: { fn: string; args: Record<string, unknown> }[] = [];
@@ -73,17 +79,18 @@ describe('GET /api/buscar', () => {
   });
 
   it('devuelve los productos con sus ofertas y el enlace /ir de cada una (contrato de k6 y del front)', async () => {
-    const { cliente, llamadas } = clienteFalso({ buscar_productos: { data: [filaTv], error: null } });
+    const { cliente, llamadas } = clienteFalso({ buscar_catalogo: { data: respuesta([filaTv], 1), error: null } });
     const GET = crearBuscarGET(crearCatalogo(cliente).buscar);
     const r = await GET(new Request('http://localhost/api/buscar?q=televisor%20samsung&orden=precio_asc'));
 
     expect(r.status).toBe(200);
-    expect(llamadas).toEqual([{ fn: 'buscar_productos', args: {
-      p_q: 'televisor samsung', p_orden: 'precio_asc', p_limite: 24, p_desde: 0,
+    expect(llamadas).toEqual([{ fn: 'buscar_catalogo', args: {
+      p_q: 'televisor samsung', p_orden: 'precio_asc', p_pagina: 1, p_por_pagina: 24,
       p_solo_disponibles: false, p_solo_varias: false, p_tienda: null,
+      p_categoria: null, p_filtros: null, p_precio_min: null, p_precio_max: null,
     } }]);
     const cuerpo = await r.json();
-    expect(cuerpo).toMatchObject({ consulta: 'televisor samsung', pagina: 1, porPagina: 24, total: 1 });
+    expect(cuerpo).toMatchObject({ consulta: 'televisor samsung', pagina: 1, porPagina: 24, total: 1, limitado: false });
     expect(cuerpo.productos).toHaveLength(1);
     expect(cuerpo.productos[0]).toMatchObject({ id: filaTv.id, desde: 451.33, numTiendas: 2 });
     expect(cuerpo.productos[0].ofertas.map((o: { tienda: string; ir: string }) => [o.tienda, o.ir])).toEqual([
@@ -95,45 +102,131 @@ describe('GET /api/buscar', () => {
 
 describe('paginación de la búsqueda', () => {
   const llamar = async (url: string) => {
-    const { cliente, llamadas } = clienteFalso({ buscar_productos: { data: [{ ...filaTv, total: 100 }], error: null } });
+    const { cliente, llamadas } = clienteFalso({ buscar_catalogo: { data: respuesta([filaTv], 100), error: null } });
     const r = await crearBuscarGET(crearCatalogo(cliente).buscar)(new Request(url));
     return { cuerpo: await r.json(), args: llamadas[0]?.args };
   };
 
-  it('la página 3 pide el desplazamiento 48 y devuelve el total de resultados, no solo los de la página', async () => {
+  it('la página 3 se pide a la base y devuelve el total de resultados, no solo los de la página', async () => {
     const { cuerpo, args } = await llamar('http://localhost/api/buscar?q=laptop&pagina=3');
-    expect(args).toMatchObject({ p_limite: 24, p_desde: 48 });
+    expect(args).toMatchObject({ p_pagina: 3, p_por_pagina: 24 });
     expect(cuerpo).toMatchObject({ pagina: 3, porPagina: 24, total: 100 });
   });
 
   it.each([['0'], ['-2'], ['abc'], ['2.5'], ['']])('una página inválida (%j) es la primera', async valor => {
     const { cuerpo, args } = await llamar(`http://localhost/api/buscar?q=laptop&pagina=${valor}`);
-    expect(args).toMatchObject({ p_desde: 0 });
+    expect(args).toMatchObject({ p_pagina: 1 });
     expect(cuerpo.pagina).toBe(1);
   });
 
-  it('una página enorme se recorta a la última que la base entrega, para no pedir desplazamientos imposibles', async () => {
+  it('una página enorme se recorta a la última que la base puede entregar (1.000 resultados como máximo)', async () => {
     const { cuerpo, args } = await llamar('http://localhost/api/buscar?q=laptop&pagina=999999');
     expect(cuerpo.pagina).toBe(MAX_PAGINA);
-    expect(Number(args!.p_desde)).toBeLessThanOrEqual(10_000);
+    expect(MAX_PAGINA).toBe(Math.ceil(1000 / 24));
+    expect(Number(args!.p_pagina)).toBe(MAX_PAGINA);
   });
 
   it('los filtros viajan a la base: disponibles, varias tiendas y tienda', async () => {
-    const { cliente, llamadas } = clienteFalso({ buscar_productos: { data: [], error: null } });
+    const { cliente, llamadas } = clienteFalso({ buscar_catalogo: { data: respuesta([], 0), error: null } });
     await crearCatalogo(cliente).buscar('laptop', 'precio_desc', { pagina: 2, soloDisponibles: true, soloVarias: true, tienda: 'kywi' });
     expect(llamadas[0]!.args).toEqual({
-      p_q: 'laptop', p_orden: 'precio_desc', p_limite: 24, p_desde: 24,
+      p_q: 'laptop', p_orden: 'precio_desc', p_pagina: 2, p_por_pagina: 24,
       p_solo_disponibles: true, p_solo_varias: true, p_tienda: 'kywi',
+      p_categoria: null, p_filtros: null, p_precio_min: null, p_precio_max: null,
     });
   });
 
-  it('sin resultados el total es 0, y las facetas se leen de facetas_busqueda', async () => {
-    const { cliente } = clienteFalso({
-      buscar_productos: { data: [], error: null },
-      facetas_busqueda: { data: { total: '30', disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: '12' }] }, error: null },
-    });
+  it('una sola llamada trae la página, el total y las facetas del lateral', async () => {
+    const facetas = { total: '30', disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: '12' }] };
+    const { cliente, llamadas } = clienteFalso({ buscar_catalogo: { data: { ...respuesta([], 0), facetas, limitado: true }, error: null } });
+    const r = await crearCatalogo(cliente).buscar('zzzz');
+    expect(llamadas).toHaveLength(1);
+    expect(r.total).toBe(0);
+    expect(r.limitado).toBe(true);
+    expect(r.facetas).toEqual({ total: 30, disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: 12 }], precio: null, categorias: [], atributos: {} });
+  });
+});
+
+describe('fallos de la base', () => {
+  const caida = { data: null, error: { message: 'canceling statement due to statement timeout' } };
+
+  it('GET /api/buscar responde 503 con JSON y un mensaje sin datos técnicos', async () => {
+    const { cliente } = clienteFalso({ buscar_catalogo: caida });
+    const GET = crearBuscarGET(crearCatalogo(cliente).buscar);
+    const r = await GET(new Request('http://localhost/api/buscar?q=laptop'));
+    expect(r.status).toBe(503);
+    expect(r.headers.get('cache-control')).toBe('no-store');
+    const cuerpo = await r.json();
+    expect(cuerpo).toEqual({ error: 'No pudimos completar la búsqueda.' });
+  });
+
+  it('el mensaje del error no nombra funciones ni tablas; el detalle va en cause', async () => {
+    const { cliente } = clienteFalso({ buscar_catalogo: caida, registrar_salida: caida });
     const catalogo = crearCatalogo(cliente);
-    expect((await catalogo.buscar('zzzz')).total).toBe(0);
-    expect(await catalogo.facetas('laptop')).toEqual({ total: 30, disponibles: 20, varias: 2, tiendas: [{ id: 'kywi', nombre: 'Kywi', n: 12 }] });
+    for (const intento of [() => catalogo.buscar('laptop'), () => catalogo.registrarSalida(1, null, 'x', false)]) {
+      const e = await intento().then(() => null, (x: unknown) => x as Error);
+      expect(e).toBeInstanceOf(Error);
+      expect(e!.message).not.toMatch(/buscar_catalogo|registrar_salida|statement|timeout/);
+      expect(String((e!.cause as Error).message)).toContain('statement timeout');
+    }
+  });
+
+  it('una respuesta vacía de la base es un fallo, no "sin resultados"', async () => {
+    const { cliente } = clienteFalso({ buscar_catalogo: { data: null, error: null } });
+    await expect(crearCatalogo(cliente).buscar('cafeteraa')).rejects.toThrow();
+  });
+});
+
+describe('categoría, filtros y precio', () => {
+  it('viajan a la base y vuelven las facetas de la categoría', async () => {
+    const facetas = { total: 3, disponibles: 3, varias: 0, tiendas: [], precio: { min: '199.9', max: '899' },
+      categorias: [], atributos: { ram: [{ valor: '16', n: '2' }, { valor: 'no-indicado', n: 1 }] } };
+    const { cliente, llamadas } = clienteFalso({ buscar_catalogo: { data: { ...respuesta([], 3), facetas }, error: null } });
+    const r = await crearCatalogo(cliente).buscar('', 'relevancia', { categoria: 'laptops', filtros: { ram: ['16'] }, precioMax: 900 });
+    expect(llamadas[0]!.args).toMatchObject({ p_q: '', p_categoria: 'laptops', p_filtros: { ram: ['16'] }, p_precio_min: null, p_precio_max: 900 });
+    expect(r.facetas.precio).toEqual({ min: 199.9, max: 899 });
+    expect(r.facetas.atributos).toEqual({ ram: [{ valor: '16', n: 2 }, { valor: 'no-indicado', n: 1 }] });
+  });
+});
+
+describe('GET /api/sugerencias', () => {
+  const filas = [
+    { tipo: 'categoria', texto: 'Celulares', slug: 'celulares' },
+    { tipo: 'marca', texto: 'Samsung' },
+    { tipo: 'producto', texto: 'Celular Samsung Galaxy A15', id: '6f1c2a54-0000-4000-8000-000000000009', precio_desde: '199.9' },
+  ];
+
+  it('menos de 2 caracteres → lista vacía, sin consultar la base', async () => {
+    const { cliente, llamadas } = clienteFalso({});
+    const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=s'));
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ sugerencias: [] });
+    expect(llamadas).toEqual([]);
+  });
+
+  it('cada sugerencia lleva adónde ir: la categoría a su página, la marca a su búsqueda, el producto a su ficha', async () => {
+    const { cliente, llamadas } = clienteFalso({ sugerir_busqueda: { data: filas, error: null } });
+    const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=sams'));
+    expect(r.status).toBe(200);
+    expect(r.headers.get('cache-control')).toMatch(/max-age/);
+    expect(llamadas).toEqual([{ fn: 'sugerir_busqueda', args: { p_q: 'sams' } }]);
+    expect((await r.json()).sugerencias).toEqual([
+      { tipo: 'categoria', texto: 'Celulares', href: '/categoria/celulares' },
+      { tipo: 'marca', texto: 'Samsung', href: '/buscar?q=Samsung' },
+      { tipo: 'producto', texto: 'Celular Samsung Galaxy A15', href: '/p/6f1c2a54-0000-4000-8000-000000000009', desde: 199.9 },
+    ]);
+  });
+
+  it('si la base falla responde 503 con JSON', async () => {
+    const { cliente } = clienteFalso({ sugerir_busqueda: { data: null, error: { message: 'timeout' } } });
+    const r = await crearSugerenciasGET(crearCatalogo(cliente).sugerir)(new Request('http://localhost/api/sugerencias?q=sams'));
+    expect(r.status).toBe(503);
+    expect(await r.json()).toEqual({ error: 'No pudimos cargar sugerencias.' });
+  });
+
+  it('"quizás buscaba" devuelve los términos de la base', async () => {
+    const { cliente, llamadas } = clienteFalso({ quizas_buscaba: { data: ['refrigeradora'], error: null } });
+    expect(await crearCatalogo(cliente).quizasBuscaba('refrijeradoraz')).toEqual(['refrigeradora']);
+    expect(llamadas[0]).toEqual({ fn: 'quizas_buscaba', args: { p_q: 'refrijeradoraz' } });
   });
 });
