@@ -10,10 +10,10 @@ const dolares = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'U
 /** Formulario GET normal: funciona aunque el JavaScript no haya cargado. Sin hooks: sirve de fallback. */
 export function FormularioBusqueda({ q = '' }: { q?: string }) {
   return (
-    <form action="/buscar" role="search" className="flex min-w-0 flex-1 basis-64">
+    <form action="/buscar" role="search" noValidate className="flex min-w-0 flex-1 basis-64">
       <label htmlFor="q" className="sr-only">Producto a buscar</label>
       <input
-        id="q" name="q" type="search" defaultValue={q} key={q} required minLength={2} maxLength={80}
+        id="q" name="q" type="search" defaultValue={q} key={q} maxLength={80}
         placeholder="¿Qué está buscando?"
         className="buscador-campo h-11 min-w-0 flex-1 rounded-l-full border-0 bg-white pr-4 pl-11 text-base text-[#36364f] placeholder:text-[#5f6070]"
       />
@@ -68,10 +68,11 @@ function FormularioConSugerencias({ q }: { q: string }) {
   const ir = (s: Sugerencia) => { setAbierta(false); router.push(s.href); };
 
   return (
-    <form action="/buscar" role="search" className="relative flex min-w-0 flex-1 basis-64">
+    <form action="/buscar" role="search" noValidate className="relative flex min-w-0 flex-1 basis-64"
+      onSubmit={(e) => { if (texto.trim().length < 2) e.preventDefault(); /* sin globo del navegador: Enter no hace nada */ }}>
       <label htmlFor="q" className="sr-only">Producto a buscar</label>
       <input
-        id="q" name="q" type="search" value={texto} required minLength={2} maxLength={80} autoComplete="off"
+        id="q" name="q" type="search" value={texto} maxLength={80} autoComplete="off"
         placeholder="¿Qué está buscando?"
         role="combobox" aria-autocomplete="list" aria-expanded={visible} aria-controls={idLista}
         aria-activedescendant={visible && activa >= 0 ? `${idLista}-${activa}` : undefined}
